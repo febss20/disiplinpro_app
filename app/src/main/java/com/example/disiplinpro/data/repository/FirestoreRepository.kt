@@ -1,0 +1,87 @@
+package com.example.disiplinpro.data.repository
+
+import com.example.disiplinpro.data.model.Task
+import com.example.disiplinpro.data.model.Schedule
+import com.example.disiplinpro.data.model.User
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.firestore.FirebaseFirestore
+import kotlinx.coroutines.tasks.await
+
+class FirestoreRepository {
+    private val db = FirebaseFirestore.getInstance()
+    private val userId = FirebaseAuth.getInstance().currentUser?.uid
+
+    suspend fun getUser(): User? {
+        return if (userId != null) {
+            db.collection("users").document(userId)
+                .get().await().toObject(User::class.java)
+        } else {
+            null
+        }
+    }
+
+    suspend fun getTasks(): List<Task> {
+        return if (userId != null) {
+            db.collection("users").document(userId).collection("tasks")
+                .get().await().documents.mapNotNull { it.toObject(Task::class.java) }
+        } else {
+            emptyList()
+        }
+    }
+
+    suspend fun addTask(task: Task): Boolean {
+        return try {
+            if (userId != null) {
+                val newTaskRef = db.collection("users").document(userId).collection("tasks").document()
+                val taskWithId = task.copy(id = newTaskRef.id)
+                newTaskRef.set(taskWithId).await()
+                true
+            } else {
+                false
+            }
+        } catch (e: Exception) {
+            false
+        }
+    }
+
+    suspend fun updateTaskCompletion(taskId: String, isCompleted: Boolean): Boolean {
+        return try {
+            if (userId != null) {
+                db.collection("users").document(userId).collection("tasks").document(taskId)
+                    .update("isCompleted", isCompleted).await()
+                println("Task $taskId updated to isCompleted = $isCompleted")
+                true
+            } else {
+                println("User ID is null, cannot update task")
+                false
+            }
+        } catch (e: Exception) {
+            println("Error updating task completion: ${e.message}")
+            false
+        }
+    }
+
+    suspend fun getSchedules(): List<Schedule> {
+        return if (userId != null) {
+            db.collection("users").document(userId).collection("schedules")
+                .get().await().documents.mapNotNull { it.toObject(Schedule::class.java) }
+        } else {
+            emptyList()
+        }
+    }
+
+    suspend fun addSchedule(schedule: Schedule): Boolean {
+        return try {
+            if (userId != null) {
+                val newScheduleRef = db.collection("users").document(userId).collection("schedules").document()
+                val scheduleWithId = schedule.copy(id = newScheduleRef.id)
+                newScheduleRef.set(scheduleWithId).await()
+                true
+            } else {
+                false
+            }
+        } catch (e: Exception) {
+            false
+        }
+    }
+}
