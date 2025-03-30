@@ -32,4 +32,22 @@ class ScheduleViewModel : ViewModel() {
             }
         }
     }
+
+    fun updateSchedule(scheduleId: String, updatedSchedule: Schedule) {
+        viewModelScope.launch {
+            val success = repository.updateSchedule(scheduleId, updatedSchedule)
+            if (success) {
+                fetchSchedules() // Refresh schedule list after successful update
+            }
+        }
+    }
+
+    fun deleteSchedule(scheduleId: String) {
+        viewModelScope.launch {
+            val success = repository.deleteSchedule(scheduleId)
+            if (success) {
+                fetchSchedules() // Refresh schedule list after successful deletion
+            }
+        }
+    }
 }
