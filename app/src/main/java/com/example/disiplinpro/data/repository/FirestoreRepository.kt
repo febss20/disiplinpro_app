@@ -44,6 +44,20 @@ class FirestoreRepository {
         }
     }
 
+    suspend fun updateTask(taskId: String, updatedTask: Task): Boolean {
+        return try {
+            if (userId != null) {
+                db.collection("users").document(userId).collection("tasks").document(taskId)
+                    .set(updatedTask).await()
+                true
+            } else {
+                false
+            }
+        } catch (e: Exception) {
+            false
+        }
+    }
+
     suspend fun updateTaskCompletion(taskId: String, isCompleted: Boolean): Boolean {
         return try {
             if (userId != null) {
@@ -57,6 +71,20 @@ class FirestoreRepository {
             }
         } catch (e: Exception) {
             println("Error updating task completion: ${e.message}")
+            false
+        }
+    }
+
+    suspend fun deleteTask(taskId: String): Boolean {
+        return try {
+            if (userId != null) {
+                db.collection("users").document(userId).collection("tasks").document(taskId)
+                    .delete().await()
+                true
+            } else {
+                false
+            }
+        } catch (e: Exception) {
             false
         }
     }
@@ -76,6 +104,34 @@ class FirestoreRepository {
                 val newScheduleRef = db.collection("users").document(userId).collection("schedules").document()
                 val scheduleWithId = schedule.copy(id = newScheduleRef.id)
                 newScheduleRef.set(scheduleWithId).await()
+                true
+            } else {
+                false
+            }
+        } catch (e: Exception) {
+            false
+        }
+    }
+
+    suspend fun updateSchedule(scheduleId: String, updatedSchedule: Schedule): Boolean {
+        return try {
+            if (userId != null) {
+                db.collection("users").document(userId).collection("schedules").document(scheduleId)
+                    .set(updatedSchedule).await()
+                true
+            } else {
+                false
+            }
+        } catch (e: Exception) {
+            false
+        }
+    }
+
+    suspend fun deleteSchedule(scheduleId: String): Boolean {
+        return try {
+            if (userId != null) {
+                db.collection("users").document(userId).collection("schedules").document(scheduleId)
+                    .delete().await()
                 true
             } else {
                 false

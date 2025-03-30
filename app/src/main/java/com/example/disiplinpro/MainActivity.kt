@@ -15,6 +15,7 @@ import com.example.disiplinpro.ui.auth.ForgotPasswordScreen
 import com.example.disiplinpro.ui.auth.EmailVerificationScreen
 import com.example.disiplinpro.ui.schedule.AddScheduleScreen
 import com.example.disiplinpro.ui.schedule.AllSchedulesScreen
+// import com.example.disiplinpro.ui.schedule.EditScheduleScreen
 import com.example.disiplinpro.ui.task.AddTaskScreen
 import com.example.disiplinpro.ui.task.AllTasksScreen
 
@@ -35,8 +36,12 @@ class MainActivity : ComponentActivity() {
                     EmailVerificationScreen(navController, email, authViewModel)
                 }
                 composable("add_jadwal") { AddScheduleScreen(navController) }
-                composable("add_tugas") { AddTaskScreen(navController) }
+                // composable("edit_jadwal/{scheduleId}") { backStackEntry ->
+                    // val scheduleId = backStackEntry.arguments?.getString("scheduleId") ?: ""
+                    // EditScheduleScreen(navController, scheduleId)
+                // }
                 composable("list_jadwal") { AllSchedulesScreen(navController) }
+                composable("add_tugas") { AddTaskScreen(navController) }
                 composable("list_tugas") { AllTasksScreen(navController) }
 
             }

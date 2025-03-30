@@ -24,9 +24,9 @@ import java.text.SimpleDateFormat
 import java.util.*
 
 @Composable
-fun ScheduleItem(schedules: List<Schedule>) {
+fun ScheduleItem(schedules: List<Schedule>, modifier: Modifier = Modifier) {
     Card(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxWidth()
             .padding(start = 31.dp, end = 31.dp, bottom = 20.dp)
             .border(1.dp, Color(0x4D333333), RoundedCornerShape(10.dp)),
