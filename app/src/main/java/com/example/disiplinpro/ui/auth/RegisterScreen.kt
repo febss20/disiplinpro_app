@@ -30,7 +30,10 @@ import com.skydoves.landscapist.ImageOptions
 import androidx.compose.ui.draw.clip
 
 @Composable
-fun RegisterScreen(navController: NavController, authViewModel: AuthViewModel = viewModel()) {
+fun RegisterScreen(
+    navController: NavController,
+    authViewModel: AuthViewModel = viewModel()
+) {
     var username by remember { mutableStateOf("") }
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
@@ -214,7 +217,7 @@ fun RegisterScreen(navController: NavController, authViewModel: AuthViewModel = 
                 )
             }
 
-            // Register Link
+            // Login Link
             Column(
                 horizontalAlignment = Alignment.End,
                 modifier = Modifier

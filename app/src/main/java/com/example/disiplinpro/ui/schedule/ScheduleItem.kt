@@ -24,19 +24,23 @@ import java.text.SimpleDateFormat
 import java.util.*
 
 @Composable
-fun ScheduleItem(schedules: List<Schedule>, modifier: Modifier = Modifier) {
+fun ScheduleItem(
+    schedules: List<Schedule>,
+    isSelected: Boolean = false,
+    modifier: Modifier = Modifier
+) {
     Card(
         modifier = modifier
             .fillMaxWidth()
-            .padding(start = 31.dp, end = 31.dp, bottom = 20.dp)
+            .padding(start = 20.dp, end = 20.dp, bottom = 20.dp)
             .border(1.dp, Color(0x4D333333), RoundedCornerShape(10.dp)),
         colors = CardDefaults.cardColors(
-            containerColor = Color(0x332196F3), // Warna background yang diinginkan
+            containerColor = if (isSelected) Color(0x802196F3) else Color(0x332196F3)
         ),
     ) {
         Column(modifier = Modifier.padding(top = 14.dp, bottom = 22.dp)) {
             Text(
-                text = schedules.first().hari, // Hari diambil dari jadwal pertama
+                text = schedules.first().hari,
                 color = Color(0xFF333333),
                 fontSize = 20.sp,
                 modifier = Modifier.padding(top = 1.dp, bottom = 12.dp, start = 23.dp)

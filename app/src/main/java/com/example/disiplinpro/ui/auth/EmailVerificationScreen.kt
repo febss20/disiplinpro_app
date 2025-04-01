@@ -25,7 +25,11 @@ import android.widget.Toast
 import androidx.compose.ui.platform.LocalContext
 
 @Composable
-fun EmailVerificationScreen(navController: NavController, email: String, authViewModel: AuthViewModel = viewModel()) {
+fun EmailVerificationScreen(
+    navController: NavController,
+    email: String,
+    authViewModel: AuthViewModel = viewModel()
+) {
     val context = LocalContext.current
 
     Column(

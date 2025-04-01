@@ -38,13 +38,15 @@ import java.util.*
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun HomeScreen(navController: NavController, viewModel: HomeViewModel = viewModel(),
-               scheduleViewModel: ScheduleViewModel = viewModel(),
-               taskViewModel: TaskViewModel = viewModel()) {
+fun HomeScreen(
+    navController: NavController,
+    viewModel: HomeViewModel = viewModel(),
+    scheduleViewModel: ScheduleViewModel = viewModel(),
+    taskViewModel: TaskViewModel = viewModel()
+) {
     val tasks by taskViewModel.tasks.collectAsState()
     val schedules by scheduleViewModel.schedules.collectAsState()
     val user by viewModel.user.collectAsState()
-
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = navBackStackEntry?.destination?.route
 
@@ -62,7 +64,7 @@ fun HomeScreen(navController: NavController, viewModel: HomeViewModel = viewMode
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color(0xFFFAF3E0)) // Background utama full
+            .background(Color(0xFFFAF3E0))
     ) {
         // Konten utama yang bisa di-scroll
         LazyColumn(
@@ -76,7 +78,7 @@ fun HomeScreen(navController: NavController, viewModel: HomeViewModel = viewMode
                         .fillMaxWidth()
                         .background(Color(0xFFFAF3E0))
                 ) {
-                    // Bagian Username dan Foto Profil
+                    // Username dan Foto Profil
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
@@ -238,7 +240,6 @@ fun HomeScreen(navController: NavController, viewModel: HomeViewModel = viewMode
                 }
             }
 
-            // Spacer untuk menghindari konten tertutup box navigasi
             item {
                 Spacer(modifier = Modifier.height(120.dp))
             }
@@ -248,7 +249,7 @@ fun HomeScreen(navController: NavController, viewModel: HomeViewModel = viewMode
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(100.dp) // Tinggi box navigasi
+                .height(100.dp)
                 .background(Color(0xFFFAF3E0))
                 .align(Alignment.BottomCenter)
         ) {
