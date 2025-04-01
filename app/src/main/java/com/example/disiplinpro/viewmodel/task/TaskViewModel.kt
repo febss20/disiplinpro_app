@@ -29,7 +29,7 @@ class TaskViewModel : ViewModel() {
         viewModelScope.launch {
             val success = repository.addTask(task)
             if (success) {
-                fetchTasks() // Refresh daftar tugas setelah berhasil
+                fetchTasks()
             }
         }
     }
@@ -38,10 +38,28 @@ class TaskViewModel : ViewModel() {
         viewModelScope.launch {
             val success = repository.updateTaskCompletion(taskId, isCompleted)
             if (success) {
-                fetchTasks() // Refresh daftar tugas setelah berhasil
+                fetchTasks()
                 println("Tasks refreshed after update")
             } else {
                 println("Failed to update task completion for taskId: $taskId")
+            }
+        }
+    }
+
+    fun updateTask(taskId: String, updatedTask: Task) {
+        viewModelScope.launch {
+            val success = repository.updateTask(taskId, updatedTask)
+            if (success) {
+                fetchTasks()
+            }
+        }
+    }
+
+    fun deleteTask(taskId: String) {
+        viewModelScope.launch {
+            val success = repository.deleteTask(taskId)
+            if (success) {
+                fetchTasks()
             }
         }
     }
