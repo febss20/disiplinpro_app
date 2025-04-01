@@ -28,7 +28,7 @@ class ScheduleViewModel : ViewModel() {
         viewModelScope.launch {
             val success = repository.addSchedule(schedule)
             if (success) {
-                fetchSchedules() // Refresh schedule list after successful addition
+                fetchSchedules()
             }
         }
     }
@@ -37,7 +37,7 @@ class ScheduleViewModel : ViewModel() {
         viewModelScope.launch {
             val success = repository.updateSchedule(scheduleId, updatedSchedule)
             if (success) {
-                fetchSchedules() // Refresh schedule list after successful update
+                fetchSchedules()
             }
         }
     }
@@ -46,7 +46,7 @@ class ScheduleViewModel : ViewModel() {
         viewModelScope.launch {
             val success = repository.deleteSchedule(scheduleId)
             if (success) {
-                fetchSchedules() // Refresh schedule list after successful deletion
+                fetchSchedules()
             }
         }
     }

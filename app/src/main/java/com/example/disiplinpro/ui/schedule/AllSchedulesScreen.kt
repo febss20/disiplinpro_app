@@ -1,16 +1,17 @@
 package com.example.disiplinpro.ui.schedule
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -31,21 +32,25 @@ import com.example.disiplinpro.ui.theme.DisiplinproTheme
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun AllSchedulesScreen(navController: NavController, viewModel: ScheduleViewModel = viewModel()) {
+fun AllSchedulesScreen(
+    navController: NavController,
+    viewModel: ScheduleViewModel = viewModel()
+) {
     val schedules by viewModel.schedules.collectAsState(initial = emptyList())
-    var selectedSchedule by remember { mutableStateOf<Schedule?>(null) } // State untuk jadwal yang dipilih
+    var selectedSchedule by remember { mutableStateOf<Schedule?>(null) }
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = navBackStackEntry?.destination?.route
+    val scrollState = rememberScrollState()
 
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color(0xFFFAF3E0)) // Background utama
+            .background(Color(0xFFFAF3E0))
     ) {
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(bottom = 17.dp)
+                .padding(bottom = 20.dp)
         ) {
             // TopAppBar dengan tombol edit dan hapus
             TopAppBar(
@@ -54,7 +59,7 @@ fun AllSchedulesScreen(navController: NavController, viewModel: ScheduleViewMode
                         verticalAlignment = Alignment.CenterVertically,
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(start = 20.dp, end = 20.dp)
+                            .padding(start = 20.dp, end = 31.dp)
                     ) {
                         Text(
                             "Semua Jadwal",
@@ -72,7 +77,12 @@ fun AllSchedulesScreen(navController: NavController, viewModel: ScheduleViewMode
                                 }
                             },
                             enabled = selectedSchedule != null,
-                            modifier = Modifier.size(40.dp)
+                            modifier = Modifier
+                                .size(40.dp)
+                                .clip(CircleShape)
+                                .background(
+                                    if (selectedSchedule != null) Color(0xFF7DAFCB) else Color(0xFF7DAFCB).copy(alpha = 0.5f)
+                                )
                         ) {
                             CoilImage(
                                 imageModel = { R.drawable.edit },
@@ -80,18 +90,25 @@ fun AllSchedulesScreen(navController: NavController, viewModel: ScheduleViewMode
                                 imageOptions = ImageOptions(contentScale = ContentScale.Fit)
                             )
                         }
+                        Spacer(modifier = Modifier.width(16.dp))
+
                         // Tombol Hapus
                         IconButton(
                             onClick = {
                                 selectedSchedule?.let { schedule ->
-                                    schedule.id?.let { id ->
+                                    schedule.id.let { id ->
                                         viewModel.deleteSchedule(id)
-                                        selectedSchedule = null // Reset pilihan setelah hapus
+                                        selectedSchedule = null
                                     }
                                 }
                             },
                             enabled = selectedSchedule != null,
-                            modifier = Modifier.size(40.dp)
+                            modifier = Modifier
+                                .size(40.dp)
+                                .clip(CircleShape)
+                                .background(
+                                    if (selectedSchedule != null) Color(0xFFD86F6F) else Color(0xFFD86F6F).copy(alpha = 0.5f)
+                                )
                         ) {
                             CoilImage(
                                 imageModel = { R.drawable.delete },
@@ -106,22 +123,21 @@ fun AllSchedulesScreen(navController: NavController, viewModel: ScheduleViewMode
                 )
             )
 
-            // Daftar Jadwal
-            LazyColumn(
+            // Daftar Jadwal dengan Column dan Scroll
+            Column(
                 modifier = Modifier
                     .weight(1f)
-                    .padding(horizontal = 16.dp)
+                    .verticalScroll(scrollState)
             ) {
-                items(schedules) { schedule ->
+                schedules.forEach { schedule ->
                     ScheduleItem(
                         schedules = listOf(schedule),
+                        isSelected = selectedSchedule == schedule,
                         modifier = Modifier
                             .clickable {
                                 selectedSchedule = if (selectedSchedule == schedule) null else schedule
                             }
-                            .background(
-                                if (selectedSchedule == schedule) Color(0x4D2196F3) else Color.Transparent
-                            )
+                            .clip(RoundedCornerShape(10.dp))
                     )
                 }
             }
@@ -148,7 +164,6 @@ fun AllSchedulesScreen(navController: NavController, viewModel: ScheduleViewMode
                 }
             }
 
-            // BottomNavigationBar
             BottomNavigationBar(navController = navController, currentRoute = currentRoute)
         }
     }

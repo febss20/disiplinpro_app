@@ -31,7 +31,10 @@ import java.util.*
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun AddScheduleScreen(navController: NavController, viewModel: ScheduleViewModel = viewModel()) {
+fun AddScheduleScreen(
+    navController: NavController,
+    viewModel: ScheduleViewModel = viewModel()
+) {
     var matkul by remember { mutableStateOf("") }
     var hari by remember { mutableStateOf("") }
     var waktuMulai by remember { mutableStateOf("") }
@@ -90,13 +93,13 @@ fun AddScheduleScreen(navController: NavController, viewModel: ScheduleViewModel
                     "Hari",
                     color = Color(0xFF333333),
                     fontSize = 18.sp,
-                    modifier = Modifier.padding(end = 16.dp) // Jarak antara teks dan dropdown
+                    modifier = Modifier.padding(end = 16.dp)
                 )
                 ExposedDropdownMenuBox(
                     expanded = expanded,
                     onExpandedChange = { expanded = !expanded },
                     modifier = Modifier
-                        .weight(1f) // Mengisi sisa ruang
+                        .weight(1f) 
                         .border(1.dp, Color(0x33FFFFFF), RoundedCornerShape(10.dp))
                 ) {
                     TextField(

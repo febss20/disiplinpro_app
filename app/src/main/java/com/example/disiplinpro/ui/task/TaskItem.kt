@@ -23,15 +23,20 @@ import java.text.SimpleDateFormat
 import java.util.*
 
 @Composable
-fun TaskItem(tasks: List<Task>, viewModel: TaskViewModel) {
+fun TaskItem(
+    tasks: List<Task>,
+    viewModel: TaskViewModel,
+    isSelected: Boolean = false,
+    modifier: Modifier = Modifier
+) {
     Card(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxWidth()
-            .padding(start = 31.dp, end = 31.dp)
+            .padding(start = 20.dp, end = 20.dp, bottom = 20.dp)
             .border(1.dp, Color(0x4D333333), RoundedCornerShape(10.dp)),
         colors = CardDefaults.cardColors(
-            containerColor = Color(0x332196F3), // Warna background yang diinginkan
-        ),
+            containerColor = if (isSelected) Color(0xFF7DAFCB) else Color(0x332196F3)
+        )
     ) {
         Column(modifier = Modifier.padding(top = 5.dp, bottom = 28.dp)) {
             tasks.forEach { task ->

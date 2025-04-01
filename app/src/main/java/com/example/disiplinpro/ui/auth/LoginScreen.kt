@@ -27,7 +27,10 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 
 @Composable
-fun LoginScreen(navController: NavController, authViewModel: AuthViewModel = viewModel()) {
+fun LoginScreen(
+    navController: NavController,
+    authViewModel: AuthViewModel = viewModel()
+) {
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     var loginFailed by remember { mutableStateOf(false) }
@@ -165,7 +168,7 @@ fun LoginScreen(navController: NavController, authViewModel: AuthViewModel = vie
                         fontWeight = FontWeight.Bold
                     )
                 } else {
-                    Spacer(modifier = Modifier.width(0.dp)) // Placeholder kosong agar layout tetap konsisten
+                    Spacer(modifier = Modifier.width(0.dp))
                 }
                 TextButton(onClick = { navController.navigate("forgot_password") }) {
                     Text(
@@ -227,7 +230,7 @@ fun LoginScreen(navController: NavController, authViewModel: AuthViewModel = vie
                     )
                     Text(
                         "Daftar",
-                        color = Color(0xFF7DAFCB), // Changed color to match your theme
+                        color = Color(0xFF7DAFCB),
                         fontSize = 12.sp,
                         fontWeight = FontWeight.Bold,
                         textDecoration = TextDecoration.Underline,

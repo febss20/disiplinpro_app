@@ -14,12 +14,15 @@ import androidx.navigation.NavController
 import com.example.disiplinpro.R
 
 @Composable
-fun BottomNavigationBar(navController: NavController, currentRoute: String?) {
+fun BottomNavigationBar(
+    navController: NavController,
+    currentRoute: String?
+) {
     Surface(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 17.dp) // Padding samping
-            .height(80.dp), // Tinggi navigation bar
+            .padding(horizontal = 17.dp)
+            .height(80.dp),
         shape = RoundedCornerShape(50.dp),
         tonalElevation = 8.dp,
         shadowElevation = 8.dp,

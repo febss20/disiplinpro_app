@@ -31,7 +31,10 @@ import java.util.*
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun AddTaskScreen(navController: NavController, viewModel: TaskViewModel = viewModel()) {
+fun AddTaskScreen(
+    navController: NavController,
+    viewModel: TaskViewModel = viewModel()
+) {
     var judulTugas by remember { mutableStateOf("") }
     var matkul by remember { mutableStateOf("") }
     var tanggal by remember { mutableStateOf("") }

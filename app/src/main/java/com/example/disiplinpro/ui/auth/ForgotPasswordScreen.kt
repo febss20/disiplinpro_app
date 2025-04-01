@@ -23,7 +23,10 @@ import com.skydoves.landscapist.coil.CoilImage
 import androidx.compose.ui.layout.ContentScale
 
 @Composable
-fun ForgotPasswordScreen(navController: NavController, authViewModel: AuthViewModel = viewModel()) {
+fun ForgotPasswordScreen(
+    navController: NavController,
+    authViewModel: AuthViewModel = viewModel()
+) {
     var email by remember { mutableStateOf("") }
     val context = LocalContext.current
 
@@ -109,7 +112,9 @@ fun ForgotPasswordScreen(navController: NavController, authViewModel: AuthViewMo
                             if (success) {
                                 navController.navigate("email_verification/$email")
                             } else {
-                                Toast.makeText(context, "Email tidak terdaftar atau gagal mengirim email reset", Toast.LENGTH_SHORT).show()
+                                Toast.makeText(context,
+                                    "Email tidak terdaftar atau gagal mengirim email reset",
+                                    Toast.LENGTH_SHORT).show()
                             }
                         }
                     } else {
