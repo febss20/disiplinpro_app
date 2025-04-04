@@ -10,25 +10,30 @@ import kotlinx.coroutines.launch
 
 class ScheduleViewModel : ViewModel() {
     private val repository = FirestoreRepository()
-
     private val _schedules = MutableStateFlow<List<Schedule>>(emptyList())
     val schedules: StateFlow<List<Schedule>> = _schedules
 
     init {
-        fetchSchedules()
+        listenToSchedules()
     }
 
-    private fun fetchSchedules() {
-        viewModelScope.launch {
-            _schedules.value = repository.getSchedules()
-        }
+    private fun listenToSchedules() {
+        repository.listenToSchedules(
+            onDataChanged = { scheduleList ->
+                println("Schedules fetched from Firestore: $scheduleList")
+                _schedules.value = scheduleList
+            },
+            onError = { error ->
+                println("Error fetching schedules: ${error.message}")
+            }
+        )
     }
 
     fun addSchedule(schedule: Schedule) {
         viewModelScope.launch {
             val success = repository.addSchedule(schedule)
             if (success) {
-                fetchSchedules()
+                println("Schedule added successfully")
             }
         }
     }
@@ -37,7 +42,7 @@ class ScheduleViewModel : ViewModel() {
         viewModelScope.launch {
             val success = repository.updateSchedule(scheduleId, updatedSchedule)
             if (success) {
-                fetchSchedules()
+                println("Schedule updated successfully")
             }
         }
     }
@@ -46,7 +51,7 @@ class ScheduleViewModel : ViewModel() {
         viewModelScope.launch {
             val success = repository.deleteSchedule(scheduleId)
             if (success) {
-                fetchSchedules()
+                println("Schedule deleted successfully")
             }
         }
     }

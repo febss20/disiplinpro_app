@@ -89,13 +89,20 @@ class FirestoreRepository {
         }
     }
 
-    suspend fun getSchedules(): List<Schedule> {
-        return if (userId != null) {
-            db.collection("users").document(userId).collection("schedules")
-                .get().await().documents.mapNotNull { it.toObject(Schedule::class.java) }
-        } else {
-            emptyList()
+    fun listenToSchedules(onDataChanged: (List<Schedule>) -> Unit, onError: (Exception) -> Unit) {
+        if (userId == null) {
+            onError(Exception("User not logged in"))
+            return
         }
+        db.collection("users").document(userId).collection("schedules")
+            .addSnapshotListener { snapshot, error ->
+                if (error != null) {
+                    onError(error)
+                    return@addSnapshotListener
+                }
+                val scheduleList = snapshot?.documents?.mapNotNull { it.toObject(Schedule::class.java) } ?: emptyList()
+                onDataChanged(scheduleList)
+            }
     }
 
     suspend fun addSchedule(schedule: Schedule): Boolean {
