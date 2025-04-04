@@ -13,6 +13,7 @@ import com.example.disiplinpro.ui.auth.RegisterScreen
 import com.example.disiplinpro.ui.home.HomeScreen
 import com.example.disiplinpro.ui.auth.ForgotPasswordScreen
 import com.example.disiplinpro.ui.auth.EmailVerificationScreen
+import com.example.disiplinpro.ui.calender.CalendarScreen
 import com.example.disiplinpro.ui.schedule.AddScheduleScreen
 import com.example.disiplinpro.ui.schedule.AllSchedulesScreen
 import com.example.disiplinpro.ui.schedule.EditScheduleScreen
@@ -48,6 +49,7 @@ class MainActivity : ComponentActivity() {
                     EditTaskScreen(navController, taskId)
                 }
                 composable("list_tugas") { AllTasksScreen(navController) }
+                composable("kalender") { CalendarScreen(navController) }
 
             }
         }

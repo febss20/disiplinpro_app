@@ -14,14 +14,11 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
-import androidx.navigation.compose.rememberNavController
 import com.example.disiplinpro.data.model.Schedule
-import com.example.disiplinpro.ui.theme.DisiplinproTheme
 import com.example.disiplinpro.viewmodel.schedule.ScheduleViewModel
 import com.google.firebase.Timestamp
 import com.skydoves.landscapist.ImageOptions
@@ -45,6 +42,7 @@ fun AddScheduleScreen(
     var showEndTimePicker by remember { mutableStateOf(false) }
     var startTime by remember { mutableStateOf(Calendar.getInstance()) }
     var endTime by remember { mutableStateOf(Calendar.getInstance()) }
+    var errorMessage by remember { mutableStateOf("") }
 
     val days = listOf("Senin", "Selasa", "Rabu", "Kamis", "Jumat", "Sabtu", "Minggu")
     val timeFormat = SimpleDateFormat("HH:mm", Locale.getDefault())
@@ -54,7 +52,6 @@ fun AddScheduleScreen(
             .fillMaxSize()
             .background(Color(0xFFFAF3E0))
     ) {
-        // Header: Tambah Jadwal dan Batal
         Row(
             verticalAlignment = Alignment.CenterVertically,
             modifier = Modifier
@@ -76,7 +73,16 @@ fun AddScheduleScreen(
             )
         }
 
-        // Bagian Dropdown Hari
+        // Informasi bahwa jadwal akan berulang
+        if (hari.isNotBlank()) {
+            Text(
+                "Jadwal ini akan berulang setiap $hari",
+                color = Color(0xFF7DAFCB),
+                fontSize = 14.sp,
+                modifier = Modifier.padding(start = 31.dp, bottom = 8.dp)
+            )
+        }
+
         Box(
             modifier = Modifier
                 .padding(start = 25.dp, end = 25.dp)
@@ -99,7 +105,7 @@ fun AddScheduleScreen(
                     expanded = expanded,
                     onExpandedChange = { expanded = !expanded },
                     modifier = Modifier
-                        .weight(1f) 
+                        .weight(1f)
                         .border(1.dp, Color(0x33FFFFFF), RoundedCornerShape(10.dp))
                 ) {
                     TextField(
@@ -138,7 +144,6 @@ fun AddScheduleScreen(
             }
         }
 
-        // Mata Kuliah
         Text(
             "Mata Kuliah",
             color = Color(0xFF333333),
@@ -165,7 +170,6 @@ fun AddScheduleScreen(
             }
         )
 
-        // Atur Ruangan dan Waktu
         Text(
             "Atur Ruangan dan Waktu",
             color = Color(0xFF333333),
@@ -293,10 +297,44 @@ fun AddScheduleScreen(
             }
         }
 
+        // Tampilkan pesan error jika ada
+        if (errorMessage.isNotBlank()) {
+            Text(
+                text = errorMessage,
+                color = Color.Red,
+                fontSize = 14.sp,
+                modifier = Modifier.padding(top = 8.dp, start = 31.dp)
+            )
+        }
+
         Button(
             onClick = {
-                val startTimeTimestamp = Timestamp(timeFormat.parse(waktuMulai) ?: Date())
-                val endTimeTimestamp = Timestamp(timeFormat.parse(waktuSelesai) ?: Date())
+                // Validasi waktu: pastikan waktuSelesai > waktuMulai
+                val startHour = startTime.get(Calendar.HOUR_OF_DAY)
+                val startMinute = startTime.get(Calendar.MINUTE)
+                val endHour = endTime.get(Calendar.HOUR_OF_DAY)
+                val endMinute = endTime.get(Calendar.MINUTE)
+
+                if (endHour < startHour || (endHour == startHour && endMinute <= startMinute)) {
+                    errorMessage = "Waktu selesai harus lebih besar dari waktu mulai"
+                    return@Button
+                }
+
+                errorMessage = ""
+
+                // Atur tanggal default (01/01/2025) untuk waktuMulai dan waktuSelesai
+                val defaultDate = Calendar.getInstance().apply {
+                    set(2025, Calendar.JANUARY, 1) // 01/01/2025
+                    set(Calendar.HOUR_OF_DAY, startTime.get(Calendar.HOUR_OF_DAY))
+                    set(Calendar.MINUTE, startTime.get(Calendar.MINUTE))
+                }
+                val startTimeTimestamp = Timestamp(defaultDate.time)
+
+                val endDate = defaultDate.clone() as Calendar
+                endDate.set(Calendar.HOUR_OF_DAY, endTime.get(Calendar.HOUR_OF_DAY))
+                endDate.set(Calendar.MINUTE, endTime.get(Calendar.MINUTE))
+                val endTimeTimestamp = Timestamp(endDate.time)
+
                 val schedule = Schedule(
                     matkul = matkul,
                     hari = hari,
@@ -336,12 +374,4 @@ fun TimePickerDialog(
         },
         text = { content() }
     )
-}
-
-@Preview(showBackground = true)
-@Composable
-fun PreviewAddScheduleScreen() {
-    DisiplinproTheme {
-        AddScheduleScreen(rememberNavController())
-    }
 }
