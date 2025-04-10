@@ -36,7 +36,6 @@ fun BottomNavigationBar(
                 verticalAlignment = Alignment.CenterVertically,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(top = 15.dp)
             ){
                 NavigationBarItem(
                     icon = {

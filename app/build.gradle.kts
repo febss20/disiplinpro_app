@@ -71,11 +71,11 @@ dependencies {
     implementation("com.github.skydoves:landscapist-placeholder:2.3.0")
     implementation("androidx.compose.material3:material3-window-size-class:1.2.1")
     implementation("androidx.compose.material:material-icons-extended:1.6.3")
-    // Firebase Cloud Messaging
-    implementation ("com.google.firebase:firebase-messaging-ktx:23.4.0")
     // WorkManager
     implementation ("androidx.work:work-runtime-ktx:2.8.1")
     implementation ("com.google.accompanist:accompanist-pager:0.27.0")
+    implementation ("androidx.datastore:datastore-preferences:1.0.0")
+    implementation ("androidx.test:core:1.5.0")
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)

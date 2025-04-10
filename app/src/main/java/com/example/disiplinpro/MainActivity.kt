@@ -1,5 +1,6 @@
 package com.example.disiplinpro
 
+import android.os.Build
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -14,20 +15,37 @@ import com.example.disiplinpro.ui.home.HomeScreen
 import com.example.disiplinpro.ui.auth.ForgotPasswordScreen
 import com.example.disiplinpro.ui.auth.EmailVerificationScreen
 import com.example.disiplinpro.ui.calender.CalendarScreen
+import com.example.disiplinpro.ui.notification.NotificationScreen
 import com.example.disiplinpro.ui.schedule.AddScheduleScreen
 import com.example.disiplinpro.ui.schedule.AllSchedulesScreen
 import com.example.disiplinpro.ui.schedule.EditScheduleScreen
 import com.example.disiplinpro.ui.task.AddTaskScreen
 import com.example.disiplinpro.ui.task.AllTasksScreen
 import com.example.disiplinpro.ui.task.EditTaskScreen
+import android.Manifest
+import androidx.activity.result.contract.ActivityResultContracts
+import com.google.firebase.auth.FirebaseAuth
 
 class MainActivity : ComponentActivity() {
+    private val requestPermissionLauncher = registerForActivityResult(ActivityResultContracts.RequestPermission()) { isGranted ->
+        if (isGranted) {
+            println("Izin notifikasi diberikan")
+        } else {
+            println("Izin notifikasi ditolak")
+        }
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
             val navController = rememberNavController()
             val authViewModel = AuthViewModel()
-            NavHost(navController = navController, startDestination = "onboarding") {
+            val startDestination = if (FirebaseAuth.getInstance().currentUser != null) {
+                "home"
+            } else {
+                "onboarding"
+            }
+            NavHost(navController = navController, startDestination = startDestination) {
                 composable("onboarding") { OnboardingScreen(navController) }
                 composable("login") { LoginScreen(navController) }
                 composable("register") { RegisterScreen(navController) }
@@ -50,8 +68,14 @@ class MainActivity : ComponentActivity() {
                 }
                 composable("list_tugas") { AllTasksScreen(navController) }
                 composable("kalender") { CalendarScreen(navController) }
+                composable("notifikasi") { NotificationScreen(navController) }
 
             }
         }
+        // Minta izin notifikasi jika Android 13+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            requestPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+        }
+
     }
 }

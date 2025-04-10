@@ -309,7 +309,6 @@ fun AddScheduleScreen(
 
         Button(
             onClick = {
-                // Validasi waktu: pastikan waktuSelesai > waktuMulai
                 val startHour = startTime.get(Calendar.HOUR_OF_DAY)
                 val startMinute = startTime.get(Calendar.MINUTE)
                 val endHour = endTime.get(Calendar.HOUR_OF_DAY)
@@ -322,15 +321,14 @@ fun AddScheduleScreen(
 
                 errorMessage = ""
 
-                // Atur tanggal default (01/01/2025) untuk waktuMulai dan waktuSelesai
-                val defaultDate = Calendar.getInstance().apply {
-                    set(2025, Calendar.JANUARY, 1) // 01/01/2025
+                // Gunakan tanggal hari ini sebagai default, bukan 01/01/2025
+                val currentDate = Calendar.getInstance().apply {
                     set(Calendar.HOUR_OF_DAY, startTime.get(Calendar.HOUR_OF_DAY))
                     set(Calendar.MINUTE, startTime.get(Calendar.MINUTE))
                 }
-                val startTimeTimestamp = Timestamp(defaultDate.time)
+                val startTimeTimestamp = Timestamp(currentDate.time)
 
-                val endDate = defaultDate.clone() as Calendar
+                val endDate = currentDate.clone() as Calendar
                 endDate.set(Calendar.HOUR_OF_DAY, endTime.get(Calendar.HOUR_OF_DAY))
                 endDate.set(Calendar.MINUTE, endTime.get(Calendar.MINUTE))
                 val endTimeTimestamp = Timestamp(endDate.time)
