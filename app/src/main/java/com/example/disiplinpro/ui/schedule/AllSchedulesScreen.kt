@@ -42,6 +42,14 @@ fun AllSchedulesScreen(
     val currentRoute = navBackStackEntry?.destination?.route
     val scrollState = rememberScrollState()
 
+    val dayOrder = listOf("senin", "selasa", "rabu", "kamis", "jumat", "sabtu", "minggu")
+
+    // Mengurutkan schedules berdasarkan hari dan waktu mulai
+    val sortedSchedules = schedules.sortedWith(compareBy(
+        { dayOrder.indexOf(it.hari.lowercase()) }, // Urutkan berdasarkan indeks hari
+        { it.waktuMulai.toDate().time }             // Urutkan berdasarkan waktu mulai
+    ))
+
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -129,7 +137,7 @@ fun AllSchedulesScreen(
                     .weight(1f)
                     .verticalScroll(scrollState)
             ) {
-                schedules.forEach { schedule ->
+                sortedSchedules.forEach { schedule ->
                     ScheduleItem(
                         schedules = listOf(schedule),
                         isSelected = selectedSchedule == schedule,

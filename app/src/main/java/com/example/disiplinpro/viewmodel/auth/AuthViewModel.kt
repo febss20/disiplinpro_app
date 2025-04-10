@@ -38,6 +38,12 @@ class AuthViewModel : ViewModel() {
         }
     }
 
+    fun logoutUser(onResult: () -> Unit) {
+        auth.signOut()
+        Log.d("AuthViewModel", "Logout berhasil")
+        onResult()
+    }
+
     fun sendPasswordResetEmail(email: String, onResult: (Boolean) -> Unit) {
         viewModelScope.launch {
             val success = authRepository.sendPasswordResetEmail(email)
