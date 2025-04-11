@@ -17,18 +17,15 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import androidx.navigation.compose.currentBackStackEntryAsState
-import androidx.navigation.compose.rememberNavController
 import com.example.disiplinpro.data.model.Task
 import com.example.disiplinpro.ui.components.BottomNavigationBar
 import com.example.disiplinpro.viewmodel.task.TaskViewModel
 import com.skydoves.landscapist.ImageOptions
 import com.skydoves.landscapist.coil.CoilImage
 import com.example.disiplinpro.R
-import com.example.disiplinpro.ui.theme.DisiplinproTheme
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -37,7 +34,7 @@ fun AllTasksScreen(
     viewModel: TaskViewModel = viewModel()
 ) {
     val tasks by viewModel.tasks.collectAsState(initial = emptyList())
-    var selectedTask by remember { mutableStateOf<Task?>(null) } // State untuk tugas yang dipilih
+    var selectedTask by remember { mutableStateOf<Task?>(null) }
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = navBackStackEntry?.destination?.route
     val scrollState = rememberScrollState()
@@ -50,16 +47,15 @@ fun AllTasksScreen(
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(bottom = 20.dp)
+                .padding(vertical = 20.dp)
         ) {
-            // TopAppBar
             TopAppBar(
                 title = {
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(start = 20.dp, end = 31.dp)
+                            .padding(start = 20.dp, end = 30.dp)
                     ) {
                         Text(
                             "Semua Tugas",
@@ -69,7 +65,6 @@ fun AllTasksScreen(
                         )
                         Spacer(modifier = Modifier.weight(1f))
 
-                        // Tombol Edit
                         IconButton(
                             onClick = {
                                 selectedTask?.let { task ->
@@ -93,11 +88,10 @@ fun AllTasksScreen(
                         }
                         Spacer(modifier = Modifier.width(16.dp))
 
-                        // Tombol Hapus
                         IconButton(
                             onClick = {
                                 selectedTask?.let { task ->
-                                    task.id?.let { id ->
+                                    task.id.let { id ->
                                         viewModel.deleteTask(id)
                                         selectedTask = null
                                     }
@@ -125,36 +119,39 @@ fun AllTasksScreen(
                 )
             )
 
-            // Daftar Tugas
-            Column(
+            Box(
                 modifier = Modifier
                     .weight(1f)
-                    .verticalScroll(scrollState)
-            ) {
-                tasks.forEach { task ->
-                    TaskItem(
-                        tasks = listOf(task),
-                        viewModel = viewModel,
-                        isSelected = selectedTask == task,
-                        modifier = Modifier
-                            .clickable {
-                                selectedTask = if (selectedTask == task) null else task
-                            }
-                            .clip(RoundedCornerShape(10.dp))
-                    )
-                }
-            }
-
-            // Tombol Tambah Jadwal di atas NavigationBar
-            Row(
-                modifier = Modifier
                     .fillMaxWidth()
-                    .padding(end = 16.dp),
-                horizontalArrangement = Arrangement.End
             ) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .verticalScroll(scrollState)
+                ) {
+                    tasks.forEach { task ->
+                        TaskItem(
+                            tasks = listOf(task),
+                            viewModel = viewModel,
+                            isSelected = selectedTask == task,
+                            modifier = Modifier
+                                .clickable {
+                                    selectedTask = if (selectedTask == task) null else task
+                                }
+                                .clip(RoundedCornerShape(10.dp))
+                        )
+                    }
+
+                    Spacer(modifier = Modifier.height(100.dp))
+                }
+
+                // Tombol Tambah Tugas
                 IconButton(
                     onClick = { navController.navigate("add_tugas") },
-                    modifier = Modifier.size(90.dp)
+                    modifier = Modifier
+                        .align(Alignment.BottomEnd)
+                        .padding(bottom = 10.dp, end = 10.dp)
+                        .size(90.dp)
                 ) {
                     CoilImage(
                         imageModel = { "https://storage.googleapis.com/tagjs-prod.appspot.com/v1/T7pdvlFwTn/78p77w0y.png" },
@@ -166,16 +163,7 @@ fun AllTasksScreen(
                     )
                 }
             }
-
             BottomNavigationBar(navController = navController, currentRoute = currentRoute)
         }
-    }
-}
-
-@Preview(showBackground = true)
-@Composable
-fun PreviewAllTasksScreen() {
-    DisiplinproTheme {
-        AllTasksScreen(rememberNavController())
     }
 }

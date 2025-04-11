@@ -14,14 +14,11 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
-import androidx.navigation.compose.rememberNavController
 import com.example.disiplinpro.data.model.Task
-import com.example.disiplinpro.ui.theme.DisiplinproTheme
 import com.example.disiplinpro.viewmodel.task.TaskViewModel
 import com.google.firebase.Timestamp
 import com.skydoves.landscapist.ImageOptions
@@ -280,12 +277,4 @@ fun TimePickerDialog(
         },
         text = { content() }
     )
-}
-
-@Preview(showBackground = true)
-@Composable
-fun PreviewAddTaskScreen() {
-    DisiplinproTheme {
-        AddTaskScreen(rememberNavController())
-    }
 }

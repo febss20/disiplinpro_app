@@ -32,7 +32,7 @@ fun ScheduleItem(
     Card(
         modifier = modifier
             .fillMaxWidth()
-            .padding(start = 20.dp, end = 20.dp, bottom = 20.dp)
+            .padding(start = 30.dp, end = 30.dp, bottom = 20.dp)
             .border(1.dp, Color(0x4D333333), RoundedCornerShape(10.dp)),
         colors = CardDefaults.cardColors(
             containerColor = if (isSelected) Color(0x802196F3) else Color(0x332196F3)

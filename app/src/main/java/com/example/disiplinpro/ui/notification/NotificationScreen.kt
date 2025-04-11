@@ -3,7 +3,6 @@ package com.example.disiplinpro.ui.notification
 import android.content.Context
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
@@ -44,7 +43,7 @@ fun NotificationScreen(navController: NavController) {
         taskTimeBefore = prefs.getString("taskTimeBefore", "1 Jam") ?: "1 Jam"
     }
 
-    val timeOptions = listOf("10 Menit", "30 Menit", "1 Jam", "1 Hari")
+    val timeOptions = listOf("10 Menit sebelum", "30 Menit sebelum", "1 Jam sebelum", "1 Hari sebelum")
 
     Box(
         modifier = Modifier
@@ -86,7 +85,7 @@ fun NotificationScreen(navController: NavController) {
                         color = Color(0xFF333333),
                         fontSize = 16.sp,
                         fontWeight = FontWeight.Bold,
-                        modifier = Modifier.padding(bottom = 16.dp, start = 19.dp)
+                        modifier = Modifier.padding(top = 10.dp, start = 19.dp)
                     )
                     Column(
                         modifier = Modifier
@@ -189,7 +188,7 @@ fun NotificationScreen(navController: NavController) {
                         color = Color(0xFF333333),
                         fontSize = 16.sp,
                         fontWeight = FontWeight.Bold,
-                        modifier = Modifier.padding(horizontal = 16.dp, vertical = 19.dp)
+                        modifier = Modifier.padding(top = 10.dp, start = 19.dp)
                     )
                     Column(
                         modifier = Modifier
@@ -300,7 +299,6 @@ fun NotificationScreen(navController: NavController) {
                 }
             }
 
-            // BottomNavigationBar diletakkan di luar Column utama, seperti di CalendarScreen
             BottomNavigationBar(navController = navController, currentRoute = currentRoute)
         }
     }

@@ -294,14 +294,27 @@ fun EditScheduleScreen(
 
         Button(
             onClick = {
-                val startTimeTimestamp = Timestamp(timeFormat.parse(waktuMulai) ?: Date())
-                val endTimeTimestamp = Timestamp(timeFormat.parse(waktuSelesai) ?: Date())
+                // Ambil tanggal asli dari schedule
+                val originalDate = Calendar.getInstance().apply { time = schedule.waktuMulai.toDate() }
+                val updatedStartTime = Calendar.getInstance().apply {
+                    time = timeFormat.parse(waktuMulai) ?: Date()
+                    set(Calendar.YEAR, originalDate.get(Calendar.YEAR))
+                    set(Calendar.MONTH, originalDate.get(Calendar.MONTH))
+                    set(Calendar.DAY_OF_MONTH, originalDate.get(Calendar.DAY_OF_MONTH))
+                }
+                val updatedEndTime = Calendar.getInstance().apply {
+                    time = timeFormat.parse(waktuSelesai) ?: Date()
+                    set(Calendar.YEAR, originalDate.get(Calendar.YEAR))
+                    set(Calendar.MONTH, originalDate.get(Calendar.MONTH))
+                    set(Calendar.DAY_OF_MONTH, originalDate.get(Calendar.DAY_OF_MONTH))
+                }
+
                 val updatedSchedule = Schedule(
                     id = scheduleId,
                     matkul = matkul,
                     hari = hari,
-                    waktuMulai = startTimeTimestamp,
-                    waktuSelesai = endTimeTimestamp,
+                    waktuMulai = Timestamp(updatedStartTime.time),
+                    waktuSelesai = Timestamp(updatedEndTime.time),
                     ruangan = ruangan
                 )
                 viewModel.updateSchedule(scheduleId, updatedSchedule)

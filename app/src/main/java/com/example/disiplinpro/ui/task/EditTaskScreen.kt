@@ -198,7 +198,6 @@ fun EditTaskScreen(
             )
         }
 
-        // DatePicker untuk Tanggal Deadline
         if (showDatePicker) {
             val datePickerState = rememberDatePickerState(initialSelectedDateMillis = selectedDate.timeInMillis)
             DatePickerDialog(
@@ -220,7 +219,6 @@ fun EditTaskScreen(
             }
         }
 
-        // TimePicker untuk Waktu Deadline
         if (showTimePicker) {
             val timePickerState = rememberTimePickerState(
                 initialHour = selectedTime.get(Calendar.HOUR_OF_DAY),
@@ -244,7 +242,11 @@ fun EditTaskScreen(
         Button(
             onClick = {
                 val dateTimeFormat = SimpleDateFormat("yyyy-MM-dd HH:mm", Locale.getDefault())
-                val deadline = Timestamp(dateTimeFormat.parse("$tanggal $waktu") ?: Date())
+                val deadline = try {
+                    Timestamp(dateTimeFormat.parse("$tanggal $waktu")!!)
+                } catch (e: Exception) {
+                    Timestamp(Date())
+                }
                 val updatedTask = Task(
                     id = taskId,
                     judulTugas = judulTugas,
