@@ -17,18 +17,15 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import androidx.navigation.compose.currentBackStackEntryAsState
-import androidx.navigation.compose.rememberNavController
 import com.example.disiplinpro.data.model.Schedule
 import com.example.disiplinpro.ui.components.BottomNavigationBar
 import com.example.disiplinpro.viewmodel.schedule.ScheduleViewModel
 import com.skydoves.landscapist.ImageOptions
 import com.skydoves.landscapist.coil.CoilImage
 import com.example.disiplinpro.R
-import com.example.disiplinpro.ui.theme.DisiplinproTheme
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -44,10 +41,10 @@ fun AllSchedulesScreen(
 
     val dayOrder = listOf("senin", "selasa", "rabu", "kamis", "jumat", "sabtu", "minggu")
 
-    // Mengurutkan schedules berdasarkan hari dan waktu mulai
+    // Mengurutkan schedules
     val sortedSchedules = schedules.sortedWith(compareBy(
-        { dayOrder.indexOf(it.hari.lowercase()) }, // Urutkan berdasarkan indeks hari
-        { it.waktuMulai.toDate().time }             // Urutkan berdasarkan waktu mulai
+        { dayOrder.indexOf(it.hari.lowercase()) },
+        { it.waktuMulai.toDate().time }
     ))
 
     Box(
@@ -58,16 +55,15 @@ fun AllSchedulesScreen(
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(bottom = 20.dp)
+                .padding(vertical = 20.dp)
         ) {
-            // TopAppBar dengan tombol edit dan hapus
             TopAppBar(
                 title = {
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(start = 20.dp, end = 31.dp)
+                            .padding(start = 20.dp, end = 30.dp)
                     ) {
                         Text(
                             "Semua Jadwal",
@@ -77,7 +73,6 @@ fun AllSchedulesScreen(
                         )
                         Spacer(modifier = Modifier.weight(1f))
 
-                        // Tombol Edit
                         IconButton(
                             onClick = {
                                 selectedSchedule?.let { schedule ->
@@ -100,7 +95,6 @@ fun AllSchedulesScreen(
                         }
                         Spacer(modifier = Modifier.width(16.dp))
 
-                        // Tombol Hapus
                         IconButton(
                             onClick = {
                                 selectedSchedule?.let { schedule ->
@@ -131,35 +125,38 @@ fun AllSchedulesScreen(
                 )
             )
 
-            // Daftar Jadwal dengan Column dan Scroll
-            Column(
+            Box(
                 modifier = Modifier
                     .weight(1f)
-                    .verticalScroll(scrollState)
-            ) {
-                sortedSchedules.forEach { schedule ->
-                    ScheduleItem(
-                        schedules = listOf(schedule),
-                        isSelected = selectedSchedule == schedule,
-                        modifier = Modifier
-                            .clickable {
-                                selectedSchedule = if (selectedSchedule == schedule) null else schedule
-                            }
-                            .clip(RoundedCornerShape(10.dp))
-                    )
-                }
-            }
-
-            // Tombol Tambah Jadwal di atas NavigationBar
-            Row(
-                modifier = Modifier
                     .fillMaxWidth()
-                    .padding(end = 16.dp),
-                horizontalArrangement = Arrangement.End
             ) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .verticalScroll(scrollState)
+                ) {
+                    sortedSchedules.forEach { schedule ->
+                        ScheduleItem(
+                            schedules = listOf(schedule),
+                            isSelected = selectedSchedule == schedule,
+                            modifier = Modifier
+                                .clickable {
+                                    selectedSchedule = if (selectedSchedule == schedule) null else schedule
+                                }
+                                .clip(RoundedCornerShape(10.dp))
+                        )
+                    }
+
+                    Spacer(modifier = Modifier.height(100.dp))
+                }
+
+                // Tombol Tambah Jadwal
                 IconButton(
                     onClick = { navController.navigate("add_jadwal") },
-                    modifier = Modifier.size(90.dp)
+                    modifier = Modifier
+                        .align(Alignment.BottomEnd)
+                        .padding(bottom = 10.dp, end = 10.dp)
+                        .size(90.dp)
                 ) {
                     CoilImage(
                         imageModel = { "https://storage.googleapis.com/tagjs-prod.appspot.com/v1/T7pdvlFwTn/78p77w0y.png" },
@@ -174,13 +171,5 @@ fun AllSchedulesScreen(
 
             BottomNavigationBar(navController = navController, currentRoute = currentRoute)
         }
-    }
-}
-
-@Preview(showBackground = true)
-@Composable
-fun PreviewAllSchedulesScreen() {
-    DisiplinproTheme {
-        AllSchedulesScreen(rememberNavController())
     }
 }

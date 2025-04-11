@@ -9,7 +9,6 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
@@ -18,9 +17,7 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.layout.ContentScale
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
-import androidx.navigation.compose.rememberNavController
 import com.example.disiplinpro.viewmodel.home.HomeViewModel
-import com.example.disiplinpro.ui.theme.DisiplinproTheme
 import com.skydoves.landscapist.ImageOptions
 import com.skydoves.landscapist.coil.CoilImage
 import androidx.compose.foundation.shape.CircleShape
@@ -255,14 +252,5 @@ fun HomeScreen(
         ) {
             BottomNavigationBar(navController = navController, currentRoute = currentRoute)
         }
-    }
-}
-
-
-@Preview(showBackground = true)
-@Composable
-fun PreviewHomeScreen() {
-    DisiplinproTheme {
-        HomeScreen(rememberNavController())
     }
 }
