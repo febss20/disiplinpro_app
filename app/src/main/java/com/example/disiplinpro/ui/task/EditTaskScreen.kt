@@ -20,6 +20,7 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.example.disiplinpro.data.model.Task
+import com.example.disiplinpro.ui.theme.DisiplinproTheme
 import com.example.disiplinpro.viewmodel.task.TaskViewModel
 import com.google.firebase.Timestamp
 import com.skydoves.landscapist.ImageOptions
@@ -34,238 +35,240 @@ fun EditTaskScreen(
     taskId: String,
     viewModel: TaskViewModel = viewModel()
 ) {
-    val tasks by viewModel.tasks.collectAsState(initial = emptyList())
-    val task = tasks.find { it.id == taskId } ?: return
+    DisiplinproTheme {
+        val tasks by viewModel.tasks.collectAsState(initial = emptyList())
+        val task = tasks.find { it.id == taskId } ?: return@DisiplinproTheme
 
-    // Inisialisasi state dengan data tugas yang ada
-    var judulTugas by remember { mutableStateOf(task.judulTugas) }
-    var matkul by remember { mutableStateOf(task.matkul) }
-    var tanggal by remember { mutableStateOf(SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(task.tanggal.toDate())) }
-    var waktu by remember { mutableStateOf(SimpleDateFormat("HH:mm", Locale.getDefault()).format(task.waktu.toDate())) }
-    var showDatePicker by remember { mutableStateOf(false) }
-    var showTimePicker by remember { mutableStateOf(false) }
-    var selectedDate by remember { mutableStateOf(Calendar.getInstance().apply { time = task.tanggal.toDate() }) }
-    var selectedTime by remember { mutableStateOf(Calendar.getInstance().apply { time = task.waktu.toDate() }) }
+        // Inisialisasi state dengan data tugas yang ada
+        var judulTugas by remember { mutableStateOf(task.judulTugas) }
+        var matkul by remember { mutableStateOf(task.matkul) }
+        var tanggal by remember { mutableStateOf(SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(task.tanggal.toDate())) }
+        var waktu by remember { mutableStateOf(SimpleDateFormat("HH:mm", Locale.getDefault()).format(task.waktu.toDate())) }
+        var showDatePicker by remember { mutableStateOf(false) }
+        var showTimePicker by remember { mutableStateOf(false) }
+        var selectedDate by remember { mutableStateOf(Calendar.getInstance().apply { time = task.tanggal.toDate() }) }
+        var selectedTime by remember { mutableStateOf(Calendar.getInstance().apply { time = task.waktu.toDate() }) }
 
-    val dateFormat = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
+        val dateFormat = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
 
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(Color(0xFFFAF3E0))
-    ) {
-        // Header: Edit Tugas dan Batal
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
+        Column(
             modifier = Modifier
-                .padding(top = 60.dp, bottom = 12.dp, start = 31.dp, end = 31.dp)
+                .fillMaxSize()
+                .background(Color(0xFFFAF3E0))
         ) {
+            // Header: Edit Tugas dan Batal
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier
+                    .padding(top = 60.dp, bottom = 12.dp, start = 31.dp, end = 31.dp)
+            ) {
+                Text(
+                    "Edit Tugas",
+                    color = Color(0xFF333333),
+                    fontSize = 20.sp,
+                    fontWeight = FontWeight.Bold,
+                    modifier = Modifier.weight(1f)
+                )
+                Text(
+                    "Batal",
+                    color = Color(0xFFFF5722),
+                    fontSize = 14.sp,
+                    modifier = Modifier.clickable { navController.popBackStack() }
+                )
+            }
+
+            // Judul Tugas
             Text(
-                "Edit Tugas",
+                "Judul Tugas",
                 color = Color(0xFF333333),
                 fontSize = 20.sp,
                 fontWeight = FontWeight.Bold,
-                modifier = Modifier.weight(1f)
+                modifier = Modifier.padding(top = 22.dp, start = 31.dp)
             )
-            Text(
-                "Batal",
-                color = Color(0xFFFF5722),
-                fontSize = 14.sp,
-                modifier = Modifier.clickable { navController.popBackStack() }
-            )
-        }
-
-        // Judul Tugas
-        Text(
-            "Judul Tugas",
-            color = Color(0xFF333333),
-            fontSize = 20.sp,
-            fontWeight = FontWeight.Bold,
-            modifier = Modifier.padding(top = 22.dp, start = 31.dp)
-        )
-        BasicTextField(
-            value = judulTugas,
-            onValueChange = { judulTugas = it },
-            textStyle = TextStyle(color = Color(0xFF333333), fontSize = 18.sp),
-            modifier = Modifier
-                .padding(top = 8.dp, start = 25.dp, end = 25.dp)
-                .border(1.dp, Color(0xFFFFFFFF), RoundedCornerShape(10.dp))
-                .clip(RoundedCornerShape(10.dp))
-                .background(Color(0x1A2196F3))
-                .padding(vertical = 16.dp, horizontal = 12.dp)
-                .fillMaxWidth(),
-            decorationBox = { innerTextField ->
-                if (judulTugas.isEmpty()) {
-                    Text("Masukkan Judul Tugas", color = Color.Gray, fontSize = 18.sp)
+            BasicTextField(
+                value = judulTugas,
+                onValueChange = { judulTugas = it },
+                textStyle = TextStyle(color = Color(0xFF333333), fontSize = 18.sp),
+                modifier = Modifier
+                    .padding(top = 8.dp, start = 25.dp, end = 25.dp)
+                    .border(1.dp, Color(0xFFFFFFFF), RoundedCornerShape(10.dp))
+                    .clip(RoundedCornerShape(10.dp))
+                    .background(Color(0x1A2196F3))
+                    .padding(vertical = 16.dp, horizontal = 12.dp)
+                    .fillMaxWidth(),
+                decorationBox = { innerTextField ->
+                    if (judulTugas.isEmpty()) {
+                        Text("Masukkan Judul Tugas", color = Color.Gray, fontSize = 18.sp)
+                    }
+                    innerTextField()
                 }
-                innerTextField()
-            }
-        )
-
-        // Mata Kuliah
-        Text(
-            "Mata Kuliah",
-            color = Color(0xFF333333),
-            fontSize = 20.sp,
-            fontWeight = FontWeight.Bold,
-            modifier = Modifier.padding(top = 22.dp, start = 31.dp)
-        )
-        BasicTextField(
-            value = matkul,
-            onValueChange = { matkul = it },
-            textStyle = TextStyle(color = Color(0xFF333333), fontSize = 18.sp),
-            modifier = Modifier
-                .padding(top = 8.dp, start = 25.dp, end = 25.dp)
-                .border(1.dp, Color(0xFFFFFFFF), RoundedCornerShape(10.dp))
-                .clip(RoundedCornerShape(10.dp))
-                .background(Color(0x1A2196F3))
-                .padding(vertical = 16.dp, horizontal = 12.dp)
-                .fillMaxWidth(),
-            decorationBox = { innerTextField ->
-                if (matkul.isEmpty()) {
-                    Text("Masukkan Mata Kuliah", color = Color.Gray, fontSize = 18.sp)
-                }
-                innerTextField()
-            }
-        )
-
-        // Atur Tanggal Deadline dan Waktu Deadline
-        Text(
-            "Atur Tanggal dan Waktu Deadline",
-            color = Color(0xFF333333),
-            fontSize = 20.sp,
-            fontWeight = FontWeight.Bold,
-            modifier = Modifier.padding(top = 22.dp, start = 31.dp)
-        )
-
-        // Tanggal Deadline
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            modifier = Modifier.padding(top = 10.dp, start = 31.dp)
-        ) {
-            CoilImage(
-                imageModel = { "https://storage.googleapis.com/tagjs-prod.appspot.com/v1/T7pdvlFwTn/4v0sclzk.png" },
-                imageOptions = ImageOptions(contentScale = ContentScale.Crop),
-                modifier = Modifier.width(35.dp).padding(end = 12.dp)
             )
-            Text("Tanggal Deadline", color = Color(0xFF333333), fontSize = 18.sp)
-        }
-        Box(
-            modifier = Modifier
-                .padding(top = 8.dp, start = 25.dp, end = 230.dp)
-                .border(1.dp, Color(0xFFFFFFFF), RoundedCornerShape(10.dp))
-                .clip(RoundedCornerShape(10.dp))
-                .background(Color(0x1A2196F3))
-                .clickable { showDatePicker = true }
-                .padding(vertical = 16.dp, horizontal = 12.dp)
-                .fillMaxWidth()
-        ) {
+
+            // Mata Kuliah
             Text(
-                text = if (tanggal.isEmpty()) "Pilih Tanggal" else tanggal,
-                color = if (tanggal.isEmpty()) Color.Gray else Color(0xFF333333),
-                fontSize = 18.sp,
-                modifier = Modifier.align(Alignment.Center)
+                "Mata Kuliah",
+                color = Color(0xFF333333),
+                fontSize = 20.sp,
+                fontWeight = FontWeight.Bold,
+                modifier = Modifier.padding(top = 22.dp, start = 31.dp)
             )
-        }
-
-        // Waktu Deadline
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            modifier = Modifier.padding(top = 16.dp, start = 31.dp)
-        ) {
-            CoilImage(
-                imageModel = { "https://storage.googleapis.com/tagjs-prod.appspot.com/v1/T7pdvlFwTn/640pibqq.png" },
-                imageOptions = ImageOptions(contentScale = ContentScale.Crop),
-                modifier = Modifier.width(35.dp).padding(end = 12.dp)
-            )
-            Text("Waktu Deadline", color = Color(0xFF333333), fontSize = 18.sp)
-        }
-        Box(
-            modifier = Modifier
-                .padding(top = 8.dp, start = 25.dp, end = 250.dp)
-                .border(1.dp, Color(0xFFFFFFFF), RoundedCornerShape(10.dp))
-                .clip(RoundedCornerShape(10.dp))
-                .background(Color(0x1A2196F3))
-                .clickable { showTimePicker = true }
-                .padding(vertical = 16.dp, horizontal = 12.dp)
-                .fillMaxWidth()
-        ) {
-            Text(
-                text = if (waktu.isEmpty()) "Pilih Waktu" else waktu,
-                color = if (waktu.isEmpty()) Color.Gray else Color(0xFF333333),
-                fontSize = 18.sp,
-                modifier = Modifier.align(Alignment.Center)
-            )
-        }
-
-        if (showDatePicker) {
-            val datePickerState = rememberDatePickerState(initialSelectedDateMillis = selectedDate.timeInMillis)
-            DatePickerDialog(
-                onDismissRequest = { showDatePicker = false },
-                confirmButton = {
-                    TextButton(onClick = {
-                        datePickerState.selectedDateMillis?.let { millis ->
-                            selectedDate.timeInMillis = millis
-                            tanggal = dateFormat.format(selectedDate.time)
-                        }
-                        showDatePicker = false
-                    }) { Text("OK") }
-                },
-                dismissButton = {
-                    TextButton(onClick = { showDatePicker = false }) { Text("Cancel") }
+            BasicTextField(
+                value = matkul,
+                onValueChange = { matkul = it },
+                textStyle = TextStyle(color = Color(0xFF333333), fontSize = 18.sp),
+                modifier = Modifier
+                    .padding(top = 8.dp, start = 25.dp, end = 25.dp)
+                    .border(1.dp, Color(0xFFFFFFFF), RoundedCornerShape(10.dp))
+                    .clip(RoundedCornerShape(10.dp))
+                    .background(Color(0x1A2196F3))
+                    .padding(vertical = 16.dp, horizontal = 12.dp)
+                    .fillMaxWidth(),
+                decorationBox = { innerTextField ->
+                    if (matkul.isEmpty()) {
+                        Text("Masukkan Mata Kuliah", color = Color.Gray, fontSize = 18.sp)
+                    }
+                    innerTextField()
                 }
+            )
+
+            // Atur Tanggal Deadline dan Waktu Deadline
+            Text(
+                "Atur Tanggal dan Waktu Deadline",
+                color = Color(0xFF333333),
+                fontSize = 20.sp,
+                fontWeight = FontWeight.Bold,
+                modifier = Modifier.padding(top = 22.dp, start = 31.dp)
+            )
+
+            // Tanggal Deadline
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier.padding(top = 10.dp, start = 31.dp)
             ) {
-                DatePicker(state = datePickerState)
-            }
-        }
-
-        if (showTimePicker) {
-            val timePickerState = rememberTimePickerState(
-                initialHour = selectedTime.get(Calendar.HOUR_OF_DAY),
-                initialMinute = selectedTime.get(Calendar.MINUTE),
-                is24Hour = true
-            )
-            TimePickerDialog(
-                onDismissRequest = { showTimePicker = false },
-                onConfirm = {
-                    selectedTime.set(Calendar.HOUR_OF_DAY, timePickerState.hour)
-                    selectedTime.set(Calendar.MINUTE, timePickerState.minute)
-                    waktu = String.format(Locale.getDefault(), "%02d:%02d", timePickerState.hour, timePickerState.minute)
-                    showTimePicker = false
-                }
-            ) {
-                TimePicker(state = timePickerState)
-            }
-        }
-
-        // Tombol Simpan
-        Button(
-            onClick = {
-                val dateTimeFormat = SimpleDateFormat("yyyy-MM-dd HH:mm", Locale.getDefault())
-                val deadline = try {
-                    Timestamp(dateTimeFormat.parse("$tanggal $waktu")!!)
-                } catch (e: Exception) {
-                    Timestamp(Date())
-                }
-                val updatedTask = Task(
-                    id = taskId,
-                    judulTugas = judulTugas,
-                    matkul = matkul,
-                    tanggal = deadline,
-                    waktu = deadline
+                CoilImage(
+                    imageModel = { "https://storage.googleapis.com/tagjs-prod.appspot.com/v1/T7pdvlFwTn/4v0sclzk.png" },
+                    imageOptions = ImageOptions(contentScale = ContentScale.Crop),
+                    modifier = Modifier.width(35.dp).padding(end = 12.dp)
                 )
-                viewModel.updateTask(taskId, updatedTask)
-                navController.popBackStack()
-            },
-            enabled = judulTugas.isNotBlank() && matkul.isNotBlank() && tanggal.isNotBlank() && waktu.isNotBlank(),
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(top = 24.dp, start = 25.dp, end = 25.dp)
-                .height(50.dp),
-            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF7DAFCB)),
-            shape = RoundedCornerShape(10.dp)
-        ) {
-            Text("Simpan", color = Color.White, fontSize = 20.sp)
+                Text("Tanggal Deadline", color = Color(0xFF333333), fontSize = 18.sp)
+            }
+            Box(
+                modifier = Modifier
+                    .padding(top = 8.dp, start = 25.dp, end = 230.dp)
+                    .border(1.dp, Color(0xFFFFFFFF), RoundedCornerShape(10.dp))
+                    .clip(RoundedCornerShape(10.dp))
+                    .background(Color(0x1A2196F3))
+                    .clickable { showDatePicker = true }
+                    .padding(vertical = 16.dp, horizontal = 12.dp)
+                    .fillMaxWidth()
+            ) {
+                Text(
+                    text = if (tanggal.isEmpty()) "Pilih Tanggal" else tanggal,
+                    color = if (tanggal.isEmpty()) Color.Gray else Color(0xFF333333),
+                    fontSize = 18.sp,
+                    modifier = Modifier.align(Alignment.Center)
+                )
+            }
+
+            // Waktu Deadline
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier.padding(top = 16.dp, start = 31.dp)
+            ) {
+                CoilImage(
+                    imageModel = { "https://storage.googleapis.com/tagjs-prod.appspot.com/v1/T7pdvlFwTn/640pibqq.png" },
+                    imageOptions = ImageOptions(contentScale = ContentScale.Crop),
+                    modifier = Modifier.width(35.dp).padding(end = 12.dp)
+                )
+                Text("Waktu Deadline", color = Color(0xFF333333), fontSize = 18.sp)
+            }
+            Box(
+                modifier = Modifier
+                    .padding(top = 8.dp, start = 25.dp, end = 250.dp)
+                    .border(1.dp, Color(0xFFFFFFFF), RoundedCornerShape(10.dp))
+                    .clip(RoundedCornerShape(10.dp))
+                    .background(Color(0x1A2196F3))
+                    .clickable { showTimePicker = true }
+                    .padding(vertical = 16.dp, horizontal = 12.dp)
+                    .fillMaxWidth()
+            ) {
+                Text(
+                    text = if (waktu.isEmpty()) "Pilih Waktu" else waktu,
+                    color = if (waktu.isEmpty()) Color.Gray else Color(0xFF333333),
+                    fontSize = 18.sp,
+                    modifier = Modifier.align(Alignment.Center)
+                )
+            }
+
+            if (showDatePicker) {
+                val datePickerState = rememberDatePickerState(initialSelectedDateMillis = selectedDate.timeInMillis)
+                DatePickerDialog(
+                    onDismissRequest = { showDatePicker = false },
+                    confirmButton = {
+                        TextButton(onClick = {
+                            datePickerState.selectedDateMillis?.let { millis ->
+                                selectedDate.timeInMillis = millis
+                                tanggal = dateFormat.format(selectedDate.time)
+                            }
+                            showDatePicker = false
+                        }) { Text("OK") }
+                    },
+                    dismissButton = {
+                        TextButton(onClick = { showDatePicker = false }) { Text("Cancel") }
+                    }
+                ) {
+                    DatePicker(state = datePickerState)
+                }
+            }
+
+            if (showTimePicker) {
+                val timePickerState = rememberTimePickerState(
+                    initialHour = selectedTime.get(Calendar.HOUR_OF_DAY),
+                    initialMinute = selectedTime.get(Calendar.MINUTE),
+                    is24Hour = true
+                )
+                TimePickerDialog(
+                    onDismissRequest = { showTimePicker = false },
+                    onConfirm = {
+                        selectedTime.set(Calendar.HOUR_OF_DAY, timePickerState.hour)
+                        selectedTime.set(Calendar.MINUTE, timePickerState.minute)
+                        waktu = String.format(Locale.getDefault(), "%02d:%02d", timePickerState.hour, timePickerState.minute)
+                        showTimePicker = false
+                    }
+                ) {
+                    TimePicker(state = timePickerState)
+                }
+            }
+
+            // Tombol Simpan
+            Button(
+                onClick = {
+                    val dateTimeFormat = SimpleDateFormat("yyyy-MM-dd HH:mm", Locale.getDefault())
+                    val deadline = try {
+                        Timestamp(dateTimeFormat.parse("$tanggal $waktu")!!)
+                    } catch (e: Exception) {
+                        Timestamp(Date())
+                    }
+                    val updatedTask = Task(
+                        id = taskId,
+                        judulTugas = judulTugas,
+                        matkul = matkul,
+                        tanggal = deadline,
+                        waktu = deadline
+                    )
+                    viewModel.updateTask(taskId, updatedTask)
+                    navController.popBackStack()
+                },
+                enabled = judulTugas.isNotBlank() && matkul.isNotBlank() && tanggal.isNotBlank() && waktu.isNotBlank(),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = 24.dp, start = 25.dp, end = 25.dp)
+                    .height(50.dp),
+                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF7DAFCB)),
+                shape = RoundedCornerShape(10.dp)
+            ) {
+                Text("Simpan", color = Color.White, fontSize = 20.sp)
+            }
         }
     }
 }
