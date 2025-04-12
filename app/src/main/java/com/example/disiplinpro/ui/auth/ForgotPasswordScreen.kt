@@ -45,14 +45,15 @@ fun ForgotPasswordScreen(
             Row(
                 verticalAlignment = Alignment.CenterVertically,
                 modifier = Modifier
-                    .padding(top = 65.dp, bottom = 19.dp, start = 24.dp)
+                    .padding(top = 65.dp, bottom = 19.dp, start = 30.dp)
             ) {
                 Text(
                     "Lupa Password",
                     color = Color(0xFF333333),
                     fontSize = 28.sp,
                     fontWeight = FontWeight.Bold,
-                    modifier = Modifier.padding(start = 6.dp, end = 120.dp)
+                    modifier = Modifier
+                        .padding(end = 150.dp)
                 )
                 Text(
                     "Batal",

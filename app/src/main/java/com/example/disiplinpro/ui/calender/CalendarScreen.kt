@@ -62,25 +62,23 @@ fun CalendarScreen(
             .fillMaxSize()
             .background(Color(0xFFFAF3E0))
     ) {
+        Text(
+            "Kalender",
+            color = Color(0xFF7DAFCB),
+            fontSize = 24.sp,
+            fontWeight = FontWeight.Bold,
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(top = 40.dp),
+            textAlign = TextAlign.Center
+        )
+
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(bottom = 20.dp)
+                .padding(vertical = 20.dp)
+                .padding(top = 55.dp)
         ) {
-            TopAppBar(
-                title = {
-                    Text(
-                        "Kalender",
-                        color = Color(0xFF7DAFCB),
-                        fontSize = 24.sp,
-                        fontWeight = FontWeight.Bold,
-                        modifier = Modifier.fillMaxWidth(),
-                        textAlign = TextAlign.Center
-                    )
-                },
-                colors = TopAppBarDefaults.topAppBarColors(containerColor = Color(0xFFFAF3E0))
-            )
-
             Column(
                 modifier = Modifier
                     .weight(1f)

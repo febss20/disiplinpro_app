@@ -47,14 +47,14 @@ fun EmailVerificationScreen(
             Row(
                 verticalAlignment = Alignment.CenterVertically,
                 modifier = Modifier
-                    .padding(top = 65.dp, bottom = 19.dp, start = 22.dp)
+                    .padding(top = 65.dp, bottom = 19.dp, start = 30.dp)
             ) {
                 Text(
                     "Cek Email Anda",
                     color = Color(0xFF333333),
                     fontSize = 28.sp,
                     fontWeight = FontWeight.Bold,
-                    modifier = Modifier.padding(start = 8.dp, end = 115.dp)
+                    modifier = Modifier.padding(end = 140.dp)
                 )
                 Text(
                     "Batal",
