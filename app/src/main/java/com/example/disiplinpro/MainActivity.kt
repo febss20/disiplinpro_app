@@ -24,6 +24,7 @@ import com.example.disiplinpro.ui.task.AllTasksScreen
 import com.example.disiplinpro.ui.task.EditTaskScreen
 import android.Manifest
 import androidx.activity.result.contract.ActivityResultContracts
+import com.example.disiplinpro.ui.profile.ProfileScreen
 import com.google.firebase.auth.FirebaseAuth
 
 class MainActivity : ComponentActivity() {
@@ -69,6 +70,7 @@ class MainActivity : ComponentActivity() {
                 composable("list_tugas") { AllTasksScreen(navController) }
                 composable("kalender") { CalendarScreen(navController) }
                 composable("notifikasi") { NotificationScreen(navController) }
+                composable("akun") { ProfileScreen(navController) }
 
             }
         }
