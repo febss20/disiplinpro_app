@@ -71,7 +71,7 @@ dependencies {
     implementation("com.github.skydoves:landscapist-placeholder:2.3.0")
     implementation("androidx.compose.material3:material3-window-size-class:1.2.1")
     implementation("androidx.compose.material:material-icons-extended:1.6.3")
-    // WorkManager
+    implementation("androidx.compose.runtime:runtime:1.7.8")
     implementation ("androidx.work:work-runtime-ktx:2.8.1")
     implementation ("com.google.accompanist:accompanist-pager:0.27.0")
     implementation ("androidx.datastore:datastore-preferences:1.0.0")

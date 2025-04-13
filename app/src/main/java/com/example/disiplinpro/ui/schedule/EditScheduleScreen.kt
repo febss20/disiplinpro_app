@@ -14,6 +14,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -53,6 +54,7 @@ fun EditScheduleScreen(
 
         val days = listOf("Senin", "Selasa", "Rabu", "Kamis", "Jumat", "Sabtu", "Minggu")
         val timeFormat = SimpleDateFormat("HH:mm", Locale.getDefault())
+        val context = LocalContext.current
 
         Column(
             modifier = Modifier
@@ -319,7 +321,7 @@ fun EditScheduleScreen(
                         waktuSelesai = Timestamp(updatedEndTime.time),
                         ruangan = ruangan
                     )
-                    viewModel.updateSchedule(scheduleId, updatedSchedule)
+                    viewModel.updateSchedule(context, scheduleId, updatedSchedule)
                     navController.popBackStack()
                 },
                 enabled = matkul.isNotBlank() && hari.isNotBlank() && waktuMulai.isNotBlank() && waktuSelesai.isNotBlank() && ruangan.isNotBlank(),

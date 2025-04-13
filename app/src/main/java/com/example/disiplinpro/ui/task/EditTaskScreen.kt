@@ -13,6 +13,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -50,6 +51,7 @@ fun EditTaskScreen(
         var selectedTime by remember { mutableStateOf(Calendar.getInstance().apply { time = task.waktu.toDate() }) }
 
         val dateFormat = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
+        val context = LocalContext.current
 
         Column(
             modifier = Modifier
@@ -256,7 +258,7 @@ fun EditTaskScreen(
                         tanggal = deadline,
                         waktu = deadline
                     )
-                    viewModel.updateTask(taskId, updatedTask)
+                    viewModel.updateTask(context, taskId, updatedTask)
                     navController.popBackStack()
                 },
                 enabled = judulTugas.isNotBlank() && matkul.isNotBlank() && tanggal.isNotBlank() && waktu.isNotBlank(),

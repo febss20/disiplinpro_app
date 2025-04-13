@@ -12,6 +12,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -48,6 +49,7 @@ fun AddScheduleScreen(
 
         val days = listOf("Senin", "Selasa", "Rabu", "Kamis", "Jumat", "Sabtu", "Minggu")
         val timeFormat = SimpleDateFormat("HH:mm", Locale.getDefault())
+        val context = LocalContext.current
 
         Column(
             modifier = Modifier
@@ -342,7 +344,7 @@ fun AddScheduleScreen(
                         waktuSelesai = endTimeTimestamp,
                         ruangan = ruangan
                     )
-                    viewModel.addSchedule(schedule)
+                    viewModel.addSchedule(context, schedule)
                     navController.popBackStack()
                 },
                 enabled = matkul.isNotBlank() && hari.isNotBlank() && waktuMulai.isNotBlank() && waktuSelesai.isNotBlank() && ruangan.isNotBlank(),
@@ -365,14 +367,14 @@ fun TimePickerDialog(
     onConfirm: () -> Unit,
     content: @Composable () -> Unit
 ) {
-        AlertDialog(
-            onDismissRequest = onDismissRequest,
-            confirmButton = {
-                TextButton(onClick = onConfirm) { Text("OK") }
-            },
-            dismissButton = {
-                TextButton(onClick = onDismissRequest) { Text("Cancel") }
-            },
-            text = { content() }
-        )
+    AlertDialog(
+        onDismissRequest = onDismissRequest,
+        confirmButton = {
+            TextButton(onClick = onConfirm) { Text("OK") }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismissRequest) { Text("Cancel") }
+        },
+        text = { content() }
+    )
 }

@@ -23,21 +23,44 @@ import com.example.disiplinpro.ui.task.AddTaskScreen
 import com.example.disiplinpro.ui.task.AllTasksScreen
 import com.example.disiplinpro.ui.task.EditTaskScreen
 import android.Manifest
+import android.content.Context
+import android.content.pm.PackageManager
+import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.core.content.ContextCompat
 import com.example.disiplinpro.ui.profile.ProfileScreen
 import com.google.firebase.auth.FirebaseAuth
+import android.content.Intent
+import android.os.PowerManager
+import android.provider.Settings
 
 class MainActivity : ComponentActivity() {
-    private val requestPermissionLauncher = registerForActivityResult(ActivityResultContracts.RequestPermission()) { isGranted ->
+    private val requestPermissionLauncher = registerForActivityResult(
+        ActivityResultContracts.RequestPermission()
+    ) { isGranted ->
         if (isGranted) {
             println("Izin notifikasi diberikan")
         } else {
-            println("Izin notifikasi ditolak")
+            Toast.makeText(this, "Izin notifikasi diperlukan untuk pengingat!", Toast.LENGTH_LONG).show()
+        }
+    }
+
+    private fun requestBatteryOptimizationExemption() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            val packageName = packageName
+            val pm = getSystemService(Context.POWER_SERVICE) as PowerManager
+            if (!pm.isIgnoringBatteryOptimizations(packageName)) {
+                val intent = Intent(Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS)
+                intent.data = android.net.Uri.parse("package:$packageName")
+                startActivity(intent)
+            }
         }
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        requestNotificationPermission()
+        requestBatteryOptimizationExemption()
         setContent {
             val navController = rememberNavController()
             val authViewModel = AuthViewModel()
@@ -74,10 +97,16 @@ class MainActivity : ComponentActivity() {
 
             }
         }
-        // Minta izin notifikasi jika Android 13+
+    }
+    private fun requestNotificationPermission() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            requestPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+            if (ContextCompat.checkSelfPermission(
+                    this,
+                    Manifest.permission.POST_NOTIFICATIONS
+                ) != PackageManager.PERMISSION_GRANTED
+            ) {
+                requestPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+            }
         }
-
     }
 }
