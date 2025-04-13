@@ -1,6 +1,6 @@
 # DisiplinPro
 
-![DisiplinPro Banner](https://via.placeholder.com/1200x300.png?text=DisiplinPro+-+Atur+Hari+Anda)  
+![DisiplinPro Banner](https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEhFgtZ6p86tm4Ks4jixEl60bZdd7-H1PGd6OOG1XCf-rhH9EqmPFxNsR8tT2YpU1a5502NVQmSjJ7z9xRZh2QhMKhKEc5Uxn2l6-jRk2lWbjp0m7D3l7lQJ6x3OSvBnJ_YjzIjeyHoABjU0ZzQaQzFt1abrEntcdkAs7sMMci3BrhlL-M59S3TFQNR2Y8Y/s320/ic_launcher-playstore.png)  
 **Sederhanakan, Atur, dan Taklukkan Hari Anda!**
 
 **DisiplinPro** adalah aplikasi manajemen jadwal dan tugas berbasis Android yang membantu pengguna mengatur waktu, tugas, dan jadwal kuliah dengan mudah. Dibangun dengan **Jetpack Compose** dan **Firebase**, aplikasi ini menawarkan antarmuka modern, notifikasi pengingat, dan pengelolaan data yang aman.
