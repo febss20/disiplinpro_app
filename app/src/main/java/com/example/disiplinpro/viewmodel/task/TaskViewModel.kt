@@ -1,5 +1,7 @@
 package com.example.disiplinpro.viewmodel.task
 
+import android.content.Context
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.work.ExistingWorkPolicy
@@ -29,16 +31,16 @@ class TaskViewModel : ViewModel() {
         viewModelScope.launch {
             val newTasks = repository.getTasks()
             _tasks.value = newTasks
-            println("Fetched ${newTasks.size} tasks")
+            Log.d("TaskViewModel", "Fetched ${newTasks.size} tasks")
         }
     }
 
-    fun addTask(task: Task) {
+    fun addTask(context: Context, task: Task) {
         viewModelScope.launch {
             val success = repository.addTask(task)
             if (success) {
                 fetchTasks()
-                scheduleNotification(task)
+                scheduleNotification(context, task)
             }
         }
     }
@@ -48,19 +50,19 @@ class TaskViewModel : ViewModel() {
             val success = repository.updateTaskCompletion(taskId, isCompleted)
             if (success) {
                 fetchTasks()
-                println("Tasks refreshed after update")
+                Log.d("TaskViewModel", "Tasks refreshed after update")
             } else {
-                println("Failed to update task completion for taskId: $taskId")
+                Log.e("TaskViewModel", "Failed to update task completion for taskId: $taskId")
             }
         }
     }
 
-    fun updateTask(taskId: String, updatedTask: Task) {
+    fun updateTask(context: Context, taskId: String, updatedTask: Task) {
         viewModelScope.launch {
             val success = repository.updateTask(taskId, updatedTask)
             if (success) {
                 fetchTasks()
-                scheduleNotification(updatedTask)
+                scheduleNotification(context, updatedTask)
             }
         }
     }
@@ -71,30 +73,39 @@ class TaskViewModel : ViewModel() {
             if (success) {
                 fetchTasks()
                 WorkManager.getInstance().cancelUniqueWork("${NotificationWorker.WORK_NAME_PREFIX}$taskId")
+                Log.d("TaskViewModel", "Task deleted and notification cancelled: $taskId")
             }
         }
     }
 
-    private fun scheduleNotification(task: Task) {
-        val notificationEnabled = true // Ganti dengan logika dari NotificationScreen
-        if (!notificationEnabled) return
+    fun scheduleNotification(context: Context, task: Task) {
+        val prefs = context.getSharedPreferences("NotificationPrefs", Context.MODE_PRIVATE)
+        val notificationEnabled = prefs.getBoolean("taskNotificationEnabled", false)
+        if (!notificationEnabled) {
+            Log.d("TaskViewModel", "Task notifications disabled for task: ${task.judulTugas}")
+            return
+        }
 
-        val timeBefore = "1 jam sebelum" // Ganti dengan nilai dari NotificationScreen
+        val timeBefore = prefs.getString("taskTimeBefore", "1 Jam sebelum") ?: "1 Jam sebelum"
         val delay = when (timeBefore) {
-            "10 menit sebelum" -> 10 * 60 * 1000L
-            "30 menit sebelum" -> 30 * 60 * 1000L
-            "1 jam sebelum" -> 60 * 60 * 1000L
-            "1 hari sebelum" -> 24 * 60 * 60 * 1000L
+            "10 Menit sebelum" -> 10 * 60 * 1000L
+            "30 Menit sebelum" -> 30 * 60 * 1000L
+            "1 Jam sebelum" -> 60 * 60 * 1000L
+            "1 Hari sebelum" -> 24 * 60 * 60 * 1000L
             else -> 0L
         }
 
         val triggerTime = task.waktu.toDate().time - delay
         val currentTime = System.currentTimeMillis()
-        if (triggerTime <= currentTime) return
+        if (triggerTime <= currentTime) {
+            Log.w("TaskViewModel", "Trigger time for task ${task.judulTugas} has passed: $triggerTime")
+            return
+        }
 
         val data = workDataOf(
             "title" to "Pengingat Tugas: ${task.judulTugas}",
-            "message" to "Tugas untuk ${task.matkul} jatuh tempo pada ${SimpleDateFormat("dd/MM/yyyy HH:mm", Locale.getDefault()).format(task.waktu.toDate())}"
+            "message" to "Tugas untuk ${task.matkul} jatuh tempo pada ${SimpleDateFormat("dd/MM/yyyy HH:mm", Locale.getDefault()).format(task.waktu.toDate())}",
+            "taskId" to task.id
         )
 
         val workRequest = OneTimeWorkRequestBuilder<NotificationWorker>()
@@ -108,5 +119,6 @@ class TaskViewModel : ViewModel() {
                 ExistingWorkPolicy.REPLACE,
                 workRequest
             )
+        Log.d("TaskViewModel", "Task notification for task ${task.judulTugas} at $triggerTime")
     }
 }

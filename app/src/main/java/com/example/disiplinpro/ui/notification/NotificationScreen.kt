@@ -1,6 +1,7 @@
 package com.example.disiplinpro.ui.notification
 
 import android.content.Context
+import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
@@ -41,6 +42,7 @@ fun NotificationScreen(navController: NavController) {
         taskNotificationEnabled = prefs.getBoolean("taskNotificationEnabled", false)
         scheduleTimeBefore = prefs.getString("scheduleTimeBefore", "30 Menit") ?: "30 Menit"
         taskTimeBefore = prefs.getString("taskTimeBefore", "1 Jam") ?: "1 Jam"
+        Log.d("NotificationScreen", "Loaded prefs: scheduleEnabled=$scheduleNotificationEnabled, taskEnabled=$taskNotificationEnabled")
     }
 
     val timeOptions = listOf("10 Menit sebelum", "30 Menit sebelum", "1 Jam sebelum", "1 Hari sebelum")
@@ -286,6 +288,7 @@ fun NotificationScreen(navController: NavController) {
                             putString("taskTimeBefore", taskTimeBefore)
                             apply()
                         }
+                        Log.d("NotificationScreen", "Saved prefs: scheduleEnabled=$scheduleNotificationEnabled, taskEnabled=$taskNotificationEnabled")
                         navController.popBackStack()
                     },
                     modifier = Modifier

@@ -1,9 +1,13 @@
 package com.example.disiplinpro.viewmodel.schedule
 
+import android.content.Context
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import androidx.work.ExistingWorkPolicy
-import androidx.work.OneTimeWorkRequestBuilder
+import androidx.work.Constraints
+import androidx.work.ExistingPeriodicWorkPolicy
+import androidx.work.NetworkType
+import androidx.work.PeriodicWorkRequestBuilder
 import androidx.work.WorkManager
 import androidx.work.workDataOf
 import com.example.disiplinpro.data.model.Schedule
@@ -28,31 +32,31 @@ class ScheduleViewModel : ViewModel() {
     private fun listenToSchedules() {
         repository.listenToSchedules(
             onDataChanged = { scheduleList ->
-                println("Schedules fetched from Firestore: $scheduleList")
+                Log.d("ScheduleViewModel", "Schedules fetched: ${scheduleList.size}")
                 _schedules.value = scheduleList
             },
             onError = { error ->
-                println("Error fetching schedules: ${error.message}")
+                Log.e("ScheduleViewModel", "Error fetching schedules: ${error.message}")
             }
         )
     }
 
-    fun addSchedule(schedule: Schedule) {
+    fun addSchedule(context: Context, schedule: Schedule) {
         viewModelScope.launch {
             val success = repository.addSchedule(schedule)
             if (success) {
-                println("Schedule added successfully")
-                scheduleNotification(schedule)
+                Log.d("ScheduleViewModel", "Schedule added: ${schedule.matkul}")
+                scheduleNotification(context, schedule)
             }
         }
     }
 
-    fun updateSchedule(scheduleId: String, updatedSchedule: Schedule) {
+    fun updateSchedule(context: Context, scheduleId: String, updatedSchedule: Schedule) {
         viewModelScope.launch {
             val success = repository.updateSchedule(scheduleId, updatedSchedule)
             if (success) {
-                println("Schedule updated successfully")
-                scheduleNotification(updatedSchedule)
+                Log.d("ScheduleViewModel", "Schedule updated: ${updatedSchedule.matkul}")
+                scheduleNotification(context, updatedSchedule)
             }
         }
     }
@@ -61,52 +65,90 @@ class ScheduleViewModel : ViewModel() {
         viewModelScope.launch {
             val success = repository.deleteSchedule(scheduleId)
             if (success) {
-                println("Schedule deleted successfully")
+                Log.d("ScheduleViewModel", "Schedule deleted: $scheduleId")
                 WorkManager.getInstance().cancelUniqueWork("${NotificationWorker.WORK_NAME_PREFIX}$scheduleId")
             }
         }
     }
 
-    private fun scheduleNotification(schedule: Schedule) {
-        val notificationEnabled = true // Ganti dengan logika dari NotificationScreen
-        if (!notificationEnabled) return
-
-        val timeBefore = "30 menit sebelum" // Ganti dengan nilai dari NotificationScreen
-        val delay = when (timeBefore) {
-            "10 menit sebelum" -> 10 * 60 * 1000L
-            "30 menit sebelum" -> 30 * 60 * 1000L
-            "1 jam sebelum" -> 60 * 60 * 1000L
-            "1 hari sebelum" -> 24 * 60 * 60 * 1000L
-            else -> 0L
-        }
-
-        val startTime = schedule.waktuMulai.toDate()
-        println("Waktu Mulai Jadwal: ${SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault()).format(startTime)}")
-
-        val triggerTime = startTime.time - delay
-        val currentTime = System.currentTimeMillis()
-        println("Current Time: $currentTime, Trigger Time: $triggerTime, Delay: ${triggerTime - currentTime}")
-
-        if (triggerTime <= currentTime) {
-            println("Waktu pemicu sudah lewat, notifikasi tidak dijadwalkan")
+    fun scheduleNotification(context: Context, schedule: Schedule) {
+        val prefs = context.getSharedPreferences("NotificationPrefs", Context.MODE_PRIVATE)
+        val notificationEnabled = prefs.getBoolean("scheduleNotificationEnabled", false)
+        if (!notificationEnabled) {
+            Log.d("ScheduleViewModel", "Schedule notifications disabled for: ${schedule.matkul}")
             return
         }
 
+        val timeBefore =
+            prefs.getString("scheduleTimeBefore", "30 Menit sebelum") ?: "30 Menit sebelum"
+        val delayMinutes = when (timeBefore) {
+            "10 Menit sebelum" -> 10
+            "30 Menit sebelum" -> 30
+            "1 Jam sebelum" -> 60
+            "1 Hari sebelum" -> 24 * 60
+            else -> 30
+        }
+
+        val dayOfWeek = when (schedule.hari) {
+            "Senin" -> Calendar.MONDAY
+            "Selasa" -> Calendar.TUESDAY
+            "Rabu" -> Calendar.WEDNESDAY
+            "Kamis" -> Calendar.THURSDAY
+            "Jumat" -> Calendar.FRIDAY
+            "Sabtu" -> Calendar.SATURDAY
+            "Minggu" -> Calendar.SUNDAY
+            else -> {
+                Log.e("ScheduleViewModel", "Invalid day: ${schedule.hari}")
+                return
+            }
+        }
+
+        val calendar = Calendar.getInstance()
+        calendar.set(Calendar.DAY_OF_WEEK, dayOfWeek)
+        calendar.set(Calendar.HOUR_OF_DAY, schedule.waktuMulai.toDate().hours)
+        calendar.set(Calendar.MINUTE, schedule.waktuMulai.toDate().minutes)
+        calendar.set(Calendar.SECOND, 0)
+        calendar.set(Calendar.MILLISECOND, 0)
+        calendar.add(Calendar.MINUTE, -delayMinutes)
+
         val data = workDataOf(
             "title" to "Pengingat Jadwal: ${schedule.matkul}",
-            "message" to "Jadwal di ${schedule.ruangan} akan dimulai pada ${SimpleDateFormat("HH:mm", Locale.getDefault()).format(schedule.waktuMulai.toDate())}"
+            "message" to "Jadwal di ${schedule.ruangan} dimulai pukul ${
+                SimpleDateFormat(
+                    "HH:mm",
+                    Locale.getDefault()
+                ).format(schedule.waktuMulai.toDate())
+            }",
+            "scheduleId" to schedule.id
         )
 
-        val workRequest = OneTimeWorkRequestBuilder<NotificationWorker>()
-            .setInitialDelay(triggerTime - currentTime, TimeUnit.MILLISECONDS)
+        val workRequest = PeriodicWorkRequestBuilder<NotificationWorker>(7, TimeUnit.DAYS)
+            .setInitialDelay(calculateInitialDelay(calendar), TimeUnit.MILLISECONDS)
             .setInputData(data)
+            .setConstraints(
+                Constraints.Builder()
+                    .setRequiresBatteryNotLow(false)
+                    .setRequiredNetworkType(NetworkType.NOT_REQUIRED)
+                    .build()
+            )
             .build()
 
-        WorkManager.getInstance()
-            .enqueueUniqueWork(
+        WorkManager.getInstance(context)
+            .enqueueUniquePeriodicWork(
                 "${NotificationWorker.WORK_NAME_PREFIX}${schedule.id}",
-                ExistingWorkPolicy.REPLACE,
+                ExistingPeriodicWorkPolicy.REPLACE,
                 workRequest
             )
+        Log.d("ScheduleViewModel", "Scheduled periodic notification for ${schedule.matkul}")
+    }
+
+    private fun calculateInitialDelay(targetCalendar: Calendar): Long {
+        val currentTime = System.currentTimeMillis()
+        var triggerTime = targetCalendar.timeInMillis
+        if (triggerTime <= currentTime) {
+            targetCalendar.add(Calendar.WEEK_OF_YEAR, 1)
+            triggerTime = targetCalendar.timeInMillis
+        }
+        return triggerTime - currentTime
     }
 }
