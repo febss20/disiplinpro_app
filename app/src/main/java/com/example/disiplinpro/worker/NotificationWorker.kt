@@ -12,6 +12,7 @@ import androidx.core.content.ContextCompat
 import androidx.work.CoroutineWorker
 import androidx.work.WorkerParameters
 import com.example.disiplinpro.R
+import com.google.firebase.auth.FirebaseAuth
 
 class NotificationWorker(
     context: Context,
@@ -24,6 +25,13 @@ class NotificationWorker(
     }
 
     override suspend fun doWork(): Result {
+        val user = FirebaseAuth.getInstance().currentUser
+        Log.d("NotificationWorker", "User login status: ${user != null}")
+        if (user == null) {
+            Log.d("NotificationWorker", "User not logged in, skipping notification")
+            return Result.success()
+        }
+
         Log.d("NotificationWorker", "Pekerjaan dijalankan")
         val title = inputData.getString("title") ?: "Pengingat"
         val message = inputData.getString("message") ?: "Waktu untuk memulai!"
