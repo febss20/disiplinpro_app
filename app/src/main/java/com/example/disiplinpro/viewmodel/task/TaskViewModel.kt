@@ -111,6 +111,7 @@ class TaskViewModel : ViewModel() {
         val workRequest = OneTimeWorkRequestBuilder<NotificationWorker>()
             .setInitialDelay(triggerTime - currentTime, TimeUnit.MILLISECONDS)
             .setInputData(data)
+            .addTag("notification_tag")
             .build()
 
         WorkManager.getInstance()

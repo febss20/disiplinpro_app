@@ -125,6 +125,7 @@ class ScheduleViewModel : ViewModel() {
         val workRequest = PeriodicWorkRequestBuilder<NotificationWorker>(7, TimeUnit.DAYS)
             .setInitialDelay(calculateInitialDelay(calendar), TimeUnit.MILLISECONDS)
             .setInputData(data)
+            .addTag("notification_tag")
             .setConstraints(
                 Constraints.Builder()
                     .setRequiresBatteryNotLow(false)
