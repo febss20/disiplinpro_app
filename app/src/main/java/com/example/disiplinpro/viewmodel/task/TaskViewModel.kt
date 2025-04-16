@@ -24,6 +24,7 @@ class TaskViewModel : ViewModel() {
     val tasks: StateFlow<List<Task>> = _tasks
 
     private var appContext: Context? = null
+
     private val pendingReschedules = mutableMapOf<String, Task>()
 
     init {
@@ -88,8 +89,9 @@ class TaskViewModel : ViewModel() {
             val task = _tasks.value.find { it.id == taskId }
             if (task != null) {
                 if (isCompleted) {
-                    Log.d("TaskViewModel", "Task completed, cancelling notification for task: ${task.judulTugas}")
+                    Log.d("TaskViewModel", "Task completed, cancelling notifications for task: ${task.judulTugas}")
                     WorkManager.getInstance().cancelUniqueWork("${NotificationWorker.WORK_NAME_PREFIX}$taskId")
+                    WorkManager.getInstance().cancelUniqueWork("${NotificationWorker.OVERDUE_WORK_NAME_PREFIX}$taskId")
                 } else {
                     Log.d("TaskViewModel", "Task uncompleted, preparing to reschedule notification for task: ${task.judulTugas}")
                     if (appContext != null) {
@@ -118,8 +120,9 @@ class TaskViewModel : ViewModel() {
             val success = repository.deleteTask(taskId)
             if (success) {
                 WorkManager.getInstance().cancelUniqueWork("${NotificationWorker.WORK_NAME_PREFIX}$taskId")
+                WorkManager.getInstance().cancelUniqueWork("${NotificationWorker.OVERDUE_WORK_NAME_PREFIX}$taskId")
                 pendingReschedules.remove(taskId)
-                Log.d("TaskViewModel", "Task deleted and notification cancelled: $taskId")
+                Log.d("TaskViewModel", "Task deleted and notifications cancelled: $taskId")
             }
         }
     }
@@ -132,12 +135,15 @@ class TaskViewModel : ViewModel() {
 
         val prefs = context.getSharedPreferences("NotificationPrefs", Context.MODE_PRIVATE)
         val notificationEnabled = prefs.getBoolean("taskNotificationEnabled", false)
-
         if (!notificationEnabled) {
             Log.d("TaskViewModel", "Task notifications disabled for task: ${task.judulTugas}")
             return
         }
 
+        val deadlineTime = task.waktu.toDate().time
+        val currentTime = System.currentTimeMillis()
+
+        // 1. Jadwalkan notifikasi sebelum deadline (pengingat)
         val timeBefore = prefs.getString("taskTimeBefore", "1 Jam sebelum") ?: "1 Jam sebelum"
         val delay = when (timeBefore) {
             "10 Menit sebelum" -> 10 * 60 * 1000L
@@ -147,31 +153,56 @@ class TaskViewModel : ViewModel() {
             else -> 0L
         }
 
-        val triggerTime = task.waktu.toDate().time - delay
-        val currentTime = System.currentTimeMillis()
-        if (triggerTime <= currentTime) {
-            Log.w("TaskViewModel", "Trigger time for task ${task.judulTugas} has passed: $triggerTime")
-            return
+        val reminderTime = deadlineTime - delay
+
+        if (reminderTime > currentTime) {
+            val reminderData = workDataOf(
+                "title" to "Pengingat Tugas: ${task.judulTugas}",
+                "message" to "Tugas untuk ${task.matkul} jatuh tempo pada ${SimpleDateFormat("dd/MM/yyyy HH:mm", Locale.getDefault()).format(task.waktu.toDate())}",
+                "taskId" to task.id
+            )
+
+            val reminderWorkRequest = OneTimeWorkRequestBuilder<NotificationWorker>()
+                .setInitialDelay(reminderTime - currentTime, TimeUnit.MILLISECONDS)
+                .setInputData(reminderData)
+                .addTag("notification_tag")
+                .build()
+
+            WorkManager.getInstance(context)
+                .enqueueUniqueWork(
+                    "${NotificationWorker.WORK_NAME_PREFIX}${task.id}",
+                    ExistingWorkPolicy.REPLACE,
+                    reminderWorkRequest
+                )
+            Log.d("TaskViewModel", "Reminder notification for task ${task.judulTugas} at $reminderTime")
+        } else {
+            Log.w("TaskViewModel", "Reminder time for task ${task.judulTugas} has passed: $reminderTime")
         }
 
-        val data = workDataOf(
-            "title" to "Pengingat Tugas: ${task.judulTugas}",
-            "message" to "Tugas untuk ${task.matkul} jatuh tempo pada ${SimpleDateFormat("dd/MM/yyyy HH:mm", Locale.getDefault()).format(task.waktu.toDate())}",
-            "taskId" to task.id
-        )
-
-        val workRequest = OneTimeWorkRequestBuilder<NotificationWorker>()
-            .setInitialDelay(triggerTime - currentTime, TimeUnit.MILLISECONDS)
-            .setInputData(data)
-            .addTag("notification_tag")
-            .build()
-
-        WorkManager.getInstance(context)
-            .enqueueUniqueWork(
-                "${NotificationWorker.WORK_NAME_PREFIX}${task.id}",
-                ExistingWorkPolicy.REPLACE,
-                workRequest
+        // 2. Jadwalkan notifikasi keterlambatan pada waktu deadline
+        if (deadlineTime > currentTime) {
+            val overdueData = workDataOf(
+                "title" to "Pengingat Tugas: ${task.judulTugas}",
+                "message" to "Tugas untuk mata kuliah ${task.matkul} terlambat diselesaikan. Jatuh tempo pada: ${SimpleDateFormat("dd/MM/yyyy HH:mm", Locale.getDefault()).format(task.waktu.toDate())}",
+                "taskId" to task.id,
+                "isOverdue" to true
             )
-        Log.d("TaskViewModel", "Task notification for task ${task.judulTugas} at $triggerTime")
+
+            val overdueWorkRequest = OneTimeWorkRequestBuilder<NotificationWorker>()
+                .setInitialDelay(deadlineTime - currentTime, TimeUnit.MILLISECONDS)
+                .setInputData(overdueData)
+                .addTag("overdue_notification_tag")
+                .build()
+
+            WorkManager.getInstance(context)
+                .enqueueUniqueWork(
+                    "${NotificationWorker.OVERDUE_WORK_NAME_PREFIX}${task.id}",
+                    ExistingWorkPolicy.REPLACE,
+                    overdueWorkRequest
+                )
+            Log.d("TaskViewModel", "Overdue notification for task ${task.judulTugas} scheduled at $deadlineTime")
+        } else {
+            Log.w("TaskViewModel", "Deadline already passed for task ${task.judulTugas}: $deadlineTime")
+        }
     }
 }
