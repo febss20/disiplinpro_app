@@ -7,5 +7,7 @@ data class Task(
     val matkul: String = "",
     val tanggal: Timestamp = Timestamp.now(),
     val waktu: Timestamp = Timestamp.now(),
-    val isCompleted: Boolean = false
+    val isCompleted: Boolean = false,
+    @field:JvmField
+    val completed: Boolean? = null
 )

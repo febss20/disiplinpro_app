@@ -24,14 +24,30 @@ class TaskViewModel : ViewModel() {
     val tasks: StateFlow<List<Task>> = _tasks
 
     init {
-        fetchTasks()
+        listenToTasks()
     }
 
-    private fun fetchTasks() {
+    private fun listenToTasks() {
+        repository.listenToTasks(
+            onDataChanged = { taskList ->
+                _tasks.value = taskList
+                Log.d("TaskViewModel", "Tasks updated: ${taskList.size}")
+            },
+            onError = { error ->
+                Log.e("TaskViewModel", "Error fetching tasks: ${error.message}")
+            }
+        )
+    }
+
+    fun fetchTasks() {
         viewModelScope.launch {
-            val newTasks = repository.getTasks()
-            _tasks.value = newTasks
-            Log.d("TaskViewModel", "Fetched ${newTasks.size} tasks")
+            try {
+                val newTasks = repository.getTasks()
+                _tasks.value = newTasks
+                Log.d("TaskViewModel", "Manually fetched ${newTasks.size} tasks")
+            } catch (e: Exception) {
+                Log.e("TaskViewModel", "Error manually fetching tasks: ${e.message}")
+            }
         }
     }
 
@@ -39,7 +55,6 @@ class TaskViewModel : ViewModel() {
         viewModelScope.launch {
             val success = repository.addTask(task)
             if (success) {
-                fetchTasks()
                 scheduleNotification(context, task)
             }
         }
@@ -48,10 +63,7 @@ class TaskViewModel : ViewModel() {
     fun updateTaskCompletion(taskId: String, isCompleted: Boolean) {
         viewModelScope.launch {
             val success = repository.updateTaskCompletion(taskId, isCompleted)
-            if (success) {
-                fetchTasks()
-                Log.d("TaskViewModel", "Tasks refreshed after update")
-            } else {
+            if (!success) {
                 Log.e("TaskViewModel", "Failed to update task completion for taskId: $taskId")
             }
         }
@@ -61,7 +73,6 @@ class TaskViewModel : ViewModel() {
         viewModelScope.launch {
             val success = repository.updateTask(taskId, updatedTask)
             if (success) {
-                fetchTasks()
                 scheduleNotification(context, updatedTask)
             }
         }
@@ -71,7 +82,6 @@ class TaskViewModel : ViewModel() {
         viewModelScope.launch {
             val success = repository.deleteTask(taskId)
             if (success) {
-                fetchTasks()
                 WorkManager.getInstance().cancelUniqueWork("${NotificationWorker.WORK_NAME_PREFIX}$taskId")
                 Log.d("TaskViewModel", "Task deleted and notification cancelled: $taskId")
             }
