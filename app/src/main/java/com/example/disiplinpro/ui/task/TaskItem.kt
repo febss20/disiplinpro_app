@@ -49,7 +49,10 @@ fun TaskItem(
                         var isChecked by remember { mutableStateOf(taskCompleted) }
 
                         LaunchedEffect(key1 = task.id, key2 = task.isCompleted, key3 = task.completed) {
-                            isChecked = task.isCompleted || (task.completed ?: false)
+                            val newStatus = task.isCompleted || (task.completed ?: false)
+                            if (isChecked != newStatus) {
+                                isChecked = newStatus
+                            }
                         }
 
                         Checkbox(
