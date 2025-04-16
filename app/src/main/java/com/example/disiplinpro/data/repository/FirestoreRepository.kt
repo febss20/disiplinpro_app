@@ -49,7 +49,11 @@ class FirestoreRepository {
         return try {
             if (userId != null) {
                 val newTaskRef = db.collection("users").document(userId).collection("tasks").document()
-                val taskWithId = task.copy(id = newTaskRef.id)
+                val taskWithId = task.copy(
+                    id = newTaskRef.id,
+                    isCompleted = task.isCompleted,
+                    completed = task.isCompleted
+                )
                 newTaskRef.set(taskWithId).await()
                 true
             } else {
@@ -63,8 +67,12 @@ class FirestoreRepository {
     suspend fun updateTask(taskId: String, updatedTask: Task): Boolean {
         return try {
             if (userId != null) {
+                val synchronizedTask = updatedTask.copy(
+                    isCompleted = updatedTask.isCompleted,
+                    completed = updatedTask.isCompleted
+                )
                 db.collection("users").document(userId).collection("tasks").document(taskId)
-                    .set(updatedTask).await()
+                    .set(synchronizedTask).await()
                 true
             } else {
                 false

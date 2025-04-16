@@ -16,6 +16,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
@@ -35,6 +36,11 @@ fun AllTasksScreen(
 ) {
     LaunchedEffect(key1 = Unit) {
         viewModel.fetchTasks()
+    }
+
+    val context = LocalContext.current
+    LaunchedEffect(key1 = Unit) {
+        viewModel.provideAppContext(context)
     }
 
     val tasks by viewModel.tasks.collectAsState(initial = emptyList())

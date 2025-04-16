@@ -23,6 +23,9 @@ class TaskViewModel : ViewModel() {
     private val _tasks = MutableStateFlow<List<Task>>(emptyList())
     val tasks: StateFlow<List<Task>> = _tasks
 
+    private var appContext: Context? = null
+    private val pendingReschedules = mutableMapOf<String, Task>()
+
     init {
         listenToTasks()
     }
@@ -39,6 +42,19 @@ class TaskViewModel : ViewModel() {
         )
     }
 
+    fun provideAppContext(context: Context) {
+        this.appContext = context.applicationContext
+        if (pendingReschedules.isNotEmpty()) {
+            Log.d("TaskViewModel", "Scheduling ${pendingReschedules.size} pending notifications")
+            val iterator = pendingReschedules.iterator()
+            while (iterator.hasNext()) {
+                val entry = iterator.next()
+                scheduleNotification(appContext!!, entry.value)
+                iterator.remove()
+            }
+        }
+    }
+
     fun fetchTasks() {
         viewModelScope.launch {
             try {
@@ -52,6 +68,7 @@ class TaskViewModel : ViewModel() {
     }
 
     fun addTask(context: Context, task: Task) {
+        this.appContext = context.applicationContext
         viewModelScope.launch {
             val success = repository.addTask(task)
             if (success) {
@@ -65,11 +82,29 @@ class TaskViewModel : ViewModel() {
             val success = repository.updateTaskCompletion(taskId, isCompleted)
             if (!success) {
                 Log.e("TaskViewModel", "Failed to update task completion for taskId: $taskId")
+                return@launch
+            }
+
+            val task = _tasks.value.find { it.id == taskId }
+            if (task != null) {
+                if (isCompleted) {
+                    Log.d("TaskViewModel", "Task completed, cancelling notification for task: ${task.judulTugas}")
+                    WorkManager.getInstance().cancelUniqueWork("${NotificationWorker.WORK_NAME_PREFIX}$taskId")
+                } else {
+                    Log.d("TaskViewModel", "Task uncompleted, preparing to reschedule notification for task: ${task.judulTugas}")
+                    if (appContext != null) {
+                        scheduleNotification(appContext!!, task)
+                    } else {
+                        pendingReschedules[taskId] = task
+                        Log.d("TaskViewModel", "No context available, added to pending reschedules. Total pending: ${pendingReschedules.size}")
+                    }
+                }
             }
         }
     }
 
     fun updateTask(context: Context, taskId: String, updatedTask: Task) {
+        this.appContext = context.applicationContext
         viewModelScope.launch {
             val success = repository.updateTask(taskId, updatedTask)
             if (success) {
@@ -83,14 +118,21 @@ class TaskViewModel : ViewModel() {
             val success = repository.deleteTask(taskId)
             if (success) {
                 WorkManager.getInstance().cancelUniqueWork("${NotificationWorker.WORK_NAME_PREFIX}$taskId")
+                pendingReschedules.remove(taskId)
                 Log.d("TaskViewModel", "Task deleted and notification cancelled: $taskId")
             }
         }
     }
 
     fun scheduleNotification(context: Context, task: Task) {
+        if (task.isCompleted || (task.completed == true)) {
+            Log.d("TaskViewModel", "Not scheduling notification for completed task: ${task.judulTugas}")
+            return
+        }
+
         val prefs = context.getSharedPreferences("NotificationPrefs", Context.MODE_PRIVATE)
         val notificationEnabled = prefs.getBoolean("taskNotificationEnabled", false)
+
         if (!notificationEnabled) {
             Log.d("TaskViewModel", "Task notifications disabled for task: ${task.judulTugas}")
             return
@@ -124,7 +166,7 @@ class TaskViewModel : ViewModel() {
             .addTag("notification_tag")
             .build()
 
-        WorkManager.getInstance()
+        WorkManager.getInstance(context)
             .enqueueUniqueWork(
                 "${NotificationWorker.WORK_NAME_PREFIX}${task.id}",
                 ExistingWorkPolicy.REPLACE,

@@ -24,6 +24,7 @@ import androidx.compose.foundation.shape.CircleShape
 import coil.compose.AsyncImage
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Person
+import androidx.compose.ui.platform.LocalContext
 import androidx.navigation.compose.currentBackStackEntryAsState
 import com.example.disiplinpro.ui.components.BottomNavigationBar
 import com.example.disiplinpro.ui.schedule.ScheduleItem
@@ -43,6 +44,11 @@ fun HomeScreen(
 ) {
     LaunchedEffect(key1 = Unit) {
         taskViewModel.fetchTasks()
+    }
+
+    val context = LocalContext.current
+    LaunchedEffect(key1 = Unit) {
+        taskViewModel.provideAppContext(context)
     }
 
     val tasks by taskViewModel.tasks.collectAsState()
