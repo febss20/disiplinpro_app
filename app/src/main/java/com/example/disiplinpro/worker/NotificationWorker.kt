@@ -13,6 +13,8 @@ import androidx.work.CoroutineWorker
 import androidx.work.WorkerParameters
 import com.example.disiplinpro.R
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.firestore.FirebaseFirestore
+import kotlinx.coroutines.tasks.await
 
 class NotificationWorker(
     context: Context,
@@ -21,6 +23,7 @@ class NotificationWorker(
 
     companion object {
         const val WORK_NAME_PREFIX = "notification_"
+        const val OVERDUE_WORK_NAME_PREFIX = "overdue_notification_"
         const val CHANNEL_ID = "disiplinpro_channel"
     }
 
@@ -36,14 +39,45 @@ class NotificationWorker(
         val title = inputData.getString("title") ?: "Pengingat"
         val message = inputData.getString("message") ?: "Waktu untuk memulai!"
         val scheduleId = inputData.getString("scheduleId")
+        val taskId = inputData.getString("taskId")
+        val isOverdue = inputData.getBoolean("isOverdue", false)
 
-        Log.d("NotificationWorker", "Processing notification: $title, $message, scheduleId=$scheduleId")
+        Log.d("NotificationWorker", "Processing notification: $title, $message, scheduleId=$scheduleId, taskId=$taskId, isOverdue=$isOverdue")
+
+        if (isOverdue && taskId != null) {
+            val isTaskCompleted = checkTaskCompletionStatus(taskId)
+            if (isTaskCompleted) {
+                Log.d("NotificationWorker", "Task $taskId already completed, skipping overdue notification")
+                return Result.success()
+            }
+        }
 
         createNotificationChannel()
         showNotification(title, message)
         Log.d("NotificationWorker", "Notifikasi ditampilkan")
 
         return Result.success()
+    }
+
+    private suspend fun checkTaskCompletionStatus(taskId: String): Boolean {
+        val userId = FirebaseAuth.getInstance().currentUser?.uid ?: return false
+        try {
+            val snapshot = FirebaseFirestore.getInstance()
+                .collection("users")
+                .document(userId)
+                .collection("tasks")
+                .document(taskId)
+                .get()
+                .await()
+
+            val isCompleted = snapshot.getBoolean("isCompleted") ?: false
+            val completed = snapshot.getBoolean("completed") ?: false
+
+            return isCompleted || completed
+        } catch (e: Exception) {
+            Log.e("NotificationWorker", "Error checking task completion status: ${e.message}")
+            return false
+        }
     }
 
     private fun createNotificationChannel() {
