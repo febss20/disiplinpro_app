@@ -33,6 +33,10 @@ fun AllTasksScreen(
     navController: NavController,
     viewModel: TaskViewModel = viewModel()
 ) {
+    LaunchedEffect(key1 = Unit) {
+        viewModel.fetchTasks()
+    }
+
     val tasks by viewModel.tasks.collectAsState(initial = emptyList())
     var selectedTask by remember { mutableStateOf<Task?>(null) }
     val navBackStackEntry by navController.currentBackStackEntryAsState()

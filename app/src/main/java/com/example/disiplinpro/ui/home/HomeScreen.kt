@@ -41,6 +41,10 @@ fun HomeScreen(
     scheduleViewModel: ScheduleViewModel = viewModel(),
     taskViewModel: TaskViewModel = viewModel()
 ) {
+    LaunchedEffect(key1 = Unit) {
+        taskViewModel.fetchTasks()
+    }
+
     val tasks by taskViewModel.tasks.collectAsState()
     val schedules by scheduleViewModel.schedules.collectAsState()
     val user by viewModel.user.collectAsState()

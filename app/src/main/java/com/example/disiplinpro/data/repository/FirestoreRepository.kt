@@ -29,6 +29,22 @@ class FirestoreRepository {
         }
     }
 
+    fun listenToTasks(onDataChanged: (List<Task>) -> Unit, onError: (Exception) -> Unit) {
+        if (userId == null) {
+            onError(Exception("User not logged in"))
+            return
+        }
+        db.collection("users").document(userId).collection("tasks")
+            .addSnapshotListener { snapshot, error ->
+                if (error != null) {
+                    onError(error)
+                    return@addSnapshotListener
+                }
+                val taskList = snapshot?.documents?.mapNotNull { it.toObject(Task::class.java) } ?: emptyList()
+                onDataChanged(taskList)
+            }
+    }
+
     suspend fun addTask(task: Task): Boolean {
         return try {
             if (userId != null) {
@@ -61,8 +77,12 @@ class FirestoreRepository {
     suspend fun updateTaskCompletion(taskId: String, isCompleted: Boolean): Boolean {
         return try {
             if (userId != null) {
+                val updates = hashMapOf<String, Any>(
+                    "isCompleted" to isCompleted,
+                    "completed" to isCompleted
+                )
                 db.collection("users").document(userId).collection("tasks").document(taskId)
-                    .update("isCompleted", isCompleted).await()
+                    .update(updates).await()
                 println("Task $taskId updated to isCompleted = $isCompleted")
                 true
             } else {

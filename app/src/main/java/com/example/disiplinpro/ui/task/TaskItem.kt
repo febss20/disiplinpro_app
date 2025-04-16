@@ -45,10 +45,13 @@ fun TaskItem(
                         verticalAlignment = Alignment.CenterVertically,
                         modifier = Modifier.padding(top = 12.dp, start = 15.dp)
                     ) {
-                        var isChecked by remember { mutableStateOf(task.isCompleted) }
-                        LaunchedEffect(task.isCompleted) {
-                            isChecked = task.isCompleted
+                        val taskCompleted = task.isCompleted || (task.completed ?: false)
+                        var isChecked by remember { mutableStateOf(taskCompleted) }
+
+                        LaunchedEffect(key1 = task.id, key2 = task.isCompleted, key3 = task.completed) {
+                            isChecked = task.isCompleted || (task.completed ?: false)
                         }
+
                         Checkbox(
                             checked = isChecked,
                             onCheckedChange = { checked ->
