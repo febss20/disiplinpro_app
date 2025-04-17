@@ -9,6 +9,10 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowForwardIos
 import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.filled.Notifications
+import androidx.compose.material.icons.filled.Security
+import androidx.compose.material.icons.filled.Help
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -191,40 +195,76 @@ fun ProfileMenuItem(title: String, onClick: () -> Unit) {
         verticalAlignment = Alignment.CenterVertically,
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 25.dp, vertical = 12.dp)
+            .padding(horizontal = 8.dp, vertical = 12.dp)
     ) {
-        Box(
-            modifier = Modifier
-                .size(45.dp)
-                .clip(RoundedCornerShape(100.dp))
-                .background(Color(0x337DAFCB)),
-            contentAlignment = Alignment.Center
-        ) {
-
+        val (icon, backgroundColor) = when (title) {
+            "Edit Akun" -> Pair(
+                Icons.Default.Settings,
+                Color(0xFFE57373)
+            )
+            "Notifikasi" -> Pair(
+                Icons.Default.Notifications,
+                Color(0xFF81C784)
+            )
+            "Keamanan dan Privasi" -> Pair(
+                Icons.Default.Security,
+                Color(0xFF64B5F6)
+            )
+            "FAQ" -> Pair(
+                Icons.Default.Help,
+                Color(0xFFFFD54F)
+            )
+            else -> Pair(
+                Icons.Default.Person,
+                Color(0xFF7DAFCB)
+            )
         }
-        Text(
-            text = title,
-            color = Color(0xFF333333),
-            fontSize = 18.sp,
-            fontWeight = FontWeight.Bold,
-            modifier = Modifier
-                .weight(1f)
-                .padding(start = 15.dp)
-        )
+
         Box(
             modifier = Modifier
-                .size(32.dp)
-                .clip(RoundedCornerShape(4.dp))
-                .clickable { onClick() }
-                .background(Color(0x337DAFCB)),
+                .size(40.dp)
+                .clip(RoundedCornerShape(100.dp))
+                .background(backgroundColor.copy(alpha = 0.7f)),
             contentAlignment = Alignment.Center
         ) {
             Icon(
-                imageVector = Icons.Default.ArrowForwardIos,
-                contentDescription = "Arrow Right",
-                tint = Color(0xFF333333),
-                modifier = Modifier.size(16.dp)
+                imageVector = icon,
+                contentDescription = title,
+                tint = Color.White,
+                modifier = Modifier.size(20.dp)
             )
+        }
+
+        Text(
+            text = title,
+            color = Color(0xFF333333),
+            fontSize = 16.sp,
+            fontWeight = FontWeight.SemiBold,
+            modifier = Modifier
+                .weight(1f)
+                .padding(start = 16.dp)
+        )
+
+        Card(
+            modifier = Modifier
+                .size(32.dp)
+                .clickable { onClick() },
+            shape = RoundedCornerShape(8.dp),
+            colors = CardDefaults.cardColors(
+                containerColor = Color(0x337DAFCB)
+            )
+        ) {
+            Box(
+                modifier = Modifier.fillMaxSize(),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    imageVector = Icons.Default.ArrowForwardIos,
+                    contentDescription = "Arrow Right",
+                    tint = Color(0xFF7DAFCB),
+                    modifier = Modifier.size(14.dp)
+                )
+            }
         }
     }
 }

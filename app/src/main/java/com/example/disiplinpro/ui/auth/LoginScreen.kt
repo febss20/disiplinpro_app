@@ -162,7 +162,7 @@ fun LoginScreen(
             ) {
                 if (loginFailed) {
                     Text(
-                        "Password atau email salah",
+                        "Password salah",
                         color = Color.Red,
                         fontSize = 12.sp,
                         fontWeight = FontWeight.Bold

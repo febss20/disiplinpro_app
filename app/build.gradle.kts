@@ -44,8 +44,8 @@ dependencies {
 
     testImplementation ("junit:junit:4.13.2")
     testImplementation ("org.mockito:mockito-core:4.8.0")
-    testImplementation ("org.mockito:mockito-inline:4.8.0") // Untuk mock final classes jika perlu
-    testImplementation ("androidx.arch.core:core-testing:2.1.0") // Untuk testing Flow
+    testImplementation ("org.mockito:mockito-inline:4.8.0")
+    testImplementation ("androidx.arch.core:core-testing:2.1.0")
     testImplementation ("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.6.4")
 
     implementation(libs.androidx.core.ktx)
@@ -76,6 +76,7 @@ dependencies {
     implementation ("com.google.accompanist:accompanist-pager:0.27.0")
     implementation ("androidx.datastore:datastore-preferences:1.0.0")
     implementation ("androidx.test:core:1.5.0")
+    implementation("androidx.compose.material:material:1.5.0")
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
