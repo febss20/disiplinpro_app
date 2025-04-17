@@ -42,12 +42,10 @@ fun HomeScreen(
     scheduleViewModel: ScheduleViewModel = viewModel(),
     taskViewModel: TaskViewModel = viewModel()
 ) {
-    LaunchedEffect(key1 = Unit) {
-        taskViewModel.fetchTasks()
-    }
-
     val context = LocalContext.current
-    LaunchedEffect(key1 = Unit) {
+    
+    LaunchedEffect(Unit) {
+        taskViewModel.fetchTasks()
         taskViewModel.provideAppContext(context)
     }
 

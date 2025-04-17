@@ -1,38 +1,42 @@
 package com.example.disiplinpro
 
+import android.Manifest
+import android.content.Context
+import android.content.Intent
+import android.content.pm.PackageManager
+import android.net.Uri
 import android.os.Build
 import android.os.Bundle
+import android.os.PowerManager
+import android.provider.Settings
+import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.core.content.ContextCompat
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
-import com.example.disiplinpro.viewmodel.auth.AuthViewModel
+import com.example.disiplinpro.ui.auth.EmailVerificationScreen
+import com.example.disiplinpro.ui.auth.ForgotPasswordScreen
 import com.example.disiplinpro.ui.auth.LoginScreen
 import com.example.disiplinpro.ui.auth.OnboardingScreen
 import com.example.disiplinpro.ui.auth.RegisterScreen
-import com.example.disiplinpro.ui.home.HomeScreen
-import com.example.disiplinpro.ui.auth.ForgotPasswordScreen
-import com.example.disiplinpro.ui.auth.EmailVerificationScreen
 import com.example.disiplinpro.ui.calender.CalendarScreen
+import com.example.disiplinpro.ui.home.HomeScreen
 import com.example.disiplinpro.ui.notification.NotificationScreen
+import com.example.disiplinpro.ui.profile.ProfileScreen
+import com.example.disiplinpro.ui.profile.EditAkunScreen
+import com.example.disiplinpro.ui.profile.KeamananPrivasiScreen
+import com.example.disiplinpro.ui.profile.FAQScreen
 import com.example.disiplinpro.ui.schedule.AddScheduleScreen
 import com.example.disiplinpro.ui.schedule.AllSchedulesScreen
 import com.example.disiplinpro.ui.schedule.EditScheduleScreen
 import com.example.disiplinpro.ui.task.AddTaskScreen
 import com.example.disiplinpro.ui.task.AllTasksScreen
 import com.example.disiplinpro.ui.task.EditTaskScreen
-import android.Manifest
-import android.content.Context
-import android.content.pm.PackageManager
-import android.widget.Toast
-import androidx.activity.result.contract.ActivityResultContracts
-import androidx.core.content.ContextCompat
-import com.example.disiplinpro.ui.profile.ProfileScreen
+import com.example.disiplinpro.viewmodel.auth.AuthViewModel
 import com.google.firebase.auth.FirebaseAuth
-import android.content.Intent
-import android.os.PowerManager
-import android.provider.Settings
 
 class MainActivity : ComponentActivity() {
     private val requestPermissionLauncher = registerForActivityResult(
@@ -45,22 +49,14 @@ class MainActivity : ComponentActivity() {
         }
     }
 
-    private fun requestBatteryOptimizationExemption() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            val packageName = packageName
-            val pm = getSystemService(Context.POWER_SERVICE) as PowerManager
-            if (!pm.isIgnoringBatteryOptimizations(packageName)) {
-                val intent = Intent(Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS)
-                intent.data = android.net.Uri.parse("package:$packageName")
-                startActivity(intent)
-            }
-        }
-    }
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         requestNotificationPermission()
         requestBatteryOptimizationExemption()
+        setupNavigation()
+    }
+
+    private fun setupNavigation() {
         setContent {
             val navController = rememberNavController()
             val authViewModel = AuthViewModel()
@@ -69,6 +65,7 @@ class MainActivity : ComponentActivity() {
             } else {
                 "onboarding"
             }
+
             NavHost(navController = navController, startDestination = startDestination) {
                 composable("onboarding") { OnboardingScreen(navController) }
                 composable("login") { LoginScreen(navController) }
@@ -95,9 +92,13 @@ class MainActivity : ComponentActivity() {
                 composable("notifikasi") { NotificationScreen(navController) }
                 composable("akun") { ProfileScreen(navController) }
 
+                composable("edit_akun") { EditAkunScreen(navController) }
+                composable("keamanan_privasi") { KeamananPrivasiScreen(navController) }
+                composable("faq") { FAQScreen(navController) }
             }
         }
     }
+
     private fun requestNotificationPermission() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             if (ContextCompat.checkSelfPermission(
@@ -106,6 +107,18 @@ class MainActivity : ComponentActivity() {
                 ) != PackageManager.PERMISSION_GRANTED
             ) {
                 requestPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+            }
+        }
+    }
+
+    private fun requestBatteryOptimizationExemption() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            val packageName = packageName
+            val pm = getSystemService(Context.POWER_SERVICE) as PowerManager
+            if (!pm.isIgnoringBatteryOptimizations(packageName)) {
+                val intent = Intent(Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS)
+                intent.data = Uri.parse("package:$packageName")
+                startActivity(intent)
             }
         }
     }

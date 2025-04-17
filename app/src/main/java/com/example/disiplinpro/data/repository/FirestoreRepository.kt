@@ -1,5 +1,6 @@
 package com.example.disiplinpro.data.repository
 
+import android.util.Log
 import com.example.disiplinpro.data.model.Task
 import com.example.disiplinpro.data.model.Schedule
 import com.example.disiplinpro.data.model.User
@@ -7,59 +8,89 @@ import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.tasks.await
 
+private const val TAG = "FirestoreRepository"
+private const val USERS_COLLECTION = "users"
+private const val TASKS_COLLECTION = "tasks"
+private const val SCHEDULES_COLLECTION = "schedules"
+
 class FirestoreRepository {
     private val db = FirebaseFirestore.getInstance()
     private val userId = FirebaseAuth.getInstance().currentUser?.uid
 
+    private fun getUserDocRef() = db.collection(USERS_COLLECTION).document(userId ?: "")
+    private fun getTasksCollectionRef() = getUserDocRef().collection(TASKS_COLLECTION)
+    private fun getSchedulesCollectionRef() = getUserDocRef().collection(SCHEDULES_COLLECTION)
+
     suspend fun getUser(): User? {
         return if (userId != null) {
-            db.collection("users").document(userId)
-                .get().await().toObject(User::class.java)
+            try {
+                getUserDocRef().get().await().toObject(User::class.java)
+            } catch (e: Exception) {
+                Log.e(TAG, "Error fetching user: ${e.message}")
+                null
+            }
         } else {
+            Log.w(TAG, "Cannot fetch user: User not logged in")
             null
         }
     }
 
     suspend fun getTasks(): List<Task> {
         return if (userId != null) {
-            db.collection("users").document(userId).collection("tasks")
-                .get().await().documents.mapNotNull { it.toObject(Task::class.java) }
+            try {
+                getTasksCollectionRef().get().await().documents
+                    .mapNotNull { it.toObject(Task::class.java) }
+            } catch (e: Exception) {
+                Log.e(TAG, "Error fetching tasks: ${e.message}")
+                emptyList()
+            }
         } else {
+            Log.w(TAG, "Cannot fetch tasks: User not logged in")
             emptyList()
         }
     }
 
     fun listenToTasks(onDataChanged: (List<Task>) -> Unit, onError: (Exception) -> Unit) {
         if (userId == null) {
-            onError(Exception("User not logged in"))
+            val exception = Exception("User not logged in")
+            Log.w(TAG, exception.message ?: "Unknown error")
+            onError(exception)
             return
         }
-        db.collection("users").document(userId).collection("tasks")
-            .addSnapshotListener { snapshot, error ->
-                if (error != null) {
-                    onError(error)
-                    return@addSnapshotListener
-                }
-                val taskList = snapshot?.documents?.mapNotNull { it.toObject(Task::class.java) } ?: emptyList()
-                onDataChanged(taskList)
+        getTasksCollectionRef().addSnapshotListener { snapshot, error ->
+            if (error != null) {
+                Log.e(TAG, "Error listening to tasks: ${error.message}")
+                onError(error)
+                return@addSnapshotListener
             }
+
+            val taskList = snapshot?.documents?.mapNotNull {
+                it.toObject(Task::class.java)
+            } ?: emptyList()
+
+            Log.d(TAG, "Received ${taskList.size} tasks from Firestore")
+            onDataChanged(taskList)
+        }
     }
 
     suspend fun addTask(task: Task): Boolean {
         return try {
             if (userId != null) {
-                val newTaskRef = db.collection("users").document(userId).collection("tasks").document()
+                val newTaskRef = getTasksCollectionRef().document()
                 val taskWithId = task.copy(
                     id = newTaskRef.id,
                     isCompleted = task.isCompleted,
                     completed = task.isCompleted
                 )
                 newTaskRef.set(taskWithId).await()
+                Log.d(TAG, "Task added successfully: ${newTaskRef.id}")
                 true
             } else {
+                Log.w(TAG, "Cannot add task: User not logged in")
                 false
             }
         } catch (e: Exception) {
+            Log.e(TAG, "Error adding task: ${e.message}")
             false
         }
     }
@@ -71,13 +102,15 @@ class FirestoreRepository {
                     isCompleted = updatedTask.isCompleted,
                     completed = updatedTask.isCompleted
                 )
-                db.collection("users").document(userId).collection("tasks").document(taskId)
-                    .set(synchronizedTask).await()
+                getTasksCollectionRef().document(taskId).set(synchronizedTask).await()
+                Log.d(TAG, "Task updated successfully: $taskId")
                 true
             } else {
+                Log.w(TAG, "Cannot update task: User not logged in")
                 false
             }
         } catch (e: Exception) {
+            Log.e(TAG, "Error updating task: ${e.message}")
             false
         }
     }
@@ -89,16 +122,15 @@ class FirestoreRepository {
                     "isCompleted" to isCompleted,
                     "completed" to isCompleted
                 )
-                db.collection("users").document(userId).collection("tasks").document(taskId)
-                    .update(updates).await()
-                println("Task $taskId updated to isCompleted = $isCompleted")
+                getTasksCollectionRef().document(taskId).update(updates).await()
+                Log.d(TAG, "Task $taskId completion status updated to: $isCompleted")
                 true
             } else {
-                println("User ID is null, cannot update task")
+                Log.w(TAG, "Cannot update task completion: User not logged in")
                 false
             }
         } catch (e: Exception) {
-            println("Error updating task completion: ${e.message}")
+            Log.e(TAG, "Error updating task completion: ${e.message}")
             false
         }
     }
@@ -106,44 +138,56 @@ class FirestoreRepository {
     suspend fun deleteTask(taskId: String): Boolean {
         return try {
             if (userId != null) {
-                db.collection("users").document(userId).collection("tasks").document(taskId)
-                    .delete().await()
+                getTasksCollectionRef().document(taskId).delete().await()
+                Log.d(TAG, "Task deleted successfully: $taskId")
                 true
             } else {
+                Log.w(TAG, "Cannot delete task: User not logged in")
                 false
             }
         } catch (e: Exception) {
+            Log.e(TAG, "Error deleting task: ${e.message}")
             false
         }
     }
 
     fun listenToSchedules(onDataChanged: (List<Schedule>) -> Unit, onError: (Exception) -> Unit) {
         if (userId == null) {
-            onError(Exception("User not logged in"))
+            val exception = Exception("User not logged in")
+            Log.w(TAG, exception.message ?: "Unknown error")
+            onError(exception)
             return
         }
-        db.collection("users").document(userId).collection("schedules")
-            .addSnapshotListener { snapshot, error ->
-                if (error != null) {
-                    onError(error)
-                    return@addSnapshotListener
-                }
-                val scheduleList = snapshot?.documents?.mapNotNull { it.toObject(Schedule::class.java) } ?: emptyList()
-                onDataChanged(scheduleList)
+        getSchedulesCollectionRef().addSnapshotListener { snapshot, error ->
+            if (error != null) {
+                Log.e(TAG, "Error listening to schedules: ${error.message}")
+                onError(error)
+                return@addSnapshotListener
             }
+
+            val scheduleList = snapshot?.documents?.mapNotNull {
+                it.toObject(Schedule::class.java)
+            } ?: emptyList()
+
+            Log.d(TAG, "Received ${scheduleList.size} schedules from Firestore")
+            onDataChanged(scheduleList)
+        }
     }
 
     suspend fun addSchedule(schedule: Schedule): Boolean {
         return try {
             if (userId != null) {
-                val newScheduleRef = db.collection("users").document(userId).collection("schedules").document()
+                val newScheduleRef = getSchedulesCollectionRef().document()
                 val scheduleWithId = schedule.copy(id = newScheduleRef.id)
                 newScheduleRef.set(scheduleWithId).await()
+                Log.d(TAG, "Schedule added successfully: ${newScheduleRef.id}")
                 true
             } else {
+                Log.w(TAG, "Cannot add schedule: User not logged in")
                 false
             }
         } catch (e: Exception) {
+            Log.e(TAG, "Error adding schedule: ${e.message}")
             false
         }
     }
@@ -151,13 +195,15 @@ class FirestoreRepository {
     suspend fun updateSchedule(scheduleId: String, updatedSchedule: Schedule): Boolean {
         return try {
             if (userId != null) {
-                db.collection("users").document(userId).collection("schedules").document(scheduleId)
-                    .set(updatedSchedule).await()
+                getSchedulesCollectionRef().document(scheduleId).set(updatedSchedule).await()
+                Log.d(TAG, "Schedule updated successfully: $scheduleId")
                 true
             } else {
+                Log.w(TAG, "Cannot update schedule: User not logged in")
                 false
             }
         } catch (e: Exception) {
+            Log.e(TAG, "Error updating schedule: ${e.message}")
             false
         }
     }
@@ -165,13 +211,15 @@ class FirestoreRepository {
     suspend fun deleteSchedule(scheduleId: String): Boolean {
         return try {
             if (userId != null) {
-                db.collection("users").document(userId).collection("schedules").document(scheduleId)
-                    .delete().await()
+                getSchedulesCollectionRef().document(scheduleId).delete().await()
+                Log.d(TAG, "Schedule deleted successfully: $scheduleId")
                 true
             } else {
+                Log.w(TAG, "Cannot delete schedule: User not logged in")
                 false
             }
         } catch (e: Exception) {
+            Log.e(TAG, "Error deleting schedule: ${e.message}")
             false
         }
     }
