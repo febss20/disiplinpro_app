@@ -91,7 +91,6 @@ class MainActivity : ComponentActivity() {
                 composable("kalender") { CalendarScreen(navController) }
                 composable("notifikasi") { NotificationScreen(navController) }
                 composable("akun") { ProfileScreen(navController) }
-
                 composable("edit_akun") { EditAkunScreen(navController) }
                 composable("keamanan_privasi") { KeamananPrivasiScreen(navController) }
                 composable("faq") { FAQScreen(navController) }
