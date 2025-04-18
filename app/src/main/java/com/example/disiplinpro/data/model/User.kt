@@ -5,5 +5,7 @@ data class User(
     val username: String = "",
     val email: String = "",
     val password: String = "",
-    val fotoProfil: String? = null
+    val fotoProfil: String? = null,
+    val fotoProfilObjectKey: String? = null,
+    val fotoProfilExpiration: Long? = null
 )
