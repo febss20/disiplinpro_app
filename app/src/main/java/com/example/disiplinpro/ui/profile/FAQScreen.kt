@@ -22,18 +22,32 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
+import com.example.disiplinpro.viewmodel.profile.FAQCategory
+import com.example.disiplinpro.viewmodel.profile.FAQViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun FAQScreen(
-    navController: NavController
+    navController: NavController,
+    viewModel: FAQViewModel = viewModel()
 ) {
-    var searchQuery by remember { mutableStateOf("") }
+    val context = LocalContext.current
+
+    // Collect states from viewModel
+    val searchQuery by viewModel.searchQuery.collectAsState()
+    val selectedCategory by viewModel.selectedCategory.collectAsState()
+    val filteredFaqItems by viewModel.filteredFaqItems.collectAsState()
+    val isLoading by viewModel.isLoading
+
+    // State untuk kategori-kategori
+    val categories = remember { listOf(FAQCategory.ALL, FAQCategory.ACCOUNT, FAQCategory.TASK, FAQCategory.OTHER) }
 
     Box(
         modifier = Modifier
@@ -63,6 +77,16 @@ fun FAQScreen(
             )
         }
 
+        // Loading indicator
+        if (isLoading) {
+            CircularProgressIndicator(
+                modifier = Modifier
+                    .size(50.dp)
+                    .align(Alignment.Center),
+                color = Color(0xFF7DAFCB)
+            )
+        }
+
         Column(
             modifier = Modifier
                 .fillMaxSize()
@@ -72,7 +96,7 @@ fun FAQScreen(
             // Search bar
             OutlinedTextField(
                 value = searchQuery,
-                onValueChange = { searchQuery = it },
+                onValueChange = { viewModel.updateSearchQuery(it) },
                 placeholder = { Text("Cari pertanyaan...") },
                 leadingIcon = {
                     Icon(
@@ -100,112 +124,102 @@ fun FAQScreen(
                     .padding(bottom = 16.dp),
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                CategoryChip(
-                    text = "Semua",
-                    selected = true,
-                    onClick = { /* Filter by All */ }
-                )
-                CategoryChip(
-                    text = "Akun",
-                    selected = false,
-                    onClick = { /* Filter by Account */ }
-                )
-                CategoryChip(
-                    text = "Tugas",
-                    selected = false,
-                    onClick = { /* Filter by Tasks */ }
-                )
-                CategoryChip(
-                    text = "Lainnya",
-                    selected = false,
-                    onClick = { /* Filter by Others */ }
-                )
+                categories.forEach { category ->
+                    CategoryChip(
+                        text = category.toDisplayName(),
+                        selected = category == selectedCategory,
+                        onClick = { viewModel.updateSelectedCategory(category) }
+                    )
+                }
             }
 
             // FAQ Items in a ScrollView
-            Column(
-                modifier = Modifier
-                    .weight(1f)
-                    .verticalScroll(rememberScrollState())
-            ) {
-                // Account Section
-                Text(
-                    text = "Akun & Pengaturan",
-                    color = Color(0xFF7DAFCB),
-                    fontSize = 16.sp,
-                    fontWeight = FontWeight.Bold,
-                    modifier = Modifier.padding(bottom = 8.dp, top = 8.dp)
-                )
+            if (filteredFaqItems.isEmpty() && !isLoading) {
+                // Tampilkan pesan jika tidak ada FAQ yang cocok dengan pencarian
+                Column(
+                    modifier = Modifier
+                        .weight(1f)
+                        .fillMaxWidth(),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.Center
+                ) {
+                    Text(
+                        text = "Tidak ada pertanyaan yang cocok dengan pencarian Anda",
+                        color = Color(0xFF666666),
+                        fontSize = 16.sp,
+                        textAlign = TextAlign.Center
+                    )
+                }
+            } else {
+                Column(
+                    modifier = Modifier
+                        .weight(1f)
+                        .verticalScroll(rememberScrollState())
+                ) {
+                    // Group FAQs by category and show section titles
+                    val groupedFaqs = filteredFaqItems.groupBy { it.category }
 
-                FAQItem(
-                    question = "Bagaimana cara mengubah password akun saya?",
-                    answer = "Untuk mengubah password, ikuti langkah berikut:\n\n1. Buka halaman Profil\n2. Pilih 'Edit Akun'\n3. Masukkan password lama Anda\n4. Masukkan password baru yang diinginkan\n5. Tekan 'Simpan Perubahan'"
-                )
+                    // Tampilkan FAQ kategori Akun jika ada
+                    if (groupedFaqs.containsKey(FAQCategory.ACCOUNT)) {
+                        Text(
+                            text = "Akun & Pengaturan",
+                            color = Color(0xFF7DAFCB),
+                            fontSize = 16.sp,
+                            fontWeight = FontWeight.Bold,
+                            modifier = Modifier.padding(bottom = 8.dp, top = 8.dp)
+                        )
 
-                FAQItem(
-                    question = "Apakah saya bisa mengubah nama pengguna?",
-                    answer = "Ya, Anda dapat mengubah nama pengguna kapan saja melalui halaman 'Edit Akun' di profil Anda. Perubahan akan langsung terlihat setelah disimpan."
-                )
+                        groupedFaqs[FAQCategory.ACCOUNT]?.forEach { faqItem ->
+                            FAQItem(
+                                question = faqItem.question,
+                                answer = faqItem.answer
+                            )
+                        }
+                    }
 
-                FAQItem(
-                    question = "Bagaimana cara logout dari aplikasi?",
-                    answer = "Untuk logout, buka halaman Profil dan gulir ke bawah. Anda akan menemukan tombol 'Logout' di bagian bawah halaman."
-                )
+                    // Tampilkan FAQ kategori Tugas jika ada
+                    if (groupedFaqs.containsKey(FAQCategory.TASK)) {
+                        Text(
+                            text = "Tugas & Jadwal",
+                            color = Color(0xFF7DAFCB),
+                            fontSize = 16.sp,
+                            fontWeight = FontWeight.Bold,
+                            modifier = Modifier.padding(bottom = 8.dp, top = if (groupedFaqs.containsKey(FAQCategory.ACCOUNT)) 16.dp else 8.dp)
+                        )
 
-                // Task Section
-                Text(
-                    text = "Tugas & Jadwal",
-                    color = Color(0xFF7DAFCB),
-                    fontSize = 16.sp,
-                    fontWeight = FontWeight.Bold,
-                    modifier = Modifier.padding(bottom = 8.dp, top = 16.dp)
-                )
+                        groupedFaqs[FAQCategory.TASK]?.forEach { faqItem ->
+                            FAQItem(
+                                question = faqItem.question,
+                                answer = faqItem.answer
+                            )
+                        }
+                    }
 
-                FAQItem(
-                    question = "Bagaimana cara menambahkan tugas baru?",
-                    answer = "Untuk menambahkan tugas baru:\n\n1. Klik tombol '+' pada halaman utama\n2. Isi informasi tugas seperti judul, mata kuliah, tanggal, dll\n3. Tekan 'Simpan' untuk menyimpan tugas baru"
-                )
+                    // Tampilkan FAQ kategori Lainnya jika ada
+                    if (groupedFaqs.containsKey(FAQCategory.OTHER)) {
+                        Text(
+                            text = "Lainnya",
+                            color = Color(0xFF7DAFCB),
+                            fontSize = 16.sp,
+                            fontWeight = FontWeight.Bold,
+                            modifier = Modifier.padding(bottom = 8.dp, top = if (groupedFaqs.isNotEmpty()) 16.dp else 8.dp)
+                        )
 
-                FAQItem(
-                    question = "Bagaimana cara menandai tugas sudah selesai?",
-                    answer = "Cukup klik kotak centang di samping tugas untuk menandainya sebagai selesai. Anda juga dapat membatalkan tanda ini dengan mengklik kembali kotak tersebut."
-                )
+                        groupedFaqs[FAQCategory.OTHER]?.forEach { faqItem ->
+                            FAQItem(
+                                question = faqItem.question,
+                                answer = faqItem.answer
+                            )
+                        }
+                    }
 
-                FAQItem(
-                    question = "Apakah saya bisa menghapus tugas yang sudah dibuat?",
-                    answer = "Ya, untuk menghapus tugas, cukup tekan lama pada tugas yang ingin dihapus, kemudian pilih opsi 'Hapus' yang muncul."
-                )
-
-                // Other Section
-                Text(
-                    text = "Lainnya",
-                    color = Color(0xFF7DAFCB),
-                    fontSize = 16.sp,
-                    fontWeight = FontWeight.Bold,
-                    modifier = Modifier.padding(bottom = 8.dp, top = 16.dp)
-                )
-
-                FAQItem(
-                    question = "Apakah notifikasi dapat disesuaikan?",
-                    answer = "Ya, Anda dapat menyesuaikan notifikasi di halaman 'Keamanan dan Privasi'. Anda dapat mengaktifkan atau menonaktifkan notifikasi dan mengatur jenis notifikasi yang ingin diterima."
-                )
-
-                FAQItem(
-                    question = "Bagaimana cara melaporkan bug atau masalah aplikasi?",
-                    answer = "Untuk melaporkan bug atau masalah, silakan kirim email ke support@disiplinpro.id dengan detail masalah yang Anda alami. Tim kami akan merespons secepat mungkin."
-                )
-
-                FAQItem(
-                    question = "Di mana saya bisa mendapatkan bantuan lebih lanjut?",
-                    answer = "Anda dapat menghubungi tim dukungan kami melalui email support@disiplinpro.id atau kunjungi situs web kami di www.disiplinpro.id untuk informasi bantuan lebih lanjut."
-                )
-
-                Spacer(modifier = Modifier.height(16.dp))
+                    Spacer(modifier = Modifier.height(16.dp))
+                }
             }
 
             // Contact Support Button
             Button(
-                onClick = { /* TODO: Implement contact support functionality */ },
+                onClick = { viewModel.contactSupport() },
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(50.dp),
@@ -259,12 +273,9 @@ fun FAQItem(
             .padding(vertical = 8.dp)
             .clickable { expanded = !expanded },
         colors = CardDefaults.cardColors(
-            containerColor = Color.White.copy(alpha = 0.8f)
+            containerColor = Color(0x332196F3)
         ),
-        shape = RoundedCornerShape(12.dp),
-        elevation = CardDefaults.cardElevation(
-            defaultElevation = 2.dp
-        )
+        shape = RoundedCornerShape(12.dp)
     ) {
         Column(
             modifier = Modifier.padding(16.dp)

@@ -37,7 +37,7 @@ import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun EditAkunScreen(
+fun ProfileEditScreen(
     navController: NavController,
     profileViewModel: ProfileEditViewModel = viewModel()
 ) {

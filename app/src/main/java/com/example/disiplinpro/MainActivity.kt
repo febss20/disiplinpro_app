@@ -26,9 +26,9 @@ import com.example.disiplinpro.ui.calender.CalendarScreen
 import com.example.disiplinpro.ui.home.HomeScreen
 import com.example.disiplinpro.ui.notification.NotificationScreen
 import com.example.disiplinpro.ui.profile.ProfileScreen
-import com.example.disiplinpro.ui.profile.EditAkunScreen
-import com.example.disiplinpro.ui.profile.KeamananPrivasiScreen
 import com.example.disiplinpro.ui.profile.FAQScreen
+import com.example.disiplinpro.ui.profile.ProfileEditScreen
+import com.example.disiplinpro.ui.profile.SecurityPrivacyScreen
 import com.example.disiplinpro.ui.schedule.AddScheduleScreen
 import com.example.disiplinpro.ui.schedule.AllSchedulesScreen
 import com.example.disiplinpro.ui.schedule.EditScheduleScreen
@@ -91,8 +91,8 @@ class MainActivity : ComponentActivity() {
                 composable("kalender") { CalendarScreen(navController) }
                 composable("notifikasi") { NotificationScreen(navController) }
                 composable("akun") { ProfileScreen(navController) }
-                composable("edit_akun") { EditAkunScreen(navController) }
-                composable("keamanan_privasi") { KeamananPrivasiScreen(navController) }
+                composable("edit_akun") { ProfileEditScreen(navController) }
+                composable("keamanan_privasi") { SecurityPrivacyScreen(navController) }
                 composable("faq") { FAQScreen(navController) }
             }
         }

@@ -1,5 +1,6 @@
 package com.example.disiplinpro.ui.profile
 
+import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -15,21 +16,46 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
+import com.example.disiplinpro.viewmodel.profile.SecurityPrivacyViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun KeamananPrivasiScreen(
-    navController: NavController
+fun SecurityPrivacyScreen(
+    navController: NavController,
+    viewModel: SecurityPrivacyViewModel = viewModel()
 ) {
-    var showBiometricLogin by remember { mutableStateOf(false) }
-    var enableTwoFactorAuth by remember { mutableStateOf(false) }
-    var shareActivityData by remember { mutableStateOf(true) }
-    var allowNotifications by remember { mutableStateOf(true) }
-    var saveLoginInfo by remember { mutableStateOf(true) }
+    val context = LocalContext.current
+
+    // Observe settings from DataStore via ViewModel
+    val showBiometricLogin by viewModel.biometricLoginEnabled.collectAsState()
+    val enableTwoFactorAuth by viewModel.twoFactorAuthEnabled.collectAsState()
+    val saveLoginInfo by viewModel.saveLoginInfoEnabled.collectAsState()
+    val shareActivityData by viewModel.shareActivityDataEnabled.collectAsState()
+    val allowNotifications by viewModel.allowNotificationsEnabled.collectAsState()
+
+    // Dialog state
+    var showPasswordResetDialog by remember { mutableStateOf(false) }
+    var showDeleteAccountDialog by remember { mutableStateOf(false) }
+    var deleteAccountPassword by remember { mutableStateOf("") }
+
+    // Loading state
+    val isLoading by viewModel.isLoading
+    val error by viewModel.error
+    val operationSuccess by viewModel.operationSuccess
+
+    // Effect to handle errors
+    LaunchedEffect(error) {
+        error?.let {
+            Toast.makeText(context, it, Toast.LENGTH_LONG).show()
+        }
+    }
 
     Box(
         modifier = Modifier
@@ -59,6 +85,16 @@ fun KeamananPrivasiScreen(
             )
         }
 
+        // Loading indicator
+        if (isLoading) {
+            CircularProgressIndicator(
+                modifier = Modifier
+                    .size(50.dp)
+                    .align(Alignment.Center),
+                color = Color(0xFF7DAFCB)
+            )
+        }
+
         Column(
             modifier = Modifier
                 .fillMaxSize()
@@ -82,7 +118,11 @@ fun KeamananPrivasiScreen(
                 icon = Icons.Default.Fingerprint,
                 iconTint = Color(0xFF64B5F6),
                 checked = showBiometricLogin,
-                onCheckedChange = { showBiometricLogin = it }
+                onCheckedChange = {
+                    // Sidik jari belum diimplementasikan
+                    Toast.makeText(context, "Fitur sidik jari tidak tersedia saat ini", Toast.LENGTH_SHORT).show()
+                },
+                enabled = false
             )
 
             // Two-Factor Authentication
@@ -92,7 +132,7 @@ fun KeamananPrivasiScreen(
                 icon = Icons.Default.Shield,
                 iconTint = Color(0xFF64B5F6),
                 checked = enableTwoFactorAuth,
-                onCheckedChange = { enableTwoFactorAuth = it }
+                onCheckedChange = { viewModel.updateTwoFactorAuth(it) }
             )
 
             // Save Login Info
@@ -102,7 +142,7 @@ fun KeamananPrivasiScreen(
                 icon = Icons.Default.SaveAlt,
                 iconTint = Color(0xFF64B5F6),
                 checked = saveLoginInfo,
-                onCheckedChange = { saveLoginInfo = it }
+                onCheckedChange = { viewModel.updateSaveLoginInfo(it) }
             )
 
             Divider(
@@ -127,7 +167,7 @@ fun KeamananPrivasiScreen(
                 icon = Icons.Default.DataUsage,
                 iconTint = Color(0xFFE57373),
                 checked = shareActivityData,
-                onCheckedChange = { shareActivityData = it }
+                onCheckedChange = { viewModel.updateShareActivityData(it) }
             )
 
             // Notifications
@@ -137,7 +177,7 @@ fun KeamananPrivasiScreen(
                 icon = Icons.Default.Notifications,
                 iconTint = Color(0xFFE57373),
                 checked = allowNotifications,
-                onCheckedChange = { allowNotifications = it }
+                onCheckedChange = { viewModel.updateAllowNotifications(it) }
             )
 
             Divider(
@@ -152,7 +192,7 @@ fun KeamananPrivasiScreen(
                 description = "Bersihkan data sementara dan histori aplikasi",
                 icon = Icons.Default.DeleteForever,
                 iconTint = Color(0xFF7DAFCB),
-                onClick = { /* TODO: Implement cache clearing */ }
+                onClick = { viewModel.clearCacheAndHistory() }
             )
 
             ActionItem(
@@ -160,7 +200,7 @@ fun KeamananPrivasiScreen(
                 description = "Atur ulang password akun Anda",
                 icon = Icons.Default.Lock,
                 iconTint = Color(0xFF7DAFCB),
-                onClick = { /* TODO: Implement password reset */ }
+                onClick = { showPasswordResetDialog = true }
             )
 
             ActionItem(
@@ -168,11 +208,91 @@ fun KeamananPrivasiScreen(
                 description = "Hapus permanen akun dan semua data terkait",
                 icon = Icons.Default.PersonOff,
                 iconTint = Color(0xFFE57373),
-                onClick = { /* TODO: Implement account deletion */ }
+                onClick = { showDeleteAccountDialog = true }
             )
 
             Spacer(modifier = Modifier.height(16.dp))
         }
+    }
+
+    // Password Reset Dialog
+    if (showPasswordResetDialog) {
+        AlertDialog(
+            onDismissRequest = { showPasswordResetDialog = false },
+            title = { Text("Reset Password") },
+            text = { Text("Email berisi tautan untuk reset password akan dikirim ke email terdaftar Anda.") },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        viewModel.resetPassword()
+                        showPasswordResetDialog = false
+                    },
+                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF7DAFCB))
+                ) {
+                    Text("Kirim Email Reset")
+                }
+            },
+            dismissButton = {
+                OutlinedButton(onClick = { showPasswordResetDialog = false }) {
+                    Text("Batal")
+                }
+            }
+        )
+    }
+
+    // Delete Account Dialog
+    if (showDeleteAccountDialog) {
+        AlertDialog(
+            onDismissRequest = { showDeleteAccountDialog = false },
+            title = { Text("Hapus Akun") },
+            text = {
+                Column {
+                    Text("Penghapusan akun bersifat permanen dan tidak dapat dibatalkan. Semua data Anda akan dihapus.")
+                    Spacer(modifier = Modifier.height(16.dp))
+                    Text("Masukkan password Anda untuk konfirmasi:")
+                    Spacer(modifier = Modifier.height(8.dp))
+                    OutlinedTextField(
+                        value = deleteAccountPassword,
+                        onValueChange = { deleteAccountPassword = it },
+                        label = { Text("Password") },
+                        visualTransformation = PasswordVisualTransformation(),
+                        singleLine = true,
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                }
+            },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        if (deleteAccountPassword.isNotEmpty()) {
+                            viewModel.deleteAccount(
+                                deleteAccountPassword,
+                                onSuccess = {
+                                    Toast.makeText(context, "Akun berhasil dihapus", Toast.LENGTH_LONG).show()
+                                    showDeleteAccountDialog = false
+                                    navController.navigate("login") {
+                                        popUpTo("home") { inclusive = true }
+                                    }
+                                }
+                            )
+                        } else {
+                            Toast.makeText(context, "Password tidak boleh kosong", Toast.LENGTH_SHORT).show()
+                        }
+                    },
+                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFE57373))
+                ) {
+                    Text("Hapus Akun")
+                }
+            },
+            dismissButton = {
+                OutlinedButton(onClick = {
+                    showDeleteAccountDialog = false
+                    deleteAccountPassword = ""
+                }) {
+                    Text("Batal")
+                }
+            }
+        )
     }
 }
 
@@ -183,19 +303,17 @@ fun SecuritySettingItem(
     icon: androidx.compose.ui.graphics.vector.ImageVector,
     iconTint: Color,
     checked: Boolean,
-    onCheckedChange: (Boolean) -> Unit
+    onCheckedChange: (Boolean) -> Unit,
+    enabled: Boolean = true
 ) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
             .padding(vertical = 8.dp),
         colors = CardDefaults.cardColors(
-            containerColor = Color.White.copy(alpha = 0.8f)
+            containerColor = Color(0x332196F3)
         ),
         shape = RoundedCornerShape(12.dp),
-        elevation = CardDefaults.cardElevation(
-            defaultElevation = 2.dp
-        )
     ) {
         Row(
             modifier = Modifier
@@ -227,24 +345,29 @@ fun SecuritySettingItem(
                     text = title,
                     fontWeight = FontWeight.Bold,
                     fontSize = 16.sp,
-                    color = Color(0xFF333333)
+                    color = if (enabled) Color(0xFF333333) else Color.Gray
                 )
                 Spacer(modifier = Modifier.height(4.dp))
                 Text(
                     text = description,
                     fontSize = 12.sp,
-                    color = Color(0xFF666666)
+                    color = if (enabled) Color(0xFF666666) else Color.Gray
                 )
             }
 
             Switch(
                 checked = checked,
                 onCheckedChange = onCheckedChange,
+                enabled = enabled,
                 colors = SwitchDefaults.colors(
                     checkedThumbColor = Color.White,
                     checkedTrackColor = iconTint,
                     uncheckedThumbColor = Color.White,
-                    uncheckedTrackColor = Color(0xFFDDDDDD)
+                    uncheckedTrackColor = Color(0xFFDDDDDD),
+                    disabledCheckedThumbColor = Color.LightGray,
+                    disabledCheckedTrackColor = iconTint.copy(alpha = 0.3f),
+                    disabledUncheckedThumbColor = Color.LightGray,
+                    disabledUncheckedTrackColor = Color(0xFFDDDDDD).copy(alpha = 0.3f)
                 )
             )
         }
@@ -265,12 +388,9 @@ fun ActionItem(
             .padding(vertical = 8.dp)
             .clickable(onClick = onClick),
         colors = CardDefaults.cardColors(
-            containerColor = Color.White.copy(alpha = 0.8f)
+            containerColor = Color(0x332196F3)
         ),
         shape = RoundedCornerShape(12.dp),
-        elevation = CardDefaults.cardElevation(
-            defaultElevation = 2.dp
-        )
     ) {
         Row(
             modifier = Modifier
