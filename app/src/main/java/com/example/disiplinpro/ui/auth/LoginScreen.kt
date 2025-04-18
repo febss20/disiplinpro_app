@@ -6,6 +6,7 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.*
@@ -43,6 +44,8 @@ fun LoginScreen(
     var password by remember { mutableStateOf("") }
     var loginFailed by remember { mutableStateOf(false) }
     var passwordVisible by remember { mutableStateOf(false) }
+    var emailError by remember { mutableStateOf(false) }
+    var passwordError by remember { mutableStateOf(false) }
 
     val context = LocalContext.current
     val lifecycleOwner = LocalLifecycleOwner.current
@@ -88,10 +91,29 @@ fun LoginScreen(
                     }
                     is AuthState.Error -> {
                         Log.e("LoginScreen", "Auth error: ${state.message}")
-                        Toast.makeText(context, "Error: ${state.message}", Toast.LENGTH_SHORT).show()
+
+                        // Provide user-friendly error message based on the error
+                        val userFriendlyMessage = when {
+                            state.message.contains("no user record", ignoreCase = true) ->
+                                "Email tidak terdaftar. Silakan daftar terlebih dahulu."
+                            state.message.contains("password is invalid", ignoreCase = true) ->
+                                "Password salah. Silakan coba lagi."
+                            state.message.contains("badly formatted", ignoreCase = true) ->
+                                "Format email tidak valid. Silakan periksa kembali."
+                            state.message.contains("network", ignoreCase = true) ->
+                                "Koneksi internet bermasalah. Silakan periksa koneksi Anda."
+                            state.message.contains("too many attempts", ignoreCase = true) ->
+                                "Terlalu banyak percobaan. Silakan coba lagi nanti."
+                            state.message.contains("ID Token", ignoreCase = true) ->
+                                "Gagal login dengan Google. Silakan coba lagi."
+                            else ->
+                                "Login gagal: ${state.message}"
+                        }
+
+                        Toast.makeText(context, userFriendlyMessage, Toast.LENGTH_LONG).show()
                         loginFailed = true
                     }
-                    else -> { }
+                    else -> { /* No action */ }
                 }
             }
         }
@@ -112,7 +134,7 @@ fun LoginScreen(
             Column(
                 horizontalAlignment = Alignment.CenterHorizontally,
                 modifier = Modifier
-                    .padding(top = 65.dp, bottom = 45.dp)
+                    .padding(top = 65.dp, bottom = 30.dp)
                     .fillMaxWidth()
             ) {
                 Text(
@@ -128,7 +150,7 @@ fun LoginScreen(
                 color = Color(0xFF7DAFCB),
                 fontSize = 24.sp,
                 fontWeight = FontWeight.Bold,
-                modifier = Modifier.padding(top = 26.dp, start = 31.dp)
+                modifier = Modifier.padding(start = 31.dp)
             )
 
             // Email Field
@@ -156,19 +178,26 @@ fun LoginScreen(
                 }
                 OutlinedTextField(
                     value = email,
-                    onValueChange = { email = it },
+                    onValueChange = {
+                        email = it
+                        if (emailError) emailError = false
+                    },
                     label = { Text("Email") },
                     modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(8.dp),
                     colors = OutlinedTextFieldDefaults.colors(
-                        focusedBorderColor = Color(0xFF7DAFCB),
-                    )
+                        focusedBorderColor = if (emailError) Color.Red else Color(0xFF7DAFCB),
+                        unfocusedBorderColor = if (emailError) Color.Red else Color(0x807DAFCB),
+                        errorBorderColor = Color.Red
+                    ),
+                    isError = emailError
                 )
             }
 
             // Password Field
             Column(
                 modifier = Modifier
-                    .padding(top = 26.dp, start = 31.dp, end = 31.dp)
+                    .padding(top = 7.dp, start = 31.dp, end = 31.dp)
                     .fillMaxWidth()
             ) {
                 Row(
@@ -190,9 +219,13 @@ fun LoginScreen(
                 }
                 OutlinedTextField(
                     value = password,
-                    onValueChange = { password = it },
+                    onValueChange = {
+                        password = it
+                        if (passwordError) passwordError = false
+                    },
                     label = { Text("Password") },
                     modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(8.dp),
                     visualTransformation = if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
                     trailingIcon = {
                         IconButton(onClick = { passwordVisible = !passwordVisible }) {
@@ -204,11 +237,11 @@ fun LoginScreen(
                         }
                     },
                     colors = OutlinedTextFieldDefaults.colors(
-                        unfocusedBorderColor = Color.Gray,
-                        focusedBorderColor = if (loginFailed) Color.Red else Color(0xFF7DAFCB),
+                        unfocusedBorderColor = if (passwordError) Color.Red else Color(0x807DAFCB),
+                        focusedBorderColor = if (passwordError) Color.Red else Color(0xFF7DAFCB),
                         errorBorderColor = Color.Red
                     ),
-                    isError = loginFailed
+                    isError = passwordError
                 )
             }
 
@@ -221,12 +254,28 @@ fun LoginScreen(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 if (loginFailed) {
-                    Text(
-                        "Password salah",
-                        color = Color.Red,
-                        fontSize = 12.sp,
-                        fontWeight = FontWeight.Bold
-                    )
+                    if (emailError) {
+                        Text(
+                            "Email tidak valid",
+                            color = Color.Red,
+                            fontSize = 12.sp,
+                            fontWeight = FontWeight.Bold
+                        )
+                    } else if (passwordError) {
+                        Text(
+                            "Password salah",
+                            color = Color.Red,
+                            fontSize = 12.sp,
+                            fontWeight = FontWeight.Bold
+                        )
+                    } else {
+                        Text(
+                            "Login gagal",
+                            color = Color.Red,
+                            fontSize = 12.sp,
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
                 } else {
                     Spacer(modifier = Modifier.width(0.dp))
                 }
@@ -244,12 +293,30 @@ fun LoginScreen(
             Button(
                 onClick = {
                     loginFailed = false
-                    if (email.isNotEmpty() && password.isNotEmpty()) {
-                        authViewModel.loginUser(email, password) { success ->
-                            loginFailed = !success
-                        }
-                    } else {
+                    emailError = false
+                    passwordError = false
+
+                    if (email.isEmpty()) {
+                        Toast.makeText(context, "Email tidak boleh kosong", Toast.LENGTH_SHORT).show()
+                        emailError = true
                         loginFailed = true
+                        return@Button
+                    }
+
+                    if (password.isEmpty()) {
+                        Toast.makeText(context, "Password tidak boleh kosong", Toast.LENGTH_SHORT).show()
+                        passwordError = true
+                        loginFailed = true
+                        return@Button
+                    }
+
+                    Log.d("LoginScreen", "Attempting login with email: $email")
+                    authViewModel.loginUser(email, password) { success ->
+                        Log.d("LoginScreen", "Login result: $success")
+                        loginFailed = !success
+                        if (!success) {
+                            passwordError = true
+                        }
                     }
                 },
                 modifier = Modifier
@@ -265,7 +332,12 @@ fun LoginScreen(
                         modifier = Modifier.size(24.dp)
                     )
                 } else {
-                    Text("MASUK", color = Color.White)
+                    Text(
+                        "MASUK",
+                        color = Color(0xFFFFFFFF),
+                        fontSize = 16.sp,
+                        fontWeight = FontWeight.Bold,
+                    )
                 }
             }
 

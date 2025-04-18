@@ -82,6 +82,7 @@ fun EmailVerificationScreen(
                 modifier = Modifier
                     .padding(top = 32.dp, start = 32.dp, end = 32.dp)
                     .fillMaxWidth()
+                    .height(48.dp)
                     .clip(RoundedCornerShape(50.dp)),
                 colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF7DAFCB)),
                 contentPadding = PaddingValues(vertical = 13.dp)
