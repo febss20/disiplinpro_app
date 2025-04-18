@@ -1,9 +1,11 @@
 package com.example.disiplinpro.ui.auth
 
+import android.util.Log
 import android.widget.Toast
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.*
@@ -15,16 +17,22 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
+import com.example.disiplinpro.viewmodel.auth.AuthState
 import com.example.disiplinpro.viewmodel.auth.AuthViewModel
+import com.google.android.gms.auth.api.signin.GoogleSignIn
+import com.google.android.gms.auth.api.signin.GoogleSignInOptions
 import com.skydoves.landscapist.ImageOptions
 import com.skydoves.landscapist.coil.CoilImage
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.draw.clip
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.VisibilityOff
+import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.repeatOnLifecycle
+import com.example.disiplinpro.R
 
 @Composable
 fun LoginScreen(
@@ -35,7 +43,59 @@ fun LoginScreen(
     var password by remember { mutableStateOf("") }
     var loginFailed by remember { mutableStateOf(false) }
     var passwordVisible by remember { mutableStateOf(false) }
+
     val context = LocalContext.current
+    val lifecycleOwner = LocalLifecycleOwner.current
+    val authState by authViewModel.authState.collectAsState()
+    val isLoading by remember { authViewModel.isLoading }
+
+    // Google Sign-In setup
+    val googleSignInClient = remember {
+        try {
+            val gso = GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
+                .requestIdToken(context.getString(R.string.default_web_client_id))
+                .requestEmail()
+                .build()
+            GoogleSignIn.getClient(context, gso)
+        } catch (e: Exception) {
+            Log.e("LoginScreen", "Error setting up Google Sign-In: ${e.message}")
+            Toast.makeText(
+                context,
+                "Google Sign-In setup error. Check Firebase configuration.",
+                Toast.LENGTH_SHORT
+            ).show()
+            val defaultGso = GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
+                .requestEmail()
+                .build()
+            GoogleSignIn.getClient(context, defaultGso)
+        }
+    }
+
+    val googleSignInLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.StartActivityForResult()
+    ) { result ->
+        authViewModel.handleGoogleSignInResult(result)
+    }
+
+    LaunchedEffect(lifecycleOwner) {
+        lifecycleOwner.lifecycle.repeatOnLifecycle(Lifecycle.State.STARTED) {
+            authViewModel.authState.collect { state ->
+                when (state) {
+                    is AuthState.Authenticated -> {
+                        navController.navigate("home") {
+                            popUpTo("login") { inclusive = true }
+                        }
+                    }
+                    is AuthState.Error -> {
+                        Log.e("LoginScreen", "Auth error: ${state.message}")
+                        Toast.makeText(context, "Error: ${state.message}", Toast.LENGTH_SHORT).show()
+                        loginFailed = true
+                    }
+                    else -> { }
+                }
+            }
+        }
+    }
 
     Column(
         modifier = Modifier
@@ -183,33 +243,69 @@ fun LoginScreen(
             // Login Button
             Button(
                 onClick = {
-                    if (email.isEmpty() || password.isEmpty()) {
-                        Toast.makeText(context, "Email dan password tidak boleh kosong", Toast.LENGTH_SHORT).show()
-                    } else {
+                    loginFailed = false
+                    if (email.isNotEmpty() && password.isNotEmpty()) {
                         authViewModel.loginUser(email, password) { success ->
-                            if (success) {
-                                navController.navigate("home")
-                            } else {
-                                loginFailed = true
-                                Toast.makeText(context, "Login gagal, periksa email dan password", Toast.LENGTH_SHORT).show()
-                            }
+                            loginFailed = !success
                         }
+                    } else {
+                        loginFailed = true
                     }
                 },
                 modifier = Modifier
-                    .padding(top = 10.dp, start = 32.dp, end = 32.dp)
+                    .padding(top = 32.dp, start = 31.dp, end = 31.dp)
                     .fillMaxWidth()
-                    .clip(RoundedCornerShape(50.dp)),
+                    .height(48.dp),
                 colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF7DAFCB)),
-                contentPadding = PaddingValues(vertical = 13.dp)
+                enabled = !isLoading
             ) {
+                if (isLoading) {
+                    CircularProgressIndicator(
+                        color = Color.White,
+                        modifier = Modifier.size(24.dp)
+                    )
+                } else {
+                    Text("MASUK", color = Color.White)
+                }
+            }
+
+            // OR Divider
+            Row(
+                modifier = Modifier
+                    .padding(horizontal = 31.dp, vertical = 16.dp)
+                    .fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Divider(
+                    color = Color(0xFFEEEEEE),
+                    thickness = 1.dp,
+                    modifier = Modifier.weight(1f)
+                )
                 Text(
-                    "Masuk",
-                    color = Color(0xFFFFFFFF),
-                    fontSize = 20.sp,
-                    fontWeight = FontWeight.Bold
+                    text = "ATAU",
+                    color = Color(0xFF999999),
+                    fontSize = 12.sp,
+                    modifier = Modifier.padding(horizontal = 16.dp)
+                )
+                Divider(
+                    color = Color(0xFFEEEEEE),
+                    thickness = 1.dp,
+                    modifier = Modifier.weight(1f)
                 )
             }
+
+            // Google Sign In Button
+            GoogleSignInButton(
+                onClick = {
+                    val signInIntent = googleSignInClient.signInIntent
+                    googleSignInLauncher.launch(signInIntent)
+                },
+                modifier = Modifier
+                    .padding(horizontal = 31.dp)
+                    .fillMaxWidth(),
+                enabled = !isLoading,
+                text = "Masuk dengan Google"
+            )
 
             // Register Link
             Column(

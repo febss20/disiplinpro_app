@@ -1,11 +1,14 @@
 package com.example.disiplinpro.ui.auth
 
+import android.util.Log
 import android.widget.Toast
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Visibility
@@ -15,6 +18,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.input.PasswordVisualTransformation
@@ -22,12 +26,17 @@ import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.layout.ContentScale
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.repeatOnLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
+import com.example.disiplinpro.R
+import com.example.disiplinpro.viewmodel.auth.AuthState
 import com.example.disiplinpro.viewmodel.auth.AuthViewModel
+import com.google.android.gms.auth.api.signin.GoogleSignIn
+import com.google.android.gms.auth.api.signin.GoogleSignInOptions
 import com.skydoves.landscapist.coil.CoilImage
 import com.skydoves.landscapist.ImageOptions
-import androidx.compose.ui.draw.clip
 
 @Composable
 fun RegisterScreen(
@@ -38,7 +47,58 @@ fun RegisterScreen(
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     var passwordVisible by remember { mutableStateOf(false) }
+    var registerFailed by remember { mutableStateOf(false) }
     val context = LocalContext.current
+    val lifecycleOwner = LocalLifecycleOwner.current
+    val authState by authViewModel.authState.collectAsState()
+    val isLoading by remember { authViewModel.isLoading }
+
+    // Google Sign-In setup
+    val googleSignInClient = remember {
+        try {
+            val gso = GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
+                .requestIdToken(context.getString(R.string.default_web_client_id))
+                .requestEmail()
+                .build()
+            GoogleSignIn.getClient(context, gso)
+        } catch (e: Exception) {
+            Log.e("RegisterScreen", "Error setting up Google Sign-In: ${e.message}")
+            Toast.makeText(
+                context,
+                "Google Sign-In setup error. Check Firebase configuration.",
+                Toast.LENGTH_SHORT
+            ).show()
+            val defaultGso = GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
+                .requestEmail()
+                .build()
+            GoogleSignIn.getClient(context, defaultGso)
+        }
+    }
+
+    val googleSignInLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.StartActivityForResult()
+    ) { result ->
+        authViewModel.handleGoogleSignInResult(result)
+    }
+
+    LaunchedEffect(lifecycleOwner) {
+        lifecycleOwner.lifecycle.repeatOnLifecycle(Lifecycle.State.STARTED) {
+            authViewModel.authState.collect { state ->
+                when (state) {
+                    is AuthState.Authenticated -> {
+                        navController.navigate("home") {
+                            popUpTo("register") { inclusive = true }
+                        }
+                    }
+                    is AuthState.Error -> {
+                        Log.e("RegisterScreen", "Auth error: ${state.message}")
+                        Toast.makeText(context, "Error: ${state.message}", Toast.LENGTH_SHORT).show()
+                    }
+                    else -> { }
+                }
+            }
+        }
+    }
 
     Column(
         modifier = Modifier
@@ -51,6 +111,7 @@ fun RegisterScreen(
                 .fillMaxWidth()
                 .weight(1f)
                 .background(color = Color(0xFFFAF3E0))
+                .verticalScroll(rememberScrollState())
         ) {
             Column(
                 horizontalAlignment = Alignment.CenterHorizontally,
@@ -189,11 +250,11 @@ fun RegisterScreen(
             // Register Button
             Button(
                 onClick = {
+                    registerFailed = false
                     if (username.isNotEmpty() && email.isNotEmpty() && password.isNotEmpty()) {
                         authViewModel.registerUser(username, email, password) { success ->
-                            if (success) {
-                                navController.navigate("home")
-                            } else {
+                            registerFailed = !success
+                            if (!success) {
                                 Toast.makeText(context, "Registrasi gagal", Toast.LENGTH_SHORT).show()
                             }
                         }
@@ -204,18 +265,61 @@ fun RegisterScreen(
                 modifier = Modifier
                     .padding(top = 30.dp, start = 32.dp, end = 32.dp)
                     .fillMaxWidth()
-                    .clip(RoundedCornerShape(50.dp))
-                    .background(Color(0xFF7DAFCB)),
+                    .height(48.dp),
                 colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF7DAFCB)),
-                contentPadding = PaddingValues(vertical = 13.dp)
+                enabled = !isLoading
             ) {
+                if (isLoading) {
+                    CircularProgressIndicator(
+                        color = Color.White,
+                        modifier = Modifier.size(24.dp)
+                    )
+                } else {
+                    Text(
+                        "DAFTAR",
+                        color = Color(0xFFFFFFFF),
+                        fontSize = 16.sp,
+                        fontWeight = FontWeight.Bold,
+                    )
+                }
+            }
+
+            // OR Divider
+            Row(
+                modifier = Modifier
+                    .padding(horizontal = 31.dp, vertical = 16.dp)
+                    .fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Divider(
+                    color = Color(0xFFEEEEEE),
+                    thickness = 1.dp,
+                    modifier = Modifier.weight(1f)
+                )
                 Text(
-                    "Daftar",
-                    color = Color(0xFFFFFFFF),
-                    fontSize = 20.sp,
-                    fontWeight = FontWeight.Bold,
+                    text = "ATAU",
+                    color = Color(0xFF999999),
+                    fontSize = 12.sp,
+                    modifier = Modifier.padding(horizontal = 16.dp)
+                )
+                Divider(
+                    color = Color(0xFFEEEEEE),
+                    thickness = 1.dp,
+                    modifier = Modifier.weight(1f)
                 )
             }
+
+            // Google Sign In Button
+            GoogleSignInButton(
+                onClick = {
+                    val signInIntent = googleSignInClient.signInIntent
+                    googleSignInLauncher.launch(signInIntent)
+                },
+                modifier = Modifier
+                    .padding(horizontal = 31.dp)
+                    .fillMaxWidth(),
+                enabled = !isLoading
+            )
 
             // Login Link
             Column(

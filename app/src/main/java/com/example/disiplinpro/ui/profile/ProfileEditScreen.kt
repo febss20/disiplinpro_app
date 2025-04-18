@@ -49,19 +49,15 @@ fun ProfileEditScreen(
     val snackbarHostState = remember { SnackbarHostState() }
     val coroutineScope = rememberCoroutineScope()
 
-    // Image picker
     val imagePicker = rememberImagePicker(context) { uri ->
         profileViewModel.setSelectedImageUri(uri)
     }
 
-    // Permission request
     RequestStoragePermission(
         context = context,
         onPermissionGranted = {
-            // Permission already granted, no action needed
         },
         onPermissionDenied = {
-            // Handle permission denied
             coroutineScope.launch {
                 snackbarHostState.showSnackbar(
                     message = "Izin akses penyimpanan dibutuhkan untuk mengubah foto profil",
@@ -71,19 +67,17 @@ fun ProfileEditScreen(
         }
     )
 
-    // Effect to auto-dismiss on success
     LaunchedEffect(uiState.isSuccess) {
         if (uiState.isSuccess) {
             snackbarHostState.showSnackbar(
                 message = "Profil berhasil diperbarui!",
                 duration = SnackbarDuration.Short
             )
-            kotlinx.coroutines.delay(1500) // Show success message for 1.5 seconds
-            navController.popBackStack() // Go back to profile screen
+            kotlinx.coroutines.delay(1500)
+            navController.popBackStack()
         }
     }
 
-    // Error message effect
     LaunchedEffect(uiState.errorMessage) {
         uiState.errorMessage?.let { error ->
             snackbarHostState.showSnackbar(
@@ -102,7 +96,6 @@ fun ProfileEditScreen(
                 .background(Color(0xFFFAF3E0))
                 .padding(paddingValues)
         ) {
-            // App Bar
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -133,7 +126,6 @@ fun ProfileEditScreen(
                     .verticalScroll(scrollState),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                // Loading indicator when state is loading
                 if (uiState.isLoading && selectedImageUri == null) {
                     CircularProgressIndicator(
                         color = Color(0xFF7DAFCB),
@@ -155,7 +147,6 @@ fun ProfileEditScreen(
                         contentAlignment = Alignment.Center
                     ) {
                         if (selectedImageUri != null) {
-                            // Show selected image
                             Box {
                                 AsyncImage(
                                     model = selectedImageUri,
@@ -164,7 +155,6 @@ fun ProfileEditScreen(
                                     contentScale = ContentScale.Crop
                                 )
 
-                                // If loading, show a semi-transparent overlay with progress indicator
                                 if (uiState.isLoading) {
                                     Box(
                                         modifier = Modifier
@@ -180,7 +170,6 @@ fun ProfileEditScreen(
                                 }
                             }
                         } else if (!uiState.profilePhotoUrl.isNullOrEmpty()) {
-                            // Show existing profile photo
                             AsyncImage(
                                 model = uiState.profilePhotoUrl,
                                 contentDescription = "Profile Photo",
@@ -188,7 +177,6 @@ fun ProfileEditScreen(
                                 contentScale = ContentScale.Crop
                             )
                         } else {
-                            // Show default icon
                             Icon(
                                 imageVector = Icons.Default.Person,
                                 contentDescription = "Profile",

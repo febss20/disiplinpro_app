@@ -40,13 +40,11 @@ fun FAQScreen(
 ) {
     val context = LocalContext.current
 
-    // Collect states from viewModel
     val searchQuery by viewModel.searchQuery.collectAsState()
     val selectedCategory by viewModel.selectedCategory.collectAsState()
     val filteredFaqItems by viewModel.filteredFaqItems.collectAsState()
     val isLoading by viewModel.isLoading
 
-    // State untuk kategori-kategori
     val categories = remember { listOf(FAQCategory.ALL, FAQCategory.ACCOUNT, FAQCategory.TASK, FAQCategory.OTHER) }
 
     Box(
@@ -54,7 +52,6 @@ fun FAQScreen(
             .fillMaxSize()
             .background(Color(0xFFFAF3E0))
     ) {
-        // App Bar
         Row(
             modifier = Modifier
                 .fillMaxWidth()
@@ -77,7 +74,6 @@ fun FAQScreen(
             )
         }
 
-        // Loading indicator
         if (isLoading) {
             CircularProgressIndicator(
                 modifier = Modifier
@@ -93,7 +89,6 @@ fun FAQScreen(
                 .padding(horizontal = 24.dp)
                 .padding(top = 80.dp, bottom = 24.dp)
         ) {
-            // Search bar
             OutlinedTextField(
                 value = searchQuery,
                 onValueChange = { viewModel.updateSearchQuery(it) },
@@ -117,7 +112,6 @@ fun FAQScreen(
                 singleLine = true
             )
 
-            // FAQ Categories
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -133,9 +127,7 @@ fun FAQScreen(
                 }
             }
 
-            // FAQ Items in a ScrollView
             if (filteredFaqItems.isEmpty() && !isLoading) {
-                // Tampilkan pesan jika tidak ada FAQ yang cocok dengan pencarian
                 Column(
                     modifier = Modifier
                         .weight(1f)
@@ -156,10 +148,8 @@ fun FAQScreen(
                         .weight(1f)
                         .verticalScroll(rememberScrollState())
                 ) {
-                    // Group FAQs by category and show section titles
                     val groupedFaqs = filteredFaqItems.groupBy { it.category }
 
-                    // Tampilkan FAQ kategori Akun jika ada
                     if (groupedFaqs.containsKey(FAQCategory.ACCOUNT)) {
                         Text(
                             text = "Akun & Pengaturan",
@@ -177,7 +167,6 @@ fun FAQScreen(
                         }
                     }
 
-                    // Tampilkan FAQ kategori Tugas jika ada
                     if (groupedFaqs.containsKey(FAQCategory.TASK)) {
                         Text(
                             text = "Tugas & Jadwal",
@@ -195,7 +184,6 @@ fun FAQScreen(
                         }
                     }
 
-                    // Tampilkan FAQ kategori Lainnya jika ada
                     if (groupedFaqs.containsKey(FAQCategory.OTHER)) {
                         Text(
                             text = "Lainnya",
@@ -217,7 +205,6 @@ fun FAQScreen(
                 }
             }
 
-            // Contact Support Button
             Button(
                 onClick = { viewModel.contactSupport() },
                 modifier = Modifier
@@ -280,7 +267,6 @@ fun FAQItem(
         Column(
             modifier = Modifier.padding(16.dp)
         ) {
-            // Question Row with arrow
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically,
@@ -307,7 +293,6 @@ fun FAQItem(
                 }
             }
 
-            // Answer
             AnimatedVisibility(
                 visible = expanded,
                 enter = expandVertically(),

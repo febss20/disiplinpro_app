@@ -155,7 +155,7 @@ fun ProfileScreen(
                     Log.d("ProfileScreen", "Cancelling all notification workers")
                     WorkManager.getInstance(context)
                         .cancelAllWorkByTag("notification_tag")
-                    authViewModel.logoutUser {
+                    authViewModel.logoutUser(context) {
                         Log.d("ProfileScreen", "Logout successful, navigating to onboarding")
                         navController.navigate("onboarding") {
                             popUpTo(navController.graph.startDestinationId) {

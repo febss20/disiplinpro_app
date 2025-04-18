@@ -13,7 +13,6 @@ val Context.securityPrivacyDataStore: DataStore<Preferences> by preferencesDataS
 
 class SecurityPrivacyPreferences(private val context: Context) {
 
-    // Preference keys
     companion object {
         val BIOMETRIC_LOGIN = booleanPreferencesKey("biometric_login")
         val TWO_FACTOR_AUTH = booleanPreferencesKey("two_factor_auth")
@@ -22,7 +21,6 @@ class SecurityPrivacyPreferences(private val context: Context) {
         val ALLOW_NOTIFICATIONS = booleanPreferencesKey("allow_notifications")
     }
 
-    // Get individual preference flows
     val biometricLoginFlow: Flow<Boolean> = context.securityPrivacyDataStore.data
         .map { preferences -> preferences[BIOMETRIC_LOGIN] ?: false }
 
@@ -38,7 +36,6 @@ class SecurityPrivacyPreferences(private val context: Context) {
     val allowNotificationsFlow: Flow<Boolean> = context.securityPrivacyDataStore.data
         .map { preferences -> preferences[ALLOW_NOTIFICATIONS] ?: true }
 
-    // Update functions
     suspend fun updateBiometricLogin(enabled: Boolean) {
         context.securityPrivacyDataStore.edit { preferences ->
             preferences[BIOMETRIC_LOGIN] = enabled
