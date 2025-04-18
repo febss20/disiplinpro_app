@@ -9,11 +9,15 @@ import android.os.Build
 import android.os.Bundle
 import android.os.PowerManager
 import android.provider.Settings
+import android.util.Log
 import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.remember
 import androidx.core.content.ContextCompat
+import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
@@ -26,9 +30,9 @@ import com.example.disiplinpro.ui.calender.CalendarScreen
 import com.example.disiplinpro.ui.home.HomeScreen
 import com.example.disiplinpro.ui.notification.NotificationScreen
 import com.example.disiplinpro.ui.profile.ProfileScreen
-import com.example.disiplinpro.ui.profile.FAQScreen
 import com.example.disiplinpro.ui.profile.ProfileEditScreen
 import com.example.disiplinpro.ui.profile.SecurityPrivacyScreen
+import com.example.disiplinpro.ui.profile.FAQScreen
 import com.example.disiplinpro.ui.schedule.AddScheduleScreen
 import com.example.disiplinpro.ui.schedule.AllSchedulesScreen
 import com.example.disiplinpro.ui.schedule.EditScheduleScreen
@@ -36,6 +40,7 @@ import com.example.disiplinpro.ui.task.AddTaskScreen
 import com.example.disiplinpro.ui.task.AllTasksScreen
 import com.example.disiplinpro.ui.task.EditTaskScreen
 import com.example.disiplinpro.viewmodel.auth.AuthViewModel
+import com.example.disiplinpro.worker.NotificationWorker
 import com.google.firebase.auth.FirebaseAuth
 
 class MainActivity : ComponentActivity() {
@@ -43,17 +48,36 @@ class MainActivity : ComponentActivity() {
         ActivityResultContracts.RequestPermission()
     ) { isGranted ->
         if (isGranted) {
-            println("Izin notifikasi diberikan")
+            Log.d("MainActivity", "Izin notifikasi diberikan")
         } else {
             Toast.makeText(this, "Izin notifikasi diperlukan untuk pengingat!", Toast.LENGTH_LONG).show()
         }
     }
 
+    private var notificationType: String? = null
+    private var notificationId: String? = null
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         requestNotificationPermission()
         requestBatteryOptimizationExemption()
+        processNotificationIntent(intent)
         setupNavigation()
+    }
+
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        processNotificationIntent(intent)
+        setIntent(intent)
+    }
+
+    private fun processNotificationIntent(intent: Intent) {
+        notificationType = intent.getStringExtra(NotificationWorker.EXTRA_NOTIFICATION_TYPE)
+        notificationId = intent.getStringExtra(NotificationWorker.EXTRA_ID)
+
+        if (notificationType != null && notificationId != null) {
+            Log.d("MainActivity", "Received notification: type=$notificationType, id=$notificationId")
+        }
     }
 
     private fun setupNavigation() {
@@ -65,6 +89,8 @@ class MainActivity : ComponentActivity() {
             } else {
                 "onboarding"
             }
+
+            HandleNotificationNavigation(navController)
 
             NavHost(navController = navController, startDestination = startDestination) {
                 composable("onboarding") { OnboardingScreen(navController) }
@@ -94,6 +120,36 @@ class MainActivity : ComponentActivity() {
                 composable("edit_akun") { ProfileEditScreen(navController) }
                 composable("keamanan_privasi") { SecurityPrivacyScreen(navController) }
                 composable("faq") { FAQScreen(navController) }
+            }
+        }
+    }
+
+    @androidx.compose.runtime.Composable
+    private fun HandleNotificationNavigation(navController: NavHostController) {
+        val type = remember { notificationType }
+        val id = remember { notificationId }
+
+        LaunchedEffect(type, id) {
+            if (type != null && id != null) {
+                when (type) {
+                    NotificationWorker.TYPE_TASK -> {
+                        Log.d("MainActivity", "Navigating to all task screen")
+                        navController.navigate("list_tugas") {
+
+                            popUpTo("home") { inclusive = false }
+                        }
+                    }
+                    NotificationWorker.TYPE_SCHEDULE -> {
+                        Log.d("MainActivity", "Navigating to schedule all screen")
+                        navController.navigate("list_jadwal") {
+
+                            popUpTo("home") { inclusive = false }
+                        }
+                    }
+                }
+
+                notificationType = null
+                notificationId = null
             }
         }
     }
