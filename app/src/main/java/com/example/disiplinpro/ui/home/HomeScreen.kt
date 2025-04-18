@@ -2,6 +2,7 @@ package com.example.disiplinpro.ui.home
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -24,6 +25,8 @@ import androidx.compose.foundation.shape.CircleShape
 import coil.compose.AsyncImage
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.outlined.CalendarMonth
+import androidx.compose.material.icons.outlined.Assignment
 import androidx.compose.ui.platform.LocalContext
 import androidx.navigation.compose.currentBackStackEntryAsState
 import com.example.disiplinpro.ui.components.BottomNavigationBar
@@ -33,6 +36,7 @@ import com.example.disiplinpro.viewmodel.schedule.ScheduleViewModel
 import com.example.disiplinpro.viewmodel.task.TaskViewModel
 import java.text.SimpleDateFormat
 import java.util.*
+import androidx.compose.ui.text.style.TextAlign
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -43,7 +47,7 @@ fun HomeScreen(
     taskViewModel: TaskViewModel = viewModel()
 ) {
     val context = LocalContext.current
-    
+
     LaunchedEffect(Unit) {
         taskViewModel.fetchTasks()
         taskViewModel.provideAppContext(context)
@@ -104,18 +108,20 @@ fun HomeScreen(
                                 contentDescription = "Profile",
                                 tint = Color(0x4D333333),
                                 modifier = Modifier
-                                    .size(40.dp)
+                                    .size(50.dp)
                                     .clip(CircleShape)
                                     .border(1.dp, Color(0x4D333333), RoundedCornerShape(100.dp))
                                     .background(Color(0xFFFFFFFF))
+                                    .clickable { navController.navigate("akun") }
                             )
                         } else {
                             AsyncImage(
                                 model = user?.fotoProfil,
                                 contentDescription = "Foto Profil",
                                 modifier = Modifier
-                                    .size(40.dp)
-                                    .clip(CircleShape),
+                                    .size(50.dp)
+                                    .clip(CircleShape)
+                                    .clickable { navController.navigate("akun") },
                                 contentScale = ContentScale.Crop
                             )
                         }
@@ -204,6 +210,23 @@ fun HomeScreen(
             item {
                 if (todaySchedules.isNotEmpty()) {
                     ScheduleItem(todaySchedules)
+                } else {
+                    // Empty state for schedules
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(16.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Text(
+                            text = "Tidak ada jadwal hari ini",
+                            color = Color(0xFF7DAFCB),
+                            fontSize = 16.sp,
+                            fontWeight = FontWeight.Bold,
+                            textAlign = TextAlign.Center
+                        )
+                    }
                 }
             }
 
@@ -242,6 +265,22 @@ fun HomeScreen(
             item {
                 if (todayTasks.isNotEmpty()) {
                     TaskItem(todayTasks, taskViewModel)
+                } else {
+                    // Empty state for tasks
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(16.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        Text(
+                            text = "Tidak ada tugas hari ini",
+                            color = Color(0xFF7DAFCB),
+                            fontSize = 16.sp,
+                            fontWeight = FontWeight.Bold,
+                            textAlign = TextAlign.Center
+                        )
+                    }
                 }
             }
 

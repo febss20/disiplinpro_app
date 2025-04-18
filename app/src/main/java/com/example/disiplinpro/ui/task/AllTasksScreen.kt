@@ -27,6 +27,9 @@ import com.example.disiplinpro.viewmodel.task.TaskViewModel
 import com.skydoves.landscapist.ImageOptions
 import com.skydoves.landscapist.coil.CoilImage
 import com.example.disiplinpro.R
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.Assignment
+import androidx.compose.ui.text.style.TextAlign
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -134,25 +137,59 @@ fun AllTasksScreen(
                     .weight(1f)
                     .fillMaxWidth()
             ) {
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .verticalScroll(scrollState)
-                ) {
-                    tasks.forEach { task ->
-                        TaskItem(
-                            tasks = listOf(task),
-                            viewModel = viewModel,
-                            isSelected = selectedTask == task,
-                            modifier = Modifier
-                                .clickable {
-                                    selectedTask = if (selectedTask == task) null else task
-                                }
-                                .clip(RoundedCornerShape(10.dp))
+                if (tasks.isEmpty()) {
+                    // Empty state message
+                    Column(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(16.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.Center
+                    ) {
+                        Icon(
+                            imageVector = Icons.Outlined.Assignment,
+                            contentDescription = "Empty Tasks",
+                            modifier = Modifier.size(120.dp),
+                            tint = Color(0xFF7DAFCB)
+                        )
+                        Spacer(modifier = Modifier.height(16.dp))
+                        Text(
+                            text = "Belum ada tugas",
+                            color = Color(0xFF7DAFCB),
+                            fontSize = 20.sp,
+                            fontWeight = FontWeight.Bold
+                        )
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Text(
+                            text = "Tambahkan tugas baru dengan tombol di bawah",
+                            color = Color(0xFF757575),
+                            fontSize = 14.sp,
+                            fontWeight = FontWeight.Normal,
+                            modifier = Modifier.padding(horizontal = 32.dp),
+                            textAlign = TextAlign.Center
                         )
                     }
+                } else {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .verticalScroll(scrollState)
+                    ) {
+                        tasks.forEach { task ->
+                            TaskItem(
+                                tasks = listOf(task),
+                                viewModel = viewModel,
+                                isSelected = selectedTask == task,
+                                modifier = Modifier
+                                    .clickable {
+                                        selectedTask = if (selectedTask == task) null else task
+                                    }
+                                    .clip(RoundedCornerShape(10.dp))
+                            )
+                        }
 
-                    Spacer(modifier = Modifier.height(100.dp))
+                        Spacer(modifier = Modifier.height(100.dp))
+                    }
                 }
 
                 // Tombol Tambah Tugas

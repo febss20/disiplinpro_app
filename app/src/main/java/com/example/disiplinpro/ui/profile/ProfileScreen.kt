@@ -92,7 +92,7 @@ fun ProfileScreen(
                             contentDescription = "Profile",
                             tint = Color(0x4D333333),
                             modifier = Modifier
-                                .size(40.dp)
+                                .size(50.dp)
                                 .clip(RoundedCornerShape(100.dp))
                                 .border(1.dp, Color(0x4D333333), RoundedCornerShape(100.dp))
                                 .background(Color(0xFFFFFFFF))
@@ -102,7 +102,7 @@ fun ProfileScreen(
                             model = user?.fotoProfil,
                             contentDescription = "Foto Profil",
                             modifier = Modifier
-                                .size(40.dp)
+                                .size(50.dp)
                                 .clip(RoundedCornerShape(100.dp)),
                             contentScale = ContentScale.Crop
                         )
@@ -167,7 +167,7 @@ fun ProfileScreen(
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(50.dp),
-                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF7DAFCB)),
+                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFE57373)),
                 shape = RoundedCornerShape(10.dp)
             ) {
                 Text("Logout", color = Color.White, fontSize = 18.sp, fontWeight = FontWeight.Bold)

@@ -26,6 +26,8 @@ import com.example.disiplinpro.viewmodel.schedule.ScheduleViewModel
 import com.skydoves.landscapist.ImageOptions
 import com.skydoves.landscapist.coil.CoilImage
 import com.example.disiplinpro.R
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.CalendarMonth
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -130,24 +132,58 @@ fun AllSchedulesScreen(
                     .weight(1f)
                     .fillMaxWidth()
             ) {
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .verticalScroll(scrollState)
-                ) {
-                    sortedSchedules.forEach { schedule ->
-                        ScheduleItem(
-                            schedules = listOf(schedule),
-                            isSelected = selectedSchedule == schedule,
-                            modifier = Modifier
-                                .clickable {
-                                    selectedSchedule = if (selectedSchedule == schedule) null else schedule
-                                }
-                                .clip(RoundedCornerShape(10.dp))
+                if (sortedSchedules.isEmpty()) {
+                    // Empty state message
+                    Column(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(16.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.Center
+                    ) {
+                        Icon(
+                            imageVector = Icons.Outlined.CalendarMonth,
+                            contentDescription = "Empty Schedule",
+                            modifier = Modifier.size(120.dp),
+                            tint = Color(0xFF7DAFCB)
+                        )
+                        Spacer(modifier = Modifier.height(16.dp))
+                        Text(
+                            text = "Belum ada jadwal",
+                            color = Color(0xFF7DAFCB),
+                            fontSize = 20.sp,
+                            fontWeight = FontWeight.Bold
+                        )
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Text(
+                            text = "Tambahkan jadwal baru dengan tombol di bawah",
+                            color = Color(0xFF757575),
+                            fontSize = 14.sp,
+                            fontWeight = FontWeight.Normal,
+                            modifier = Modifier.padding(horizontal = 32.dp),
+                            textAlign = androidx.compose.ui.text.style.TextAlign.Center
                         )
                     }
+                } else {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .verticalScroll(scrollState)
+                    ) {
+                        sortedSchedules.forEach { schedule ->
+                            ScheduleItem(
+                                schedules = listOf(schedule),
+                                isSelected = selectedSchedule == schedule,
+                                modifier = Modifier
+                                    .clickable {
+                                        selectedSchedule = if (selectedSchedule == schedule) null else schedule
+                                    }
+                                    .clip(RoundedCornerShape(10.dp))
+                            )
+                        }
 
-                    Spacer(modifier = Modifier.height(100.dp))
+                        Spacer(modifier = Modifier.height(100.dp))
+                    }
                 }
 
                 // Tombol Tambah Jadwal

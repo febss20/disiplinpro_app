@@ -8,6 +8,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.material.icons.Icons
@@ -48,6 +49,9 @@ fun RegisterScreen(
     var password by remember { mutableStateOf("") }
     var passwordVisible by remember { mutableStateOf(false) }
     var registerFailed by remember { mutableStateOf(false) }
+    var usernameError by remember { mutableStateOf(false) }
+    var emailError by remember { mutableStateOf(false) }
+    var passwordError by remember { mutableStateOf(false) }
     val context = LocalContext.current
     val lifecycleOwner = LocalLifecycleOwner.current
     val authState by authViewModel.authState.collectAsState()
@@ -92,9 +96,28 @@ fun RegisterScreen(
                     }
                     is AuthState.Error -> {
                         Log.e("RegisterScreen", "Auth error: ${state.message}")
-                        Toast.makeText(context, "Error: ${state.message}", Toast.LENGTH_SHORT).show()
+
+                        // Provide user-friendly error message based on the error
+                        val userFriendlyMessage = when {
+                            state.message.contains("email address is already in use", ignoreCase = true) ->
+                                "Email sudah terdaftar. Silakan login atau gunakan email lain."
+                            state.message.contains("password is invalid", ignoreCase = true) ||
+                                    state.message.contains("password is too weak", ignoreCase = true) ->
+                                "Password terlalu lemah. Gunakan minimal 6 karakter dengan kombinasi huruf dan angka."
+                            state.message.contains("badly formatted", ignoreCase = true) ->
+                                "Format email tidak valid. Silakan periksa kembali."
+                            state.message.contains("network", ignoreCase = true) ->
+                                "Koneksi internet bermasalah. Silakan periksa koneksi Anda."
+                            state.message.contains("ID Token", ignoreCase = true) ->
+                                "Gagal mendaftar dengan Google. Silakan coba lagi."
+                            else ->
+                                "Registrasi gagal: ${state.message}"
+                        }
+
+                        Toast.makeText(context, userFriendlyMessage, Toast.LENGTH_LONG).show()
+                        registerFailed = true
                     }
-                    else -> { }
+                    else -> { /* No action */ }
                 }
             }
         }
@@ -116,7 +139,7 @@ fun RegisterScreen(
             Column(
                 horizontalAlignment = Alignment.CenterHorizontally,
                 modifier = Modifier
-                    .padding(top = 65.dp, bottom = 45.dp)
+                    .padding(top = 65.dp, bottom = 30.dp)
                     .fillMaxWidth()
             ) {
                 Text(
@@ -132,7 +155,7 @@ fun RegisterScreen(
                 color = Color(0xFF7DAFCB),
                 fontSize = 24.sp,
                 fontWeight = FontWeight.Bold,
-                modifier = Modifier.padding(top = 26.dp, start = 31.dp)
+                modifier = Modifier.padding(start = 31.dp)
             )
 
             // Username Field
@@ -160,19 +183,26 @@ fun RegisterScreen(
                 }
                 OutlinedTextField(
                     value = username,
-                    onValueChange = { username = it },
+                    onValueChange = {
+                        username = it
+                        if (usernameError) usernameError = false
+                    },
                     label = { Text("Username") },
                     modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(8.dp),
                     colors = OutlinedTextFieldDefaults.colors(
-                        focusedBorderColor = Color(0xFF7DAFCB),
-                    )
+                        focusedBorderColor = if (usernameError) Color.Red else Color(0xFF7DAFCB),
+                        unfocusedBorderColor = if (usernameError) Color.Red else Color(0x807DAFCB),
+                        errorBorderColor = Color.Red
+                    ),
+                    isError = usernameError
                 )
             }
 
             // Email Field
             Column(
                 modifier = Modifier
-                    .padding(top = 26.dp, start = 31.dp, end = 31.dp)
+                    .padding(top = 7.dp, start = 31.dp, end = 31.dp)
                     .fillMaxWidth()
             ) {
                 Row(
@@ -194,19 +224,26 @@ fun RegisterScreen(
                 }
                 OutlinedTextField(
                     value = email,
-                    onValueChange = { email = it },
+                    onValueChange = {
+                        email = it
+                        if (emailError) emailError = false
+                    },
                     label = { Text("Email") },
                     modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(8.dp),
                     colors = OutlinedTextFieldDefaults.colors(
-                        focusedBorderColor = Color(0xFF7DAFCB),
-                    )
+                        focusedBorderColor = if (emailError) Color.Red else Color(0xFF7DAFCB),
+                        unfocusedBorderColor = if (emailError) Color.Red else Color(0x807DAFCB),
+                        errorBorderColor = Color.Red
+                    ),
+                    isError = emailError
                 )
             }
 
             // Password Field
             Column(
                 modifier = Modifier
-                    .padding(top = 26.dp, start = 31.dp, end = 31.dp)
+                    .padding(top = 7.dp, start = 31.dp, end = 31.dp)
                     .fillMaxWidth()
             ) {
                 Row(
@@ -228,9 +265,13 @@ fun RegisterScreen(
                 }
                 OutlinedTextField(
                     value = password,
-                    onValueChange = { password = it },
+                    onValueChange = {
+                        password = it
+                        if (passwordError) passwordError = false
+                    },
                     label = { Text("Password") },
                     modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(8.dp),
                     visualTransformation = if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
                     trailingIcon = {
                         IconButton(onClick = { passwordVisible = !passwordVisible }) {
@@ -242,8 +283,11 @@ fun RegisterScreen(
                         }
                     },
                     colors = OutlinedTextFieldDefaults.colors(
-                        focusedBorderColor = Color(0xFF7DAFCB),
-                    )
+                        focusedBorderColor = if (passwordError) Color.Red else Color(0xFF7DAFCB),
+                        unfocusedBorderColor = if (passwordError) Color.Red else Color(0x807DAFCB),
+                        errorBorderColor = Color.Red
+                    ),
+                    isError = passwordError
                 )
             }
 
@@ -251,15 +295,45 @@ fun RegisterScreen(
             Button(
                 onClick = {
                     registerFailed = false
-                    if (username.isNotEmpty() && email.isNotEmpty() && password.isNotEmpty()) {
-                        authViewModel.registerUser(username, email, password) { success ->
-                            registerFailed = !success
-                            if (!success) {
-                                Toast.makeText(context, "Registrasi gagal", Toast.LENGTH_SHORT).show()
-                            }
+                    usernameError = false
+                    emailError = false
+                    passwordError = false
+
+                    if (username.isEmpty()) {
+                        Toast.makeText(context, "Username tidak boleh kosong", Toast.LENGTH_SHORT).show()
+                        usernameError = true
+                        registerFailed = true
+                        return@Button
+                    }
+
+                    if (email.isEmpty()) {
+                        Toast.makeText(context, "Email tidak boleh kosong", Toast.LENGTH_SHORT).show()
+                        emailError = true
+                        registerFailed = true
+                        return@Button
+                    }
+
+                    if (password.isEmpty()) {
+                        Toast.makeText(context, "Password tidak boleh kosong", Toast.LENGTH_SHORT).show()
+                        passwordError = true
+                        registerFailed = true
+                        return@Button
+                    }
+
+                    if (password.length < 6) {
+                        Toast.makeText(context, "Password minimal 6 karakter", Toast.LENGTH_SHORT).show()
+                        passwordError = true
+                        registerFailed = true
+                        return@Button
+                    }
+
+                    Log.d("RegisterScreen", "Attempting registration with username: $username, email: $email")
+                    authViewModel.registerUser(username, email, password) { success ->
+                        Log.d("RegisterScreen", "Registration result: $success")
+                        registerFailed = !success
+                        if (!success) {
+                            Log.e("RegisterScreen", "Registration failed in callback")
                         }
-                    } else {
-                        Toast.makeText(context, "Semua field harus diisi", Toast.LENGTH_SHORT).show()
                     }
                 },
                 modifier = Modifier

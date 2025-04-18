@@ -33,7 +33,7 @@ fun GoogleSignInButton(
             .border(
                 width = 1.dp,
                 color = Color(0xFFDDDDDD),
-                shape = RoundedCornerShape(4.dp)
+                shape = RoundedCornerShape(8.dp)
             ),
         colors = CardDefaults.cardColors(
             containerColor = Color.White

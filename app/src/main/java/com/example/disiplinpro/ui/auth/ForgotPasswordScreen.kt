@@ -1,5 +1,7 @@
 package com.example.disiplinpro.ui.auth
 
+import android.util.Log
+import android.util.Patterns
 import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -28,6 +30,9 @@ fun ForgotPasswordScreen(
     authViewModel: AuthViewModel = viewModel()
 ) {
     var email by remember { mutableStateOf("") }
+    var emailError by remember { mutableStateOf(false) }
+    var errorMessage by remember { mutableStateOf("") }
+    val isLoading by remember { authViewModel.isLoading }
     val context = LocalContext.current
 
     Column(
@@ -45,7 +50,7 @@ fun ForgotPasswordScreen(
             Row(
                 verticalAlignment = Alignment.CenterVertically,
                 modifier = Modifier
-                    .padding(top = 65.dp, bottom = 19.dp, start = 30.dp)
+                    .padding(top = 65.dp, bottom = 25.dp, start = 30.dp)
             ) {
                 Text(
                     "Lupa Password",
@@ -68,13 +73,13 @@ fun ForgotPasswordScreen(
                 "Mohon masukkan email anda untuk reset password",
                 color = Color(0xFF333333),
                 fontSize = 13.sp,
-                modifier = Modifier.padding(top = 19.dp, start = 30.dp)
+                modifier = Modifier.padding(start = 30.dp, bottom = 25.dp)
             )
 
             // Email Field
             Column(
                 modifier = Modifier
-                    .padding(top = 23.dp, start = 29.dp, end = 29.dp)
+                    .padding(start = 29.dp, end = 29.dp)
                     .fillMaxWidth()
             ) {
                 Row(
@@ -96,45 +101,91 @@ fun ForgotPasswordScreen(
                 }
                 OutlinedTextField(
                     value = email,
-                    onValueChange = { email = it },
+                    onValueChange = {
+                        email = it
+                        if (emailError) {
+                            emailError = false
+                            errorMessage = ""
+                        }
+                    },
                     label = { Text("Email") },
                     modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(8.dp),
                     colors = OutlinedTextFieldDefaults.colors(
-                        focusedBorderColor = Color(0xFF7DAFCB),
-                    )
+                        focusedBorderColor = if (emailError) Color.Red else Color(0xFF7DAFCB),
+                        unfocusedBorderColor = if (emailError) Color.Red else Color(0x807DAFCB),
+                        errorBorderColor = Color.Red
+                    ),
+                    isError = emailError
                 )
+
+                if (emailError) {
+                    Text(
+                        text = errorMessage,
+                        color = Color.Red,
+                        fontSize = 12.sp,
+                        modifier = Modifier.padding(start = 4.dp, top = 4.dp)
+                    )
+                }
             }
 
             // Reset Password Button
             Button(
                 onClick = {
-                    if (email.isNotEmpty()) {
-                        authViewModel.sendPasswordResetEmail(email) { success ->
-                            if (success) {
-                                navController.navigate("email_verification/$email")
-                            } else {
-                                Toast.makeText(context,
-                                    "Email tidak terdaftar atau gagal mengirim email reset",
-                                    Toast.LENGTH_SHORT).show()
-                            }
+                    emailError = false
+                    errorMessage = ""
+
+                    if (email.isEmpty()) {
+                        Log.e("ForgotPasswordScreen", "Email kosong")
+                        errorMessage = "Email tidak boleh kosong"
+                        emailError = true
+                        Toast.makeText(context, errorMessage, Toast.LENGTH_SHORT).show()
+                        return@Button
+                    }
+
+                    if (!Patterns.EMAIL_ADDRESS.matcher(email).matches()) {
+                        Log.e("ForgotPasswordScreen", "Format email tidak valid: $email")
+                        errorMessage = "Format email tidak valid"
+                        emailError = true
+                        Toast.makeText(context, errorMessage, Toast.LENGTH_SHORT).show()
+                        return@Button
+                    }
+
+                    Log.d("ForgotPasswordScreen", "Attempting to send password reset email to: $email")
+                    authViewModel.sendPasswordResetEmail(email) { success ->
+                        if (success) {
+                            Log.d("ForgotPasswordScreen", "Password reset email sent successfully to: $email")
+                            navController.navigate("email_verification/$email")
+                        } else {
+                            Log.e("ForgotPasswordScreen", "Failed to send password reset email to: $email")
+                            errorMessage = "Email tidak terdaftar atau gagal mengirim email reset"
+                            emailError = true
+                            Toast.makeText(context, errorMessage, Toast.LENGTH_LONG).show()
                         }
-                    } else {
-                        Toast.makeText(context, "Masukkan email terlebih dahulu", Toast.LENGTH_SHORT).show()
                     }
                 },
                 modifier = Modifier
                     .padding(top = 50.dp, start = 32.dp, end = 32.dp)
                     .fillMaxWidth()
+                    .height(48.dp)
                     .clip(RoundedCornerShape(50.dp)),
                 colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF7DAFCB)),
-                contentPadding = PaddingValues(vertical = 13.dp)
+                contentPadding = PaddingValues(vertical = 13.dp),
+                enabled = !isLoading
             ) {
-                Text(
-                    "Reset Password",
-                    color = Color(0xFFFFFFFF),
-                    fontSize = 20.sp,
-                    fontWeight = FontWeight.Bold,
-                )
+                if (isLoading) {
+                    CircularProgressIndicator(
+                        color = Color.White,
+                        modifier = Modifier.size(24.dp)
+                    )
+                } else {
+                    Text(
+                        "Reset Password",
+                        color = Color(0xFFFFFFFF),
+                        fontSize = 20.sp,
+                        fontWeight = FontWeight.Bold,
+                    )
+                }
             }
         }
     }
