@@ -2,7 +2,6 @@ package com.example.disiplinpro.ui.schedule
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Card
@@ -32,8 +31,7 @@ fun ScheduleItem(
     Card(
         modifier = modifier
             .fillMaxWidth()
-            .padding(start = 30.dp, end = 30.dp, bottom = 20.dp)
-            .border(1.dp, Color(0x4D333333), RoundedCornerShape(10.dp)),
+            .padding(start = 30.dp, end = 30.dp, bottom = 20.dp),
         colors = CardDefaults.cardColors(
             containerColor = if (isSelected) Color(0x802196F3) else Color(0x332196F3)
         ),
