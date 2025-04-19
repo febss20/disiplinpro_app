@@ -16,10 +16,11 @@ import com.example.disiplinpro.R
 @Composable
 fun BottomNavigationBar(
     navController: NavController,
-    currentRoute: String?
+    currentRoute: String?,
+    modifier: Modifier = Modifier
 ) {
     Surface(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxWidth()
             .padding(horizontal = 17.dp)
             .height(80.dp),

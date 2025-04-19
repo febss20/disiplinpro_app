@@ -49,7 +49,9 @@ DisiplinPro dirancang untuk membantu mahasiswa dan profesional mengelola waktu m
 | **Kalender Interaktif**  | Lihat jadwal berdasarkan tanggal dengan tampilan kalender yang intuitif.                                                                                |
 | **Autentikasi Pengguna** | Registrasi, login, reset kata sandi, dan verifikasi email menggunakan Firebase Authentication.                                                          |
 | **Profil Pengguna**      | Lihat dan kelola informasi pengguna seperti username dan foto profil.                                                                                   |
-| **Notifikasi**           | Aktifkan/nonaktifkan notifikasi untuk jadwal dan tugas, serta sesuaikan waktu pengingat.                                                                |
+| **Notifikasi**           | Aktifkan/nonaktifkan notifikasi untuk jadwal dan tugas, sesuaikan waktu pengingat, dan terima notifikasi pop-up (floating).                             |
+| **Notifikasi Floating**  | Semua notifikasi muncul sebagai pop-up (heads-up) sehingga tidak terlewatkan, dengan prioritas tinggi dan dukungan penuh untuk semua versi Android.     |
+| **Navigasi Pintar**      | Klik notifikasi untuk langsung menuju daftar tugas atau jadwal terkait.                                                                                 |
 | **Desain Modern**        | Antarmuka responsif menggunakan Jetpack Compose dengan tema yang ramah pengguna.                                                                        |
 
 ---
@@ -98,21 +100,21 @@ Ikuti langkah-langkah berikut untuk mengatur proyek:
 
 2. **Konfigurasi Firebase**:
 
-   - Buat proyek di [Firebase Console](https://console.firebase.google.com/)
-   - Tambahkan aplikasi Android dengan package name `com.example.disiplinpro`
-   - Unduh file `google-services.json` dan tempatkan di direktori `/app`
-   - Aktifkan Authentication (Email dan Google Sign-In)
-   - Buat database Firestore
+    - Buat proyek di [Firebase Console](https://console.firebase.google.com/)
+    - Tambahkan aplikasi Android dengan package name `com.example.disiplinpro`
+    - Unduh file `google-services.json` dan tempatkan di direktori `/app`
+    - Aktifkan Authentication (Email dan Google Sign-In)
+    - Buat database Firestore
 
 3. **Buka dengan Android Studio**:
 
-   - Buka Android Studio
-   - Pilih "Open an Existing Project"
-   - Navigasi ke direktori proyek dan buka
+    - Buka Android Studio
+    - Pilih "Open an Existing Project"
+    - Navigasi ke direktori proyek dan buka
 
 4. **Sinkronisasi Gradle**:
-   - Tunggu hingga Android Studio menyelesaikan sinkronisasi Gradle
-   - Selesaikan instalasi dependensi yang diperlukan
+    - Tunggu hingga Android Studio menyelesaikan sinkronisasi Gradle
+    - Selesaikan instalasi dependensi yang diperlukan
 
 ---
 
@@ -122,19 +124,19 @@ Setelah menyelesaikan instalasi, Anda dapat menjalankan aplikasi:
 
 1. **Pilih Perangkat Target**:
 
-   - Pilih emulator atau perangkat fisik yang terhubung
-   - Pastikan API level perangkat ≥ 21 (Android 5.0)
+    - Pilih emulator atau perangkat fisik yang terhubung
+    - Pastikan API level perangkat ≥ 21 (Android 5.0)
 
 2. **Build dan Run**:
 
-   - Klik tombol 'Run' (▶️) di Android Studio
-   - Tunggu hingga proses build selesai
-   - Aplikasi akan terbuka di perangkat target
+    - Klik tombol 'Run' (▶️) di Android Studio
+    - Tunggu hingga proses build selesai
+    - Aplikasi akan terbuka di perangkat target
 
 3. **Aplikasi Pertama Kali**:
-   - Layar Onboarding akan muncul untuk pengguna baru
-   - Daftar atau masuk untuk menggunakan fitur lengkap
-   - Verifikasi email Anda untuk keamanan tambahan
+    - Layar Onboarding akan muncul untuk pengguna baru
+    - Daftar atau masuk untuk menggunakan fitur lengkap
+    - Verifikasi email Anda untuk keamanan tambahan
 
 ---
 
@@ -168,16 +170,16 @@ app/
 
 - **app/src/main/java/com/example/disiplinpro/**
 
-   - **data/**: Model data dan repository
-   - **ui/**: Layar dan komponen UI Jetpack Compose
-   - **viewmodel/**: ViewModels untuk setiap fitur
-   - **worker/**: Kelas Worker untuk tugas latar belakang
-   - **util/**: Utility dan extension functions
+    - **data/**: Model data dan repository
+    - **ui/**: Layar dan komponen UI Jetpack Compose
+    - **viewmodel/**: ViewModels untuk setiap fitur
+    - **worker/**: Kelas Worker untuk tugas latar belakang
+    - **util/**: Utility dan extension functions
 
 - **app/src/main/res/**
-   - **drawable/**: Aset gambar dan ikon
-   - **values/**: Warna, string, dan dimensi
-   - **font/**: Font kustom yang digunakan
+    - **drawable/**: Aset gambar dan ikon
+    - **values/**: Warna, string, dan dimensi
+    - **font/**: Font kustom yang digunakan
 
 ---
 
@@ -250,6 +252,8 @@ Fitur yang direncanakan untuk rilis mendatang:
 - **Grup & Kolaborasi**: Berbagi jadwal dan tugas dengan teman sekelas
 - **Ekspor Data**: Ekspor jadwal dan tugas ke format PDF atau CSV
 - **Pengoptimalan Penggunaan Baterai**: Perbaikan pada sistem notifikasi
+- **Tindakan Cepat Notifikasi**: Tombol tindakan langsung pada notifikasi untuk menyelesaikan tugas
+- **Pengelompokan Notifikasi**: Mengelompokkan beberapa notifikasi untuk mengurangi gangguan
 
 ---
 

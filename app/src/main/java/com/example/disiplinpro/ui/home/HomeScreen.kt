@@ -1,7 +1,6 @@
 package com.example.disiplinpro.ui.home
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -19,14 +18,15 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.example.disiplinpro.viewmodel.home.HomeViewModel
-import com.skydoves.landscapist.ImageOptions
-import com.skydoves.landscapist.coil.CoilImage
 import androidx.compose.foundation.shape.CircleShape
 import coil.compose.AsyncImage
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.outlined.CalendarMonth
 import androidx.compose.material.icons.outlined.Assignment
+import androidx.compose.material.icons.outlined.WatchLater
+import androidx.compose.material.icons.outlined.CheckCircle
 import androidx.compose.ui.platform.LocalContext
 import androidx.navigation.compose.currentBackStackEntryAsState
 import com.example.disiplinpro.ui.components.BottomNavigationBar
@@ -37,6 +37,9 @@ import com.example.disiplinpro.viewmodel.task.TaskViewModel
 import java.text.SimpleDateFormat
 import java.util.*
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.animation.animateContentSize
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.spring
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -70,6 +73,9 @@ fun HomeScreen(
         taskDate == currentDate
     }
 
+    val currentDate = remember { SimpleDateFormat("EEEE, d MMMM yyyy", Locale("id", "ID")).format(Date()) }
+    val currentTime = remember { SimpleDateFormat("HH:mm", Locale.getDefault()).format(Date()) }
+
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -87,119 +93,256 @@ fun HomeScreen(
                         .fillMaxWidth()
                         .background(Color(0xFFFAF3E0))
                 ) {
-                    // Username dan Foto Profil
-                    Row(
+                    Card(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(top = 55.dp, bottom = 8.dp, start = 31.dp, end = 31.dp),
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.SpaceBetween
-                    ) {
-                        Text(
-                            text = user?.username ?: "Guest",
-                            style = MaterialTheme.typography.titleMedium,
-                            fontSize = 25.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = Color(0xFF333333),
+                            .padding(horizontal = 10.dp, vertical = 16.dp),
+                        shape = RoundedCornerShape(16.dp),
+                        colors = CardDefaults.cardColors(
+                            containerColor = Color.Transparent
                         )
-                        if (user?.fotoProfil.isNullOrEmpty()) {
-                            Icon(
-                                imageVector = Icons.Default.Person,
-                                contentDescription = "Profile",
-                                tint = Color(0x4D333333),
+                    ) {
+                        Column(
+                            modifier = Modifier.padding(16.dp)
+                        ) {
+                            // Username dan Foto Profil
+                            Row(
                                 modifier = Modifier
-                                    .size(50.dp)
-                                    .clip(CircleShape)
-                                    .border(1.dp, Color(0x4D333333), RoundedCornerShape(100.dp))
-                                    .background(Color(0xFFFFFFFF))
-                                    .clickable { navController.navigate("akun") }
-                            )
-                        } else {
-                            AsyncImage(
-                                model = user?.fotoProfil,
-                                contentDescription = "Foto Profil",
-                                modifier = Modifier
-                                    .size(50.dp)
-                                    .clip(CircleShape)
-                                    .clickable { navController.navigate("akun") },
-                                contentScale = ContentScale.Crop
-                            )
+                                    .fillMaxWidth(),
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.SpaceBetween
+                            ) {
+                                Column {
+                                    Text(
+                                        text = "Halo,",
+                                        style = MaterialTheme.typography.bodyLarge,
+                                        fontSize = 16.sp,
+                                        color = Color(0xFF333333),
+                                    )
+                                    Text(
+                                        text = user?.username ?: "Guest",
+                                        style = MaterialTheme.typography.titleMedium,
+                                        fontSize = 24.sp,
+                                        fontWeight = FontWeight.Bold,
+                                        color = Color(0xFF333333),
+                                    )
+                                    Spacer(modifier = Modifier.height(4.dp))
+                                    Row(
+                                        verticalAlignment = Alignment.CenterVertically
+                                    ) {
+                                        Icon(
+                                            imageVector = Icons.Outlined.CalendarMonth,
+                                            contentDescription = "Date",
+                                            tint = Color(0xFF7DAFCB),
+                                            modifier = Modifier.size(16.dp)
+                                        )
+                                        Spacer(modifier = Modifier.width(4.dp))
+                                        Text(
+                                            text = currentDate,
+                                            style = MaterialTheme.typography.bodyMedium,
+                                            fontSize = 12.sp,
+                                            color = Color(0xFF666666),
+                                        )
+                                    }
+                                }
+                                if (user?.fotoProfil.isNullOrEmpty()) {
+                                    Surface(
+                                        modifier = Modifier
+                                            .size(60.dp)
+                                            .clip(CircleShape)
+                                            .clickable { navController.navigate("akun") },
+                                        color = Color(0xFFFFFFFF),
+                                        shape = CircleShape,
+                                        shadowElevation = 4.dp
+                                    ) {
+                                        Icon(
+                                            imageVector = Icons.Default.Person,
+                                            contentDescription = "Profile",
+                                            tint = Color(0x4D333333),
+                                            modifier = Modifier
+                                                .padding(12.dp)
+                                                .size(36.dp)
+                                        )
+                                    }
+                                } else {
+                                    Surface(
+                                        modifier = Modifier
+                                            .size(60.dp)
+                                            .clip(CircleShape),
+                                        shape = CircleShape,
+                                        shadowElevation = 4.dp
+                                    ) {
+                                        AsyncImage(
+                                            model = user?.fotoProfil,
+                                            contentDescription = "Foto Profil",
+                                            modifier = Modifier
+                                                .fillMaxSize()
+                                                .clickable { navController.navigate("akun") },
+                                            contentScale = ContentScale.Crop
+                                        )
+                                    }
+                                }
+                            }
                         }
                     }
-
-                    Spacer(modifier = Modifier.height(8.dp))
 
                     // Kategori
                     Text(
                         "Kategori",
                         color = Color(0xFF333333),
-                        fontSize = 25.sp,
+                        fontSize = 20.sp,
                         fontWeight = FontWeight.Bold,
-                        modifier = Modifier.padding(top = 15.dp, start = 31.dp)
+                        modifier = Modifier.padding(horizontal = 24.dp, vertical = 12.dp)
                     )
+
                     Row(
-                        modifier = Modifier.padding(top = 25.dp, start = 30.dp)
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 20.dp),
+                        horizontalArrangement = Arrangement.spacedBy(12.dp)
                     ) {
-                        Button(
-                            onClick = { navController.navigate("list_tugas") },
+                        // Card Tugas
+                        Card(
                             modifier = Modifier
-                                .padding(end = 22.dp)
-                                .border(1.dp, Color(0xFF7DAFCB), RoundedCornerShape(10.dp))
-                                .padding(top = 30.dp, bottom = 14.dp, start = 35.dp, end = 35.dp),
-                            colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent)
-                        ) {
-                            Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                                CoilImage(
-                                    imageModel = { "https://storage.googleapis.com/tagjs-prod.appspot.com/v1/T7pdvlFwTn/gs17algr.png" },
-                                    modifier = Modifier.size(29.dp),
-                                    imageOptions = ImageOptions(contentScale = ContentScale.Crop)
+                                .weight(1f)
+                                .animateContentSize(
+                                    animationSpec = spring(
+                                        dampingRatio = Spring.DampingRatioMediumBouncy,
+                                        stiffness = Spring.StiffnessLow
+                                    )
                                 )
-                                Text("Tugas", color = Color(0xFF7DAFCB), fontSize = 12.sp)
+                                .clickable { navController.navigate("list_tugas") },
+                            colors = CardDefaults.cardColors(
+                                containerColor = Color(0x332196F3)
+                            )
+                        ) {
+                            Column(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(16.dp),
+                                horizontalAlignment = Alignment.CenterHorizontally
+                            ) {
+                                Surface(
+                                    modifier = Modifier
+                                        .size(60.dp)
+                                        .clip(CircleShape),
+                                    color = Color(0x33F39C12),
+                                    shape = CircleShape
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Outlined.Assignment,
+                                        contentDescription = "Tugas",
+                                        tint = Color(0xFFF39C12),
+                                        modifier = Modifier
+                                            .padding(12.dp)
+                                            .size(36.dp)
+                                    )
+                                }
+                                Spacer(modifier = Modifier.height(8.dp))
+                                Text(
+                                    text = "Tugas",
+                                    fontWeight = FontWeight.Bold,
+                                    fontSize = 16.sp,
+                                    color = Color(0xFF333333)
+                                )
+                                Spacer(modifier = Modifier.height(4.dp))
+                                Text(
+                                    text = "${tasks.size} tugas",
+                                    fontSize = 12.sp,
+                                    color = Color(0xFF666666)
+                                )
                             }
                         }
-                        Button(
-                            onClick = { navController.navigate("list_jadwal") },
+
+                        // Card Jadwal
+                        Card(
                             modifier = Modifier
-                                .border(1.dp, Color(0xFF7DAFCB), RoundedCornerShape(10.dp))
-                                .padding(top = 28.dp, bottom = 15.dp, start = 32.dp, end = 32.dp),
-                            colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent)
-                        ) {
-                            Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                                CoilImage(
-                                    imageModel = { "https://storage.googleapis.com/tagjs-prod.appspot.com/v1/T7pdvlFwTn/rujrrssz.png" },
-                                    modifier = Modifier.size(29.dp),
-                                    imageOptions = ImageOptions(contentScale = ContentScale.Crop)
+                                .weight(1f)
+                                .animateContentSize(
+                                    animationSpec = spring(
+                                        dampingRatio = Spring.DampingRatioMediumBouncy,
+                                        stiffness = Spring.StiffnessLow
+                                    )
                                 )
-                                Text("Jadwal", color = Color(0xFF7DAFCB), fontSize = 12.sp)
+                                .clickable { navController.navigate("list_jadwal") },
+                            colors = CardDefaults.cardColors(
+                                containerColor = Color(0x332196F3)
+                            )
+                        ) {
+                            Column(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(16.dp),
+                                horizontalAlignment = Alignment.CenterHorizontally
+                            ) {
+                                Surface(
+                                    modifier = Modifier
+                                        .size(60.dp)
+                                        .clip(CircleShape),
+                                    color = Color(0x332196F3),
+                                    shape = CircleShape
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Outlined.CalendarMonth,
+                                        contentDescription = "Jadwal",
+                                        tint = Color(0xFF2196F3),
+                                        modifier = Modifier
+                                            .padding(12.dp)
+                                            .size(36.dp)
+                                    )
+                                }
+                                Spacer(modifier = Modifier.height(8.dp))
+                                Text(
+                                    text = "Jadwal",
+                                    fontWeight = FontWeight.Bold,
+                                    fontSize = 16.sp,
+                                    color = Color(0xFF333333)
+                                )
+                                Spacer(modifier = Modifier.height(4.dp))
+                                Text(
+                                    text = "${schedules.size} jadwal",
+                                    fontSize = 12.sp,
+                                    color = Color(0xFF666666)
+                                )
                             }
                         }
                     }
+
+                    Spacer(modifier = Modifier.height(24.dp))
 
                     // Jadwal Hari Ini
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(top = 14.dp, start = 31.dp, end = 7.dp)
+                            .padding(horizontal = 24.dp, vertical = 20.dp)
                     ) {
+                        Icon(
+                            imageVector = Icons.Outlined.WatchLater,
+                            contentDescription = "Jadwal Hari Ini",
+                            tint = Color(0xFF7DAFCB),
+                            modifier = Modifier
+                                .size(28.dp)
+                                .padding(end = 8.dp)
+                        )
                         Text(
                             "Jadwal Hari Ini",
                             color = Color(0xFF333333),
-                            fontSize = 25.sp,
+                            fontSize = 20.sp,
                             fontWeight = FontWeight.Bold,
                             modifier = Modifier.weight(1f)
                         )
                         IconButton(
                             onClick = { navController.navigate("add_jadwal") },
-                            modifier = Modifier.size(85.dp)
+                            modifier = Modifier
+                                .size(36.dp)
+                                .clip(CircleShape)
+                                .background(Color(0xFF7DAFCB))
                         ) {
-                            CoilImage(
-                                imageModel = { "https://storage.googleapis.com/tagjs-prod.appspot.com/v1/T7pdvlFwTn/0lx4ib3k.png" },
-                                modifier = Modifier.fillMaxSize(),
-                                imageOptions = ImageOptions(
-                                    contentScale = ContentScale.Fit,
-                                    alignment = Alignment.Center
-                                )
+                            Icon(
+                                imageVector = Icons.Default.Add,
+                                contentDescription = "Tambah Jadwal",
+                                tint = Color.White
                             )
                         }
                     }
@@ -211,7 +354,6 @@ fun HomeScreen(
                 if (todaySchedules.isNotEmpty()) {
                     ScheduleItem(todaySchedules)
                 } else {
-                    // Empty state for schedules
                     Column(
                         modifier = Modifier
                             .fillMaxWidth()
@@ -235,27 +377,34 @@ fun HomeScreen(
                     verticalAlignment = Alignment.CenterVertically,
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(start = 31.dp, end = 7.dp)
+                        .padding(horizontal = 24.dp, vertical = 20.dp)
                 ) {
+                    Icon(
+                        imageVector = Icons.Outlined.CheckCircle,
+                        contentDescription = "Tugas Hari Ini",
+                        tint = Color(0xFFF39C12),
+                        modifier = Modifier
+                            .size(28.dp)
+                            .padding(end = 8.dp)
+                    )
                     Text(
                         "Tugas Hari Ini",
                         color = Color(0xFF333333),
-                        fontSize = 25.sp,
+                        fontSize = 20.sp,
                         fontWeight = FontWeight.Bold,
                         modifier = Modifier.weight(1f)
                     )
                     IconButton(
                         onClick = { navController.navigate("add_tugas") },
-                        modifier = Modifier.size(85.dp)
+                        modifier = Modifier
+                            .size(36.dp)
+                            .clip(CircleShape)
+                            .background(Color(0xFFF39C12))
                     ) {
-                        CoilImage(
-                            imageModel = { "https://storage.googleapis.com/tagjs-prod.appspot.com/v1/T7pdvlFwTn/0lx4ib3k.png" },
-                            modifier = Modifier
-                                .fillMaxSize(),
-                            imageOptions = ImageOptions(
-                                contentScale = ContentScale.Crop,
-                                alignment = Alignment.Center
-                            )
+                        Icon(
+                            imageVector = Icons.Default.Add,
+                            contentDescription = "Tambah Tugas",
+                            tint = Color.White
                         )
                     }
                 }
@@ -266,7 +415,6 @@ fun HomeScreen(
                 if (todayTasks.isNotEmpty()) {
                     TaskItem(todayTasks, taskViewModel)
                 } else {
-                    // Empty state for tasks
                     Column(
                         modifier = Modifier
                             .fillMaxWidth()
@@ -297,7 +445,11 @@ fun HomeScreen(
                 .background(Color(0xFFFAF3E0))
                 .align(Alignment.BottomCenter)
         ) {
-            BottomNavigationBar(navController = navController, currentRoute = currentRoute)
+            BottomNavigationBar(
+                navController = navController,
+                currentRoute = currentRoute,
+                modifier = Modifier.padding(bottom = 20.dp)
+            )
         }
     }
 }

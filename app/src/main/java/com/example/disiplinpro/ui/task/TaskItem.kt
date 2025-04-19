@@ -1,7 +1,6 @@
 package com.example.disiplinpro.ui.task
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -44,8 +43,7 @@ fun TaskItem(
     Card(
         modifier = modifier
             .fillMaxWidth()
-            .padding(start = 30.dp, end = 30.dp, bottom = 20.dp)
-            .border(1.dp, Color(0x4D333333), RoundedCornerShape(10.dp)),
+            .padding(start = 30.dp, end = 30.dp, bottom = 20.dp),
         colors = CardDefaults.cardColors(
             containerColor = cardColor
         ),

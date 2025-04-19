@@ -2,15 +2,24 @@ package com.example.disiplinpro.ui.notification
 
 import android.content.Context
 import android.util.Log
+import androidx.compose.animation.*
+import androidx.compose.animation.core.*
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ArrowDropDown
+import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.Schedule
+import androidx.compose.material.icons.filled.Task
+import androidx.compose.material.icons.outlined.NotificationsOff
 import androidx.compose.material3.*
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
@@ -19,23 +28,31 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import androidx.navigation.compose.currentBackStackEntryAsState
 import com.example.disiplinpro.ui.components.BottomNavigationBar
-import com.skydoves.landscapist.ImageOptions
-import com.skydoves.landscapist.coil.CoilImage
+import kotlinx.coroutines.delay
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalAnimationApi::class)
 @Composable
 fun NotificationScreen(navController: NavController) {
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = navBackStackEntry?.destination?.route
     val context = LocalContext.current
 
+    // State variables for notification settings
     var scheduleNotificationEnabled by remember { mutableStateOf(false) }
     var taskNotificationEnabled by remember { mutableStateOf(false) }
     var scheduleTimeBefore by remember { mutableStateOf("30 Menit") }
     var taskTimeBefore by remember { mutableStateOf("1 Jam") }
     var scheduleExpanded by remember { mutableStateOf(false) }
     var taskExpanded by remember { mutableStateOf(false) }
+    var showSavedAnimation by remember { mutableStateOf(false) }
 
+    // Animation properties
+    val cardElevation by animateDpAsState(
+        targetValue = if (showSavedAnimation) 8.dp else 4.dp,
+        animationSpec = tween(durationMillis = 300)
+    )
+
+    // Load saved preferences when the screen is opened
     LaunchedEffect(Unit) {
         val prefs = context.getSharedPreferences("NotificationPrefs", Context.MODE_PRIVATE)
         scheduleNotificationEnabled = prefs.getBoolean("scheduleNotificationEnabled", false)
@@ -47,262 +64,441 @@ fun NotificationScreen(navController: NavController) {
 
     val timeOptions = listOf("10 Menit sebelum", "30 Menit sebelum", "1 Jam sebelum", "1 Hari sebelum")
 
+    val backgroundColor = Color(0xFFFAF3E0)
+    val primaryColor = Color(0xFF1E88E5)
+    val accentColor = Color(0xFFFFA000)
+
+    // Variable to track if we should navigate back
+    var shouldNavigateBack by remember { mutableStateOf(false) }
+
+    // Effect to handle navigation after animation completes
+    LaunchedEffect(shouldNavigateBack) {
+        if (shouldNavigateBack) {
+            delay(800)
+            navController.popBackStack()
+        }
+    }
+
+    // Effect to reset the animation state
+    LaunchedEffect(showSavedAnimation) {
+        if (showSavedAnimation) {
+            delay(2000) // Wait for 2 seconds before resetting
+            showSavedAnimation = false
+        }
+    }
+
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color(0xFFFAF3E0))
+            .background(backgroundColor)
     ) {
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(vertical = 20.dp)
+                .padding(top = 40.dp, bottom = 16.dp, start = 20.dp, end = 20.dp),
+            verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            Column(
-                modifier = Modifier
-                    .clip(RoundedCornerShape(20.dp))
-                    .fillMaxWidth()
-                    .weight(1f)
-                    .background(Color(0xFFFAF3E0), RoundedCornerShape(20.dp))
-            ) {
-                Text(
-                    "Atur Notifikasi",
-                    color = Color(0xFF333333),
-                    fontSize = 24.sp,
-                    fontWeight = FontWeight.Bold,
-                    modifier = Modifier.padding(top = 45.dp, bottom = 24.dp, start = 30.dp)
-                )
+            // Título principal
+            Text(
+                "Pengaturan Notifikasi",
+                fontWeight = FontWeight.Bold,
+                fontSize = 24.sp,
+                color = Color(0xFF333333),
+                modifier = Modifier.padding(bottom = 16.dp)
+            )
 
-                // Card untuk Jadwal Kuliah
+            // Jadwal Kuliah Card
+            Card(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .animateContentSize(
+                        animationSpec = spring(
+                            dampingRatio = Spring.DampingRatioMediumBouncy,
+                            stiffness = Spring.StiffnessLow
+                        )
+                    ),
+                shape = RoundedCornerShape(10.dp),
+                colors = CardDefaults.cardColors(
+                    containerColor = Color(0x332196F3)
+                )
+            ) {
                 Column(
                     modifier = Modifier
-                        .padding(bottom = 24.dp, start = 30.dp, end = 30.dp)
-                        .border(1.dp, Color(0x4D333333), RoundedCornerShape(10.dp))
-                        .clip(RoundedCornerShape(10.dp))
                         .fillMaxWidth()
-                        .background(Color(0x1A2196F3), RoundedCornerShape(10.dp))
-                        .padding(vertical = 16.dp)
+                        .padding(16.dp)
                 ) {
-                    Text(
-                        "Jadwal Kuliah",
-                        color = Color(0xFF333333),
-                        fontSize = 16.sp,
-                        fontWeight = FontWeight.Bold,
-                        modifier = Modifier.padding(top = 10.dp, start = 19.dp)
-                    )
-                    Column(
-                        modifier = Modifier
-                            .padding(horizontal = 19.dp, vertical = 22.dp)
-                            .height(1.dp)
-                            .fillMaxWidth()
-                            .background(Color(0xFF000000))
-                    ) {}
+                    // Card Header
                     Row(
-                        verticalAlignment = Alignment.CenterVertically,
                         modifier = Modifier
-                            .padding(horizontal = 19.dp)
                             .fillMaxWidth()
+                            .padding(bottom = 12.dp),
+                        verticalAlignment = Alignment.CenterVertically
                     ) {
-                        CoilImage(
-                            imageModel = { "https://storage.googleapis.com/tagjs-prod.appspot.com/v1/T7pdvlFwTn/285pk63d_expires_30_days.png" },
-                            imageOptions = ImageOptions(contentScale = androidx.compose.ui.layout.ContentScale.Crop),
+                        Icon(
+                            imageVector = Icons.Filled.Schedule,
+                            contentDescription = null,
+                            tint = primaryColor,
                             modifier = Modifier
-                                .padding(end = 7.dp)
-                                .clip(RoundedCornerShape(20.dp))
-                                .width(21.dp)
-                                .height(20.dp)
+                                .size(28.dp)
+                                .background(primaryColor.copy(alpha = 0.1f), CircleShape)
+                                .padding(4.dp)
                         )
-                        if (scheduleNotificationEnabled) {
-                            ExposedDropdownMenuBox(
-                                expanded = scheduleExpanded,
-                                onExpandedChange = { scheduleExpanded = !scheduleExpanded },
-                                modifier = Modifier
-                                    .padding(end = 13.dp)
-                                    .fillMaxWidth(0.7f)
-                                    .border(1.dp, Color(0x4D333333), RoundedCornerShape(10.dp))
-                                    .clip(RoundedCornerShape(10.dp))
-                                    .background(Color(0x332196F3))
-                            ) {
-                                TextField(
-                                    value = scheduleTimeBefore,
-                                    onValueChange = {},
-                                    readOnly = true,
-                                    textStyle = androidx.compose.ui.text.TextStyle(color = Color(0xFF333333), fontSize = 16.sp),
-                                    trailingIcon = {
-                                        CoilImage(
-                                            imageModel = { "https://storage.googleapis.com/tagjs-prod.appspot.com/v1/T7pdvlFwTn/ak1ar00d_expires_30_days.png" },
-                                            imageOptions = ImageOptions(contentScale = androidx.compose.ui.layout.ContentScale.Crop),
-                                            modifier = Modifier
-                                                .padding(end = 5.dp)
-                                                .clip(RoundedCornerShape(20.dp))
-                                                .width(29.dp)
-                                                .height(29.dp)
-                                        )
-                                    },
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .menuAnchor()
-                                        .background(Color.Transparent)
-                                )
-                                ExposedDropdownMenu(
-                                    expanded = scheduleExpanded,
-                                    onDismissRequest = { scheduleExpanded = false },
-                                    modifier = Modifier.background(Color(0x1A2196F3))
-                                ) {
-                                    timeOptions.forEach { time ->
-                                        DropdownMenuItem(
-                                            text = { Text(time, color = Color(0xFF333333), fontSize = 16.sp) },
-                                            onClick = {
-                                                scheduleTimeBefore = time
-                                                scheduleExpanded = false
-                                            }
-                                        )
-                                    }
-                                }
-                            }
-                        } else {
-                            Spacer(modifier = Modifier.weight(1f))
-                        }
+                        Text(
+                            "Notifikasi Jadwal Kuliah",
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 18.sp,
+                            color = Color.DarkGray,
+                            modifier = Modifier.padding(start = 12.dp)
+                        )
+                        Spacer(modifier = Modifier.weight(1f))
                         Switch(
                             checked = scheduleNotificationEnabled,
                             onCheckedChange = { scheduleNotificationEnabled = it },
                             colors = SwitchDefaults.colors(
-                                checkedThumbColor = Color(0xFF7DAFCB),
-                                checkedTrackColor = Color(0xFF7DAFCB).copy(alpha = 0.5f),
+                                checkedThumbColor = primaryColor,
+                                checkedTrackColor = primaryColor.copy(alpha = 0.5f),
                                 uncheckedThumbColor = Color.Gray,
                                 uncheckedTrackColor = Color.Gray.copy(alpha = 0.5f)
                             )
                         )
                     }
-                }
 
-                // Card untuk Daftar Tugas
-                Column(
-                    modifier = Modifier
-                        .padding(bottom = 24.dp, start = 30.dp, end = 30.dp)
-                        .border(1.dp, Color(0x4D333333), RoundedCornerShape(10.dp))
-                        .clip(RoundedCornerShape(10.dp))
-                        .fillMaxWidth()
-                        .background(Color(0x1A2196F3), RoundedCornerShape(10.dp))
-                        .padding(vertical = 16.dp)
-                ) {
-                    Text(
-                        "Daftar Tugas",
-                        color = Color(0xFF333333),
-                        fontSize = 16.sp,
-                        fontWeight = FontWeight.Bold,
-                        modifier = Modifier.padding(top = 10.dp, start = 19.dp)
+                    HorizontalDivider(
+                        modifier = Modifier.padding(vertical = 8.dp),
+                        thickness = 1.dp,
+                        color = Color.LightGray.copy(alpha = 0.7f)
                     )
-                    Column(
-                        modifier = Modifier
-                            .padding(horizontal = 19.dp, vertical = 22.dp)
-                            .height(1.dp)
-                            .fillMaxWidth()
-                            .background(Color(0xFF000000))
-                    ) {}
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        modifier = Modifier
-                            .padding(horizontal = 19.dp)
-                            .fillMaxWidth()
+
+                    // Dropdown section, only visible when notifications are enabled
+                    AnimatedVisibility(
+                        visible = scheduleNotificationEnabled,
+                        enter = fadeIn() + expandVertically(),
+                        exit = fadeOut() + shrinkVertically()
                     ) {
-                        CoilImage(
-                            imageModel = { "https://storage.googleapis.com/tagjs-prod.appspot.com/v1/T7pdvlFwTn/9kchx17p_expires_30_days.png" },
-                            imageOptions = ImageOptions(contentScale = androidx.compose.ui.layout.ContentScale.Crop),
+                        Column(
                             modifier = Modifier
-                                .padding(end = 7.dp)
-                                .clip(RoundedCornerShape(20.dp))
-                                .width(21.dp)
-                                .height(20.dp)
-                        )
-                        if (taskNotificationEnabled) {
+                                .fillMaxWidth()
+                                .padding(top = 8.dp)
+                        ) {
+                            Text(
+                                "Waktu Pengingat",
+                                fontSize = 14.sp,
+                                color = Color.Gray,
+                                modifier = Modifier.padding(bottom = 8.dp)
+                            )
+
                             ExposedDropdownMenuBox(
-                                expanded = taskExpanded,
-                                onExpandedChange = { taskExpanded = !taskExpanded },
-                                modifier = Modifier
-                                    .padding(end = 13.dp)
-                                    .fillMaxWidth(0.7f)
-                                    .border(1.dp, Color(0x4D333333), RoundedCornerShape(10.dp))
-                                    .clip(RoundedCornerShape(10.dp))
-                                    .background(Color(0x332196F3))
+                                expanded = scheduleExpanded,
+                                onExpandedChange = { scheduleExpanded = !scheduleExpanded },
                             ) {
-                                TextField(
-                                    value = taskTimeBefore,
+                                OutlinedTextField(
+                                    value = scheduleTimeBefore,
                                     onValueChange = {},
                                     readOnly = true,
-                                    textStyle = androidx.compose.ui.text.TextStyle(color = Color(0xFF333333), fontSize = 16.sp),
                                     trailingIcon = {
-                                        CoilImage(
-                                            imageModel = { "https://storage.googleapis.com/tagjs-prod.appspot.com/v1/T7pdvlFwTn/ak1ar00d_expires_30_days.png" },
-                                            imageOptions = ImageOptions(contentScale = androidx.compose.ui.layout.ContentScale.Crop),
-                                            modifier = Modifier
-                                                .padding(end = 5.dp)
-                                                .clip(RoundedCornerShape(20.dp))
-                                                .width(29.dp)
-                                                .height(29.dp)
+                                        Icon(
+                                            imageVector = Icons.Filled.ArrowDropDown,
+                                            contentDescription = "Dropdown Menu"
                                         )
                                     },
                                     modifier = Modifier
                                         .fillMaxWidth()
-                                        .menuAnchor()
-                                        .background(Color.Transparent)
+                                        .menuAnchor(),
+                                    shape = RoundedCornerShape(8.dp),
+                                    colors = OutlinedTextFieldDefaults.colors(
+                                        focusedBorderColor = primaryColor,
+                                        unfocusedBorderColor = Color.Gray.copy(alpha = 0.5f)
+                                    )
                                 )
+
                                 ExposedDropdownMenu(
-                                    expanded = taskExpanded,
-                                    onDismissRequest = { taskExpanded = false },
-                                    modifier = Modifier.background(Color(0x1A2196F3))
+                                    expanded = scheduleExpanded,
+                                    onDismissRequest = { scheduleExpanded = false },
+                                    modifier = Modifier.background(Color(0x332196F3))
                                 ) {
                                     timeOptions.forEach { time ->
                                         DropdownMenuItem(
-                                            text = { Text(time, color = Color(0xFF333333), fontSize = 16.sp) },
+                                            text = { Text(time) },
                                             onClick = {
-                                                taskTimeBefore = time
-                                                taskExpanded = false
+                                                scheduleTimeBefore = time
+                                                scheduleExpanded = false
+                                            },
+                                            trailingIcon = {
+                                                if (scheduleTimeBefore == time) {
+                                                    Icon(
+                                                        imageVector = Icons.Filled.Check,
+                                                        contentDescription = "Selected",
+                                                        tint = primaryColor
+                                                    )
+                                                }
                                             }
                                         )
                                     }
                                 }
                             }
-                        } else {
-                            Spacer(modifier = Modifier.weight(1f))
                         }
+                    }
+
+                    // Message when disabled
+                    AnimatedVisibility(
+                        visible = !scheduleNotificationEnabled,
+                        enter = fadeIn() + expandVertically(),
+                        exit = fadeOut() + shrinkVertically()
+                    ) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            modifier = Modifier.padding(vertical = 8.dp)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Outlined.NotificationsOff,
+                                contentDescription = null,
+                                tint = Color.Gray,
+                                modifier = Modifier.size(20.dp)
+                            )
+                            Text(
+                                "Notifikasi jadwal dinonaktifkan",
+                                fontSize = 14.sp,
+                                color = Color.Gray,
+                                modifier = Modifier.padding(start = 8.dp)
+                            )
+                        }
+                    }
+                }
+            }
+
+            // Daftar Tugas Card
+            Card(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .animateContentSize(
+                        animationSpec = spring(
+                            dampingRatio = Spring.DampingRatioMediumBouncy,
+                            stiffness = Spring.StiffnessLow
+                        )
+                    ),
+                shape = RoundedCornerShape(10.dp),
+                colors = CardDefaults.cardColors(
+                    containerColor = Color(0x332196F3)
+                )
+            ) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(16.dp)
+                ) {
+                    // Card Header
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(bottom = 12.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Icon(
+                            imageVector = Icons.Filled.Task,
+                            contentDescription = null,
+                            tint = accentColor,
+                            modifier = Modifier
+                                .size(28.dp)
+                                .background(accentColor.copy(alpha = 0.1f), CircleShape)
+                                .padding(4.dp)
+                        )
+                        Text(
+                            "Notifikasi Tugas",
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 18.sp,
+                            color = Color.DarkGray,
+                            modifier = Modifier.padding(start = 12.dp)
+                        )
+                        Spacer(modifier = Modifier.weight(1f))
                         Switch(
                             checked = taskNotificationEnabled,
                             onCheckedChange = { taskNotificationEnabled = it },
                             colors = SwitchDefaults.colors(
-                                checkedThumbColor = Color(0xFF7DAFCB),
-                                checkedTrackColor = Color(0xFF7DAFCB).copy(alpha = 0.5f),
+                                checkedThumbColor = accentColor,
+                                checkedTrackColor = accentColor.copy(alpha = 0.5f),
                                 uncheckedThumbColor = Color.Gray,
                                 uncheckedTrackColor = Color.Gray.copy(alpha = 0.5f)
                             )
                         )
                     }
-                }
 
-                Button(
-                    onClick = {
-                        val prefs = context.getSharedPreferences("NotificationPrefs", Context.MODE_PRIVATE)
-                        with(prefs.edit()) {
-                            putBoolean("scheduleNotificationEnabled", scheduleNotificationEnabled)
-                            putBoolean("taskNotificationEnabled", taskNotificationEnabled)
-                            putString("scheduleTimeBefore", scheduleTimeBefore)
-                            putString("taskTimeBefore", taskTimeBefore)
-                            apply()
+                    HorizontalDivider(
+                        modifier = Modifier.padding(vertical = 8.dp),
+                        thickness = 1.dp,
+                        color = Color.LightGray.copy(alpha = 0.7f)
+                    )
+
+                    // Dropdown section, only visible when notifications are enabled
+                    AnimatedVisibility(
+                        visible = taskNotificationEnabled,
+                        enter = fadeIn() + expandVertically(),
+                        exit = fadeOut() + shrinkVertically()
+                    ) {
+                        Column(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(top = 8.dp)
+                        ) {
+                            Text(
+                                "Waktu Pengingat",
+                                fontSize = 14.sp,
+                                color = Color.Gray,
+                                modifier = Modifier.padding(bottom = 8.dp)
+                            )
+
+                            ExposedDropdownMenuBox(
+                                expanded = taskExpanded,
+                                onExpandedChange = { taskExpanded = !taskExpanded },
+                            ) {
+                                OutlinedTextField(
+                                    value = taskTimeBefore,
+                                    onValueChange = {},
+                                    readOnly = true,
+                                    trailingIcon = {
+                                        Icon(
+                                            imageVector = Icons.Filled.ArrowDropDown,
+                                            contentDescription = "Dropdown Menu"
+                                        )
+                                    },
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .menuAnchor(),
+                                    shape = RoundedCornerShape(8.dp),
+                                    colors = OutlinedTextFieldDefaults.colors(
+                                        focusedBorderColor = accentColor,
+                                        unfocusedBorderColor = Color.Gray.copy(alpha = 0.5f)
+                                    )
+                                )
+
+                                ExposedDropdownMenu(
+                                    expanded = taskExpanded,
+                                    onDismissRequest = { taskExpanded = false },
+                                    modifier = Modifier.background(Color(0x332196F3))
+                                ) {
+                                    timeOptions.forEach { time ->
+                                        DropdownMenuItem(
+                                            text = { Text(time) },
+                                            onClick = {
+                                                taskTimeBefore = time
+                                                taskExpanded = false
+                                            },
+                                            trailingIcon = {
+                                                if (taskTimeBefore == time) {
+                                                    Icon(
+                                                        imageVector = Icons.Filled.Check,
+                                                        contentDescription = "Selected",
+                                                        tint = accentColor
+                                                    )
+                                                }
+                                            }
+                                        )
+                                    }
+                                }
+                            }
                         }
-                        Log.d("NotificationScreen", "Saved prefs: scheduleEnabled=$scheduleNotificationEnabled, taskEnabled=$taskNotificationEnabled")
-                        navController.popBackStack()
-                    },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(top = 16.dp, start = 30.dp, end = 30.dp)
-                        .height(50.dp),
-                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF7DAFCB)),
-                    shape = RoundedCornerShape(10.dp)
-                ) {
-                    Text("Simpan", color = Color.White, fontSize = 20.sp)
+                    }
+
+                    // Message when disabled
+                    AnimatedVisibility(
+                        visible = !taskNotificationEnabled,
+                        enter = fadeIn() + expandVertically(),
+                        exit = fadeOut() + shrinkVertically()
+                    ) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            modifier = Modifier.padding(vertical = 8.dp)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Outlined.NotificationsOff,
+                                contentDescription = null,
+                                tint = Color.Gray,
+                                modifier = Modifier.size(20.dp)
+                            )
+                            Text(
+                                "Notifikasi tugas dinonaktifkan",
+                                fontSize = 14.sp,
+                                color = Color.Gray,
+                                modifier = Modifier.padding(start = 8.dp)
+                            )
+                        }
+                    }
                 }
             }
 
-            BottomNavigationBar(navController = navController, currentRoute = currentRoute)
+            Spacer(modifier = Modifier.padding(bottom = 82.dp))
+
+            // Save Button
+            Button(
+                onClick = {
+                    // Show animation
+                    showSavedAnimation = true
+
+                    // Save preferences
+                    val prefs = context.getSharedPreferences("NotificationPrefs", Context.MODE_PRIVATE)
+                    with(prefs.edit()) {
+                        putBoolean("scheduleNotificationEnabled", scheduleNotificationEnabled)
+                        putBoolean("taskNotificationEnabled", taskNotificationEnabled)
+                        putString("scheduleTimeBefore", scheduleTimeBefore)
+                        putString("taskTimeBefore", taskTimeBefore)
+                        apply()
+                    }
+                    Log.d("NotificationScreen", "Saved prefs: scheduleEnabled=$scheduleNotificationEnabled, taskEnabled=$taskNotificationEnabled")
+
+                    // Set flag to navigate back after delay
+                    shouldNavigateBack = true
+                },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(50.dp),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = if (showSavedAnimation) Color(0xFF66BB4F) else Color(0xFF7DAFCB)
+                ),
+                shape = RoundedCornerShape(10.dp)
+            ) {
+                AnimatedContent(
+                    targetState = showSavedAnimation,
+                    transitionSpec = {
+                        fadeIn().togetherWith(fadeOut())
+                    }
+                ) { saved ->
+                    if (saved) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.Center
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Check,
+                                contentDescription = null,
+                                modifier = Modifier.size(24.dp)
+                            )
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text(
+                                "Tersimpan",
+                                fontSize = 18.sp,
+                                fontWeight = FontWeight.Bold
+                            )
+                        }
+                    } else {
+                        Text(
+                            "Simpan Pengaturan",
+                            fontSize = 18.sp,
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
+                }
+            }
+
+            // Agregar espacio para el BottomNavigationBar
+            Spacer(modifier = Modifier.height(80.dp))
         }
+
+        // BottomNavigationBar colocado manualmente con un margen inferior
+        BottomNavigationBar(
+            navController = navController,
+            currentRoute = currentRoute,
+            modifier = Modifier
+                .align(Alignment.BottomCenter)
+                .padding(bottom = 20.dp) // Agregar un padding inferior para elevarlo
+        )
     }
 }

@@ -62,13 +62,13 @@ fun ProfileScreen(
             fontWeight = FontWeight.Bold,
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(top = 65.dp, start = 30.dp)
+                .padding(top = 40.dp, start = 20.dp)
         )
 
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(horizontal = 30.dp, vertical = 40.dp)
+                .padding(horizontal = 20.dp, vertical = 24.dp)
         ) {
             Spacer(modifier = Modifier.height(70.dp))
 
@@ -77,7 +77,7 @@ fun ProfileScreen(
                 modifier = Modifier
                     .fillMaxWidth()
                     .clip(RoundedCornerShape(10.dp))
-                    .background(Color(0x807DAFCB))
+                    .background(Color(0x332196F3))
                     .padding(20.dp),
                 colors = CardDefaults.cardColors(containerColor = Color.Transparent)
             ) {
@@ -173,7 +173,7 @@ fun ProfileScreen(
                 Text("Logout", color = Color.White, fontSize = 18.sp, fontWeight = FontWeight.Bold)
             }
 
-            Spacer(modifier = Modifier.height(80.dp))
+            Spacer(modifier = Modifier.height(96.dp))
         }
 
         // Bottom Navigation Bar
