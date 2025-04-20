@@ -25,7 +25,6 @@ import com.example.disiplinpro.viewmodel.schedule.ScheduleViewModel
 import com.google.firebase.Timestamp
 import com.skydoves.landscapist.ImageOptions
 import com.skydoves.landscapist.coil.CoilImage
-import java.text.SimpleDateFormat
 import java.util.*
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -48,7 +47,6 @@ fun AddScheduleScreen(
         var errorMessage by remember { mutableStateOf("") }
 
         val days = listOf("Senin", "Selasa", "Rabu", "Kamis", "Jumat", "Sabtu", "Minggu")
-        val timeFormat = SimpleDateFormat("HH:mm", Locale.getDefault())
         val context = LocalContext.current
 
         Column(

@@ -16,38 +16,30 @@ import kotlinx.coroutines.launch
 
 class FAQViewModel(application: Application) : AndroidViewModel(application) {
 
-    // Data untuk FAQ
     private val _faqItems = mutableStateListOf<FAQItem>()
     val faqItems: List<FAQItem> = _faqItems
 
-    // State untuk pencarian
     private val _searchQuery = MutableStateFlow("")
     val searchQuery: StateFlow<String> = _searchQuery.asStateFlow()
 
-    // State untuk filter kategori
     private val _selectedCategory = MutableStateFlow(FAQCategory.ALL)
     val selectedCategory: StateFlow<FAQCategory> = _selectedCategory.asStateFlow()
 
-    // State untuk hasil pencarian
     private val _filteredFaqItems = MutableStateFlow<List<FAQItem>>(emptyList())
     val filteredFaqItems: StateFlow<List<FAQItem>> = _filteredFaqItems.asStateFlow()
 
-    // Loading state
     val isLoading = mutableStateOf(false)
 
-    // Init block untuk memuat data FAQ
     init {
         loadFaqItems()
         updateFilteredItems()
     }
 
     private fun loadFaqItems() {
-        // Simulasi loading dari database
         viewModelScope.launch {
             isLoading.value = true
-            delay(300) // Simulasi loading delay
+            delay(300)
 
-            // Data Kategori Akun & Pengaturan
             _faqItems.add(
                 FAQItem(
                     id = 1,
@@ -75,7 +67,6 @@ class FAQViewModel(application: Application) : AndroidViewModel(application) {
                 )
             )
 
-            // Data Kategori Tugas & Jadwal
             _faqItems.add(
                 FAQItem(
                     id = 4,
@@ -103,7 +94,6 @@ class FAQViewModel(application: Application) : AndroidViewModel(application) {
                 )
             )
 
-            // Data Kategori Lainnya
             _faqItems.add(
                 FAQItem(
                     id = 7,
@@ -136,19 +126,16 @@ class FAQViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
-    // Update search query
     fun updateSearchQuery(query: String) {
         _searchQuery.value = query
         updateFilteredItems()
     }
 
-    // Update selected category
     fun updateSelectedCategory(category: FAQCategory) {
         _selectedCategory.value = category
         updateFilteredItems()
     }
 
-    // Filter FAQ berdasarkan search query dan kategori
     private fun updateFilteredItems() {
         val query = _searchQuery.value.lowercase()
         val category = _selectedCategory.value
@@ -160,10 +147,9 @@ class FAQViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
-    // Fungsi untuk kontak dukungan
     fun contactSupport() {
         val emailIntent = Intent(Intent.ACTION_SENDTO).apply {
-            data = Uri.parse("mailto:support@disiplinpro.id")
+            data = Uri.parse("alif.23131@mhs.unesa.ac.id")
             putExtra(Intent.EXTRA_SUBJECT, "Bantuan DisiplinPro")
         }
 
@@ -174,14 +160,13 @@ class FAQViewModel(application: Application) : AndroidViewModel(application) {
         } catch (e: Exception) {
             Toast.makeText(
                 context,
-                "Tidak dapat membuka aplikasi email. Silakan kirim email ke support@disiplinpro.id",
+                "Tidak dapat membuka aplikasi email. Silakan kirim email ke alif.23131@mhs.unesa.ac.id",
                 Toast.LENGTH_LONG
             ).show()
         }
     }
 }
 
-// Data class untuk item FAQ
 data class FAQItem(
     val id: Int,
     val question: String,
@@ -189,7 +174,6 @@ data class FAQItem(
     val category: FAQCategory
 )
 
-// Enum untuk kategori FAQ
 enum class FAQCategory {
     ALL, ACCOUNT, TASK, OTHER;
 

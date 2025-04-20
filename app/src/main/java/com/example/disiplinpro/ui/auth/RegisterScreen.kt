@@ -14,6 +14,7 @@ import androidx.compose.material3.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.VisibilityOff
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -57,7 +58,6 @@ fun RegisterScreen(
     val authState by authViewModel.authState.collectAsState()
     val isLoading by remember { authViewModel.isLoading }
 
-    // Google Sign-In setup
     val googleSignInClient = remember {
         try {
             val gso = GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
@@ -97,7 +97,6 @@ fun RegisterScreen(
                     is AuthState.Error -> {
                         Log.e("RegisterScreen", "Auth error: ${state.message}")
 
-                        // Provide user-friendly error message based on the error
                         val userFriendlyMessage = when {
                             state.message.contains("email address is already in use", ignoreCase = true) ->
                                 "Email sudah terdaftar. Silakan login atau gunakan email lain."
@@ -365,10 +364,10 @@ fun RegisterScreen(
                     .fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Divider(
-                    color = Color(0xFFEEEEEE),
+                HorizontalDivider(
+                    modifier = Modifier.weight(1f),
                     thickness = 1.dp,
-                    modifier = Modifier.weight(1f)
+                    color = Color(0xFFEEEEEE)
                 )
                 Text(
                     text = "ATAU",
@@ -376,14 +375,13 @@ fun RegisterScreen(
                     fontSize = 12.sp,
                     modifier = Modifier.padding(horizontal = 16.dp)
                 )
-                Divider(
-                    color = Color(0xFFEEEEEE),
+                HorizontalDivider(
+                    modifier = Modifier.weight(1f),
                     thickness = 1.dp,
-                    modifier = Modifier.weight(1f)
+                    color = Color(0xFFEEEEEE)
                 )
             }
 
-            // Google Sign In Button
             GoogleSignInButton(
                 onClick = {
                     val signInIntent = googleSignInClient.signInIntent
