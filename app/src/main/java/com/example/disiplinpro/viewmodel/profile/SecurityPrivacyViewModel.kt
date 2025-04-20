@@ -1,10 +1,6 @@
 package com.example.disiplinpro.viewmodel.profile
 
-import android.app.Activity
 import android.app.Application
-import android.content.Intent
-import android.net.Uri
-import android.os.Build
 import android.util.Log
 import android.widget.Toast
 import androidx.compose.runtime.mutableStateOf
@@ -27,7 +23,6 @@ class SecurityPrivacyViewModel(application: Application) : AndroidViewModel(appl
     private val firestore = FirebaseFirestore.getInstance()
     private val preferences = SecurityPrivacyPreferences(application.applicationContext)
 
-    // UI states from DataStore preferences
     val biometricLoginEnabled: StateFlow<Boolean> = preferences.biometricLoginFlow
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), false)
 
@@ -43,16 +38,12 @@ class SecurityPrivacyViewModel(application: Application) : AndroidViewModel(appl
     val allowNotificationsEnabled: StateFlow<Boolean> = preferences.allowNotificationsFlow
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), true)
 
-    // Loading state
     val isLoading = mutableStateOf(false)
 
-    // Error state
     val error = mutableStateOf<String?>(null)
 
-    // Success state
     val operationSuccess = mutableStateOf(false)
 
-    // Update preferences functions
     fun updateBiometricLogin(enabled: Boolean) {
         viewModelScope.launch {
             preferences.updateBiometricLogin(enabled)
@@ -96,14 +87,12 @@ class SecurityPrivacyViewModel(application: Application) : AndroidViewModel(appl
         }
     }
 
-    // Clear cache and history
     fun clearCacheAndHistory() {
         viewModelScope.launch {
             isLoading.value = true
             error.value = null
 
             try {
-                // Clear app cache
                 val cacheDir = getApplication<Application>().cacheDir
                 if (deleteDir(cacheDir)) {
                     Log.d("SecurityPrivacyViewModel", "Cache cleared successfully")
@@ -111,7 +100,6 @@ class SecurityPrivacyViewModel(application: Application) : AndroidViewModel(appl
                     Log.w("SecurityPrivacyViewModel", "Failed to clear some cache files")
                 }
 
-                // Optionally clear Firebase cache
                 FirebaseFirestore.getInstance().clearPersistence()
 
                 // Clear preferences related to history if needed
@@ -198,17 +186,13 @@ class SecurityPrivacyViewModel(application: Application) : AndroidViewModel(appl
                     return@launch
                 }
 
-                // Re-authenticate user before deleting account
                 val credential = EmailAuthProvider.getCredential(user.email!!, password)
                 user.reauthenticate(credential).await()
 
-                // Delete user data from Firestore first
                 val userId = user.uid
 
-                // Delete user document
                 firestore.collection("users").document(userId).delete().await()
 
-                // Delete user's tasks
                 val tasksSnapshot = firestore.collection("users").document(userId)
                     .collection("tasks").get().await()
 
@@ -216,7 +200,6 @@ class SecurityPrivacyViewModel(application: Application) : AndroidViewModel(appl
                     docSnapshot.reference.delete().await()
                 }
 
-                // Delete user's schedules
                 val schedulesSnapshot = firestore.collection("users").document(userId)
                     .collection("schedules").get().await()
 
@@ -224,7 +207,6 @@ class SecurityPrivacyViewModel(application: Application) : AndroidViewModel(appl
                     docSnapshot.reference.delete().await()
                 }
 
-                // Finally delete the Firebase Auth account
                 user.delete().await()
 
                 operationSuccess.value = true

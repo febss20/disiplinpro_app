@@ -27,9 +27,11 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -45,6 +47,25 @@ import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Locale
 
+private const val DEFAULT_YEAR_RANGE_COUNT = 4
+private const val DAYS_IN_WEEK = 7
+private const val WEEKS_TO_SHOW = 6
+private val DAY_ABBREVIATIONS = listOf("Min", "Sen", "Sel", "Rab", "Kam", "Jum", "Sab")
+private val MONTH_NAMES = listOf(
+    "Januari", "Februari", "Maret", "April", "Mei", "Juni",
+    "Juli", "Agustus", "September", "Oktober", "November", "Desember"
+)
+
+/**
+ * Data class menyimpan informasi hari kalender
+ */
+private data class CalendarDay(
+    val date: Calendar,
+    val isCurrentMonth: Boolean,
+    val isSelected: Boolean,
+    val hasSchedule: Boolean
+)
+
 @Composable
 fun AdvancedCalendarView(
     currentMonth: Calendar,
@@ -53,20 +74,19 @@ fun AdvancedCalendarView(
     onDateSelected: (Calendar) -> Unit,
     onMonthChanged: (Calendar) -> Unit
 ) {
-    val daysInMonth = currentMonth.getActualMaximum(Calendar.DAY_OF_MONTH)
-    val firstDayOfMonth = currentMonth.apply { set(Calendar.DAY_OF_MONTH, 1) }
-    val startingDayOfWeek = firstDayOfMonth.get(Calendar.DAY_OF_WEEK) - 1
     val monthFormat = SimpleDateFormat("MMMM yyyy", Locale.getDefault())
-    val dateFormat = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
 
-    // State for dialog visibility
+    val scheduleDays by remember(schedules) {
+        derivedStateOf { schedules.map { it.hari.lowercase() }.toSet() }
+    }
+
     var showYearRangeDialog by remember { mutableStateOf(false) }
     var showMonthSelectionDialog by remember { mutableStateOf(false) }
-    var selectedYear by remember { mutableStateOf(currentMonth.get(Calendar.YEAR)) }
+    var selectedYear by remember { mutableIntStateOf(currentMonth.get(Calendar.YEAR)) }
 
-    // Tanggal yang memiliki jadwal berdasarkan field 'hari'
-    val scheduleDays = schedules.map { it.hari.lowercase() }.toSet()
-    val selectedDay = SimpleDateFormat("EEEE", Locale("id", "ID")).format(selectedDate.time).lowercase()
+    val calendarDays by remember(currentMonth, selectedDate, scheduleDays) {
+        derivedStateOf { calculateCalendarDays(currentMonth, selectedDate, scheduleDays) }
+    }
 
     Column(
         modifier = Modifier
@@ -75,131 +95,38 @@ fun AdvancedCalendarView(
             .background(Color.White, RoundedCornerShape(10.dp))
             .padding(8.dp)
     ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(bottom = 8.dp),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            IconButton(onClick = {
+        CalendarHeader(
+            currentMonth = currentMonth,
+            monthFormat = monthFormat,
+            onPreviousMonth = {
                 val newMonth = currentMonth.clone() as Calendar
                 newMonth.add(Calendar.MONTH, -1)
                 onMonthChanged(newMonth)
-            }) {
-                Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Previous Month")
-            }
-
-            Box(
-                modifier = Modifier
-                    .clip(RoundedCornerShape(8.dp))
-                    .background(Color(0xFFE6F1F8))
-                    .clickable { showYearRangeDialog = true }
-                    .padding(horizontal = 16.dp, vertical = 8.dp)
-            ) {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.Center
-                ) {
-                    Text(
-                        monthFormat.format(currentMonth.time),
-                        fontSize = 18.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = Color(0xFF7DAFCB)
-                    )
-
-                    Spacer(modifier = Modifier.width(4.dp))
-
-                    Icon(
-                        imageVector = Icons.Filled.ArrowDropDown,
-                        contentDescription = "Select Month & Year",
-                        tint = Color(0xFF7DAFCB),
-                        modifier = Modifier.size(24.dp)
-                    )
-                }
-            }
-
-            IconButton(onClick = {
+            },
+            onNextMonth = {
                 val newMonth = currentMonth.clone() as Calendar
                 newMonth.add(Calendar.MONTH, 1)
                 onMonthChanged(newMonth)
-            }) {
-                Icon(Icons.AutoMirrored.Filled.ArrowForward, contentDescription = "Next Month")
-            }
-        }
+            },
+            onMonthYearClick = { showYearRangeDialog = true }
+        )
 
-        Row(modifier = Modifier.fillMaxWidth()) {
-            listOf("Min", "Sen", "Sel", "Rab", "Kam", "Jum", "Sab").forEach { day ->
-                Text(
-                    text = day,
-                    fontSize = 14.sp,
-                    modifier = Modifier.weight(1f),
-                    textAlign = TextAlign.Center
-                )
-            }
-        }
+        DaysOfWeekHeader()
 
-        var dayCounter = 1
-        for (week in 0..5) {
-            Row(modifier = Modifier.fillMaxWidth()) {
-                for (dayOfWeek in 0..6) {
-                    if (week == 0 && dayOfWeek < startingDayOfWeek || dayCounter > daysInMonth) {
-                        Box(modifier = Modifier.weight(1f).height(40.dp))
-                    } else {
-                        val currentDate = Calendar.getInstance().apply {
-                            set(Calendar.DAY_OF_MONTH, dayCounter)
-                            set(Calendar.MONTH, currentMonth.get(Calendar.MONTH))
-                            set(Calendar.YEAR, currentMonth.get(Calendar.YEAR))
-                        }
-                        val isSelected = selectedDate.get(Calendar.DAY_OF_MONTH) == dayCounter &&
-                                selectedDate.get(Calendar.MONTH) == currentMonth.get(Calendar.MONTH) &&
-                                selectedDate.get(Calendar.YEAR) == currentMonth.get(Calendar.YEAR)
-                        val currentDay = SimpleDateFormat("EEEE", Locale("id", "ID")).format(currentDate.time).lowercase()
-                        val hasSchedule = currentDay in scheduleDays
-
-                        Box(
-                            modifier = Modifier
-                                .weight(1f)
-                                .height(40.dp)
-                                .clip(CircleShape)
-                                .background(
-                                    when {
-                                        isSelected -> Color(0xFF7DAFCB)
-                                        hasSchedule -> Color(0xFFCCE5FF)
-                                        else -> Color.Transparent
-                                    }
-                                )
-                                .clickable {
-                                    onDateSelected(currentDate)
-                                },
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Text(
-                                text = dayCounter.toString(),
-                                color = if (isSelected) Color.White else Color.Black,
-                                fontSize = 14.sp
-                            )
-                            dayCounter++
-                        }
-                    }
-                }
-            }
-        }
+        CalendarGrid(calendarDays, onDateSelected)
     }
 
-    // Show Year Range Dialog
     if (showYearRangeDialog) {
         YearRangeSelectionDialog(
             onDismiss = { showYearRangeDialog = false },
-            onYearRangeSelected = { selectedYearRange ->
+            onYearRangeSelected = { year ->
+                selectedYear = year
                 showYearRangeDialog = false
                 showMonthSelectionDialog = true
-                selectedYear = selectedYearRange
             }
         )
     }
 
-    // Show Month Selection Dialog
     if (showMonthSelectionDialog) {
         MonthSelectionDialog(
             selectedYear = selectedYear,
@@ -220,19 +147,126 @@ fun AdvancedCalendarView(
 }
 
 @Composable
+private fun CalendarHeader(
+    currentMonth: Calendar,
+    monthFormat: SimpleDateFormat,
+    onPreviousMonth: () -> Unit,
+    onNextMonth: () -> Unit,
+    onMonthYearClick: () -> Unit
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(bottom = 8.dp),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        IconButton(onClick = onPreviousMonth) {
+            Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Previous Month")
+        }
+
+        Box(
+            modifier = Modifier
+                .clip(RoundedCornerShape(8.dp))
+                .background(Color(0xFFE6F1F8))
+                .clickable(onClick = onMonthYearClick)
+                .padding(horizontal = 16.dp, vertical = 8.dp)
+        ) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.Center
+            ) {
+                Text(
+                    monthFormat.format(currentMonth.time),
+                    fontSize = 18.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = Color(0xFF7DAFCB)
+                )
+
+                Spacer(modifier = Modifier.width(4.dp))
+
+                Icon(
+                    imageVector = Icons.Filled.ArrowDropDown,
+                    contentDescription = "Select Month & Year",
+                    tint = Color(0xFF7DAFCB),
+                    modifier = Modifier.size(24.dp)
+                )
+            }
+        }
+
+        IconButton(onClick = onNextMonth) {
+            Icon(Icons.AutoMirrored.Filled.ArrowForward, contentDescription = "Next Month")
+        }
+    }
+}
+
+@Composable
+private fun DaysOfWeekHeader() {
+    Row(modifier = Modifier.fillMaxWidth()) {
+        DAY_ABBREVIATIONS.forEach { day ->
+            Text(
+                text = day,
+                fontSize = 14.sp,
+                modifier = Modifier.weight(1f),
+                textAlign = TextAlign.Center
+            )
+        }
+    }
+}
+
+@Composable
+private fun CalendarGrid(calendarDays: List<List<CalendarDay?>>, onDateSelected: (Calendar) -> Unit) {
+    calendarDays.forEach { week ->
+        Row(modifier = Modifier.fillMaxWidth()) {
+            week.forEach { day ->
+                if (day == null) {
+                    Box(modifier = Modifier.weight(1f).height(40.dp))
+                } else {
+                    Box(
+                        modifier = Modifier
+                            .weight(1f)
+                            .height(40.dp)
+                            .clip(CircleShape)
+                            .background(
+                                when {
+                                    day.isSelected -> Color(0xFF7DAFCB)
+                                    day.hasSchedule -> Color(0xFFCCE5FF)
+                                    else -> Color.Transparent
+                                }
+                            )
+                            .clickable {
+                                onDateSelected(day.date)
+                            },
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            text = day.date.get(Calendar.DAY_OF_MONTH).toString(),
+                            color = if (day.isSelected) Color.White else Color.Black,
+                            fontSize = 14.sp
+                        )
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
 fun YearRangeSelectionDialog(
     onDismiss: () -> Unit,
     onYearRangeSelected: (Int) -> Unit
 ) {
     val currentYear = Calendar.getInstance().get(Calendar.YEAR)
-    // Calculate ranges to include current year in the middle
-    val baseYear = (currentYear / 5) * 5 - 5  // Round to nearest 5 and subtract 5
-    val yearRanges = listOf(
-        baseYear to baseYear + 4,
-        baseYear + 5 to baseYear + 9,
-        baseYear + 10 to baseYear + 14,
-        baseYear + 15 to baseYear + 19
-    )
+    val baseYear = ((currentYear - 5) / 5) * 5
+
+    val yearRanges by remember(baseYear) {
+        derivedStateOf {
+            (0 until DEFAULT_YEAR_RANGE_COUNT).map { i ->
+                val start = baseYear + (i * 5)
+                start to start + 4
+            }
+        }
+    }
 
     Dialog(onDismissRequest = onDismiss) {
         Card(
@@ -274,7 +308,6 @@ fun YearRangeSelectionDialog(
                                 .padding(vertical = 12.dp, horizontal = 16.dp)
                                 .fillMaxWidth()
                                 .clickable {
-                                    // Let's pass the start year of the range
                                     onYearRangeSelected(start)
                                 }
                         )
@@ -292,11 +325,6 @@ fun MonthSelectionDialog(
     onBackPressed: () -> Unit,
     onMonthSelected: (Int) -> Unit
 ) {
-    val months = listOf(
-        "Januari", "Februari", "Maret", "April", "Mei", "Juni",
-        "Juli", "Agustus", "September", "Oktober", "November", "Desember"
-    )
-
     val currentMonth = Calendar.getInstance().get(Calendar.MONTH)
     val currentYear = Calendar.getInstance().get(Calendar.YEAR)
 
@@ -335,7 +363,6 @@ fun MonthSelectionDialog(
                         color = Color(0xFF7DAFCB)
                     )
 
-                    // Empty box for alignment
                     Box(modifier = Modifier.width(48.dp))
                 }
 
@@ -345,10 +372,10 @@ fun MonthSelectionDialog(
                     columns = GridCells.Fixed(3),
                     modifier = Modifier.padding(8.dp)
                 ) {
-                    items(months.indices.toList()) { index ->
+                    items(MONTH_NAMES.indices.toList()) { index ->
                         val isCurrentMonth = index == currentMonth && selectedYear == currentYear
                         Text(
-                            text = months[index],
+                            text = MONTH_NAMES[index],
                             fontSize = 14.sp,
                             textAlign = TextAlign.Center,
                             color = if (isCurrentMonth) Color.White else Color.Black,
@@ -369,4 +396,56 @@ fun MonthSelectionDialog(
             }
         }
     }
+}
+
+/**
+ * Menghitung data hari-hari kalender secara efisien
+ */
+private fun calculateCalendarDays(
+    currentMonth: Calendar,
+    selectedDate: Calendar,
+    scheduleDays: Set<String>
+): List<List<CalendarDay?>> {
+    val daysInMonth = currentMonth.getActualMaximum(Calendar.DAY_OF_MONTH)
+    val firstDayOfMonth = (currentMonth.clone() as Calendar).apply { set(Calendar.DAY_OF_MONTH, 1) }
+    val startingDayOfWeek = firstDayOfMonth.get(Calendar.DAY_OF_WEEK) - 1
+    val indonesianLocale = Locale("id", "ID")
+    val dayFormat = SimpleDateFormat("EEEE", indonesianLocale)
+
+    val selectedYear = selectedDate.get(Calendar.YEAR)
+    val selectedMonth = selectedDate.get(Calendar.MONTH)
+    val selectedDay = selectedDate.get(Calendar.DAY_OF_MONTH)
+    val currentMonthValue = currentMonth.get(Calendar.MONTH)
+    val currentYearValue = currentMonth.get(Calendar.YEAR)
+
+    val calendarGrid = List(WEEKS_TO_SHOW) { weekIndex ->
+        List(DAYS_IN_WEEK) { dayOfWeek ->
+            val dayIndex = weekIndex * DAYS_IN_WEEK + dayOfWeek
+            val calendarDayIndex = dayIndex - startingDayOfWeek
+
+            if (calendarDayIndex < 0 || calendarDayIndex >= daysInMonth) {
+                null
+            } else {
+                val date = (currentMonth.clone() as Calendar).apply {
+                    set(Calendar.DAY_OF_MONTH, calendarDayIndex + 1)
+                }
+
+                val isSelected = selectedDay == (calendarDayIndex + 1) &&
+                        selectedMonth == currentMonthValue &&
+                        selectedYear == currentYearValue
+
+                val dayOfWeekString = dayFormat.format(date.time).lowercase()
+                val hasSchedule = dayOfWeekString in scheduleDays
+
+                CalendarDay(
+                    date = date,
+                    isCurrentMonth = true,
+                    isSelected = isSelected,
+                    hasSchedule = hasSchedule
+                )
+            }
+        }
+    }
+
+    return calendarGrid
 }

@@ -25,11 +25,9 @@ class ProfileEditViewModel(application: Application) : AndroidViewModel(applicat
     private val firestore = FirebaseFirestore.getInstance()
     private val s3Repository = S3Repository(application.applicationContext)
 
-    // UI States
     private val _uiState = MutableStateFlow(ProfileEditUiState())
     val uiState: StateFlow<ProfileEditUiState> = _uiState.asStateFlow()
 
-    // Selected Image
     private val _selectedImageUri = MutableStateFlow<Uri?>(null)
     val selectedImageUri: StateFlow<Uri?> = _selectedImageUri.asStateFlow()
 
@@ -49,19 +47,16 @@ class ProfileEditViewModel(application: Application) : AndroidViewModel(applicat
 
                     val userData = userDoc.toObject(User::class.java)
                     if (userData != null) {
-                        // Periksa apakah URL foto perlu diperbarui (hampir expired)
                         val photoUrl = userData.fotoProfil
                         val photoObjectKey = userData.fotoProfilObjectKey
                         val photoExpiration = userData.fotoProfilExpiration ?: 0L
 
                         val finalPhotoUrl = if (!photoUrl.isNullOrEmpty() && !photoObjectKey.isNullOrEmpty() &&
                             photoExpiration > 0 && Date().time > photoExpiration - TimeUnit.DAYS.toMillis(1)) {
-                            // URL akan expired dalam 1 hari, refresh URL
                             try {
                                 val newUrl = s3Repository.refreshProfilePhotoUrl(photoObjectKey)
                                 val newExpiration = Date().time + TimeUnit.DAYS.toMillis(7)
 
-                                // Update URL di Firestore
                                 val photoUpdate = mapOf(
                                     "fotoProfil" to newUrl,
                                     "fotoProfilExpiration" to newExpiration
@@ -69,7 +64,7 @@ class ProfileEditViewModel(application: Application) : AndroidViewModel(applicat
                                 userDoc.reference.update(photoUpdate).await()
                                 newUrl
                             } catch (e: Exception) {
-                                photoUrl // Gunakan URL lama jika refresh gagal
+                                photoUrl
                             }
                         } else {
                             photoUrl
@@ -130,19 +125,16 @@ class ProfileEditViewModel(application: Application) : AndroidViewModel(applicat
         var isValid = true
         var errorMessage: String? = null
 
-        // Username validation
         if (_uiState.value.username.isBlank()) {
             errorMessage = "Username tidak boleh kosong"
             isValid = false
         }
 
-        // Email validation
         else if (_uiState.value.email.isBlank() || !Patterns.EMAIL_ADDRESS.matcher(_uiState.value.email).matches()) {
             errorMessage = "Email tidak valid"
             isValid = false
         }
 
-        // Password validation
         else if (_uiState.value.newPassword.isNotEmpty()) {
             if (_uiState.value.currentPassword.isEmpty()) {
                 errorMessage = "Password saat ini diperlukan untuk mengubah password"
@@ -169,22 +161,17 @@ class ProfileEditViewModel(application: Application) : AndroidViewModel(applicat
                 val currentUser = auth.currentUser ?: throw Exception("User tidak ditemukan")
                 val userId = currentUser.uid
 
-                // Handle photo upload first if selected
                 val photoData = if (_selectedImageUri.value != null) {
-                    // Jika pengguna sudah memiliki foto profil sebelumnya, hapus foto lama
                     if (!_uiState.value.profilePhotoUrl.isNullOrEmpty() &&
                         !_uiState.value.profilePhotoObjectKey.isNullOrEmpty()) {
                         s3Repository.deleteProfilePhoto(_uiState.value.profilePhotoUrl!!)
                     }
 
-                    // Upload foto baru dan dapatkan presigned URL
                     val presignedUrl = s3Repository.uploadProfilePhoto(_selectedImageUri.value!!, userId)
 
-                    // Parse URL untuk mendapatkan info tambahan
                     val url = URL(presignedUrl)
                     val objectKey = url.path.removePrefix("/").substringBefore("?")
 
-                    // Hitung expiration dari query parameter
                     val expirationTime = Date().time + TimeUnit.DAYS.toMillis(7)
 
                     mapOf(
@@ -198,9 +185,7 @@ class ProfileEditViewModel(application: Application) : AndroidViewModel(applicat
                     )
                 }
 
-                // If email changed, update email in Firebase Auth
                 if (currentUser.email != _uiState.value.email) {
-                    // Need to reauthenticate before email change
                     if (_uiState.value.currentPassword.isNotEmpty()) {
                         val credential = EmailAuthProvider.getCredential(currentUser.email!!, _uiState.value.currentPassword)
                         currentUser.reauthenticate(credential).await()
@@ -210,9 +195,7 @@ class ProfileEditViewModel(application: Application) : AndroidViewModel(applicat
                     }
                 }
 
-                // If password changed, update it
                 if (_uiState.value.newPassword.isNotEmpty() && _uiState.value.currentPassword.isNotEmpty()) {
-                    // Reauthenticate if not done above
                     if (currentUser.email != _uiState.value.email) {
                         val credential = EmailAuthProvider.getCredential(currentUser.email!!, _uiState.value.currentPassword)
                         currentUser.reauthenticate(credential).await()
@@ -220,12 +203,10 @@ class ProfileEditViewModel(application: Application) : AndroidViewModel(applicat
                     currentUser.updatePassword(_uiState.value.newPassword).await()
                 }
 
-                // Update Firestore data
                 val userData = hashMapOf<String, Any>(
                     "username" to _uiState.value.username
                 )
 
-                // Tambahkan data foto profil jika ada
                 userData.putAll(photoData)
 
                 firestore.collection("users").document(userId).update(userData).await()
