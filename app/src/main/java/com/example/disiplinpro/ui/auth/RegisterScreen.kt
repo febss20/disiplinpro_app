@@ -63,6 +63,10 @@ fun RegisterScreen(
             val gso = GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
                 .requestIdToken(context.getString(R.string.default_web_client_id))
                 .requestEmail()
+                .requestProfile()
+                .requestId()
+                .requestServerAuthCode(context.getString(R.string.default_web_client_id))
+                .setHostedDomain("*")
                 .build()
             GoogleSignIn.getClient(context, gso)
         } catch (e: Exception) {
@@ -384,12 +388,15 @@ fun RegisterScreen(
 
             GoogleSignInButton(
                 onClick = {
-                    val signInIntent = googleSignInClient.signInIntent
-                    googleSignInLauncher.launch(signInIntent)
+                    googleSignInClient.signOut().addOnCompleteListener {
+                        val signInIntent = googleSignInClient.signInIntent
+                        signInIntent.putExtra("prompt", "select_account")
+                        googleSignInLauncher.launch(signInIntent)
+                    }
                 },
                 modifier = Modifier
-                    .padding(horizontal = 31.dp)
-                    .fillMaxWidth(),
+                    .fillMaxWidth()
+                    .padding(horizontal = 30.dp),
                 enabled = !isLoading
             )
 

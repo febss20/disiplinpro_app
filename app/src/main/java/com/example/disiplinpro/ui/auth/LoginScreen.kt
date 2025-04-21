@@ -35,6 +35,7 @@ import androidx.compose.ui.text.input.VisualTransformation
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.repeatOnLifecycle
 import com.example.disiplinpro.R
+import com.example.disiplinpro.viewmodel.profile.SecurityPrivacyViewModel
 
 @Composable
 fun LoginScreen(
@@ -52,12 +53,35 @@ fun LoginScreen(
     val lifecycleOwner = LocalLifecycleOwner.current
     val authState by authViewModel.authState.collectAsState()
     val isLoading by remember { authViewModel.isLoading }
+    val securityPrivacyViewModel: SecurityPrivacyViewModel = viewModel()
+    val hasCredentials by securityPrivacyViewModel.hasCredentials.collectAsState()
+    val savedCredentials by securityPrivacyViewModel.savedCredentials.collectAsState()
+
+    LaunchedEffect(Unit) {
+        securityPrivacyViewModel.loadSavedCredentials()
+    }
+
+    // Isi otomatis email yang tersimpan
+    LaunchedEffect(hasCredentials, savedCredentials) {
+        if (hasCredentials) {
+            if (email.isEmpty() && savedCredentials.first.isNotEmpty()) {
+                email = savedCredentials.first
+            }
+            if (password.isEmpty() && savedCredentials.second.isNotEmpty()) {
+                password = savedCredentials.second
+            }
+        }
+    }
 
     val googleSignInClient = remember {
         try {
             val gso = GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
                 .requestIdToken(context.getString(R.string.default_web_client_id))
                 .requestEmail()
+                .requestProfile()
+                .requestId()
+                .requestServerAuthCode(context.getString(R.string.default_web_client_id))
+                .setHostedDomain("*")
                 .build()
             GoogleSignIn.getClient(context, gso)
         } catch (e: Exception) {
@@ -310,7 +334,7 @@ fun LoginScreen(
                     }
 
                     Log.d("LoginScreen", "Attempting login with email: $email")
-                    authViewModel.loginUser(email, password) { success ->
+                    authViewModel.loginUser(context, email, password) { success ->
                         Log.d("LoginScreen", "Login result: $success")
                         loginFailed = !success
                         if (!success) {
@@ -367,14 +391,16 @@ fun LoginScreen(
 
             GoogleSignInButton(
                 onClick = {
-                    val signInIntent = googleSignInClient.signInIntent
-                    googleSignInLauncher.launch(signInIntent)
+                    googleSignInClient.signOut().addOnCompleteListener {
+                        val signInIntent = googleSignInClient.signInIntent
+                        signInIntent.putExtra("prompt", "select_account")
+                        googleSignInLauncher.launch(signInIntent)
+                    }
                 },
+                text = "Masuk dengan Google",
                 modifier = Modifier
-                    .padding(horizontal = 31.dp)
-                    .fillMaxWidth(),
-                enabled = !isLoading,
-                text = "Masuk dengan Google"
+                    .fillMaxWidth()
+                    .padding(horizontal = 30.dp)
             )
 
             // Register Link
