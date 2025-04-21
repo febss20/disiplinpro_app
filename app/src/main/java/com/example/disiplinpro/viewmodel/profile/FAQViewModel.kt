@@ -149,7 +149,7 @@ class FAQViewModel(application: Application) : AndroidViewModel(application) {
 
     fun contactSupport() {
         val emailIntent = Intent(Intent.ACTION_SENDTO).apply {
-            data = Uri.parse("alif.23131@mhs.unesa.ac.id")
+            data = Uri.parse("mailto:alif.23131@mhs.unesa.ac.id")
             putExtra(Intent.EXTRA_SUBJECT, "Bantuan DisiplinPro")
         }
 

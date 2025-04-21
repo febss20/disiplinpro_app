@@ -84,6 +84,11 @@ class MainActivity : ComponentActivity() {
         setContent {
             val navController = rememberNavController()
             val authViewModel = AuthViewModel()
+
+            LaunchedEffect(Unit) {
+                authViewModel.initialize(this@MainActivity)
+            }
+
             val startDestination = if (FirebaseAuth.getInstance().currentUser != null) {
                 "home"
             } else {

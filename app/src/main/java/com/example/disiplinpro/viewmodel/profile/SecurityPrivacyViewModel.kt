@@ -1,11 +1,13 @@
 package com.example.disiplinpro.viewmodel.profile
 
 import android.app.Application
+import android.content.Context
 import android.util.Log
 import android.widget.Toast
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
+import androidx.work.WorkManager
 import com.example.disiplinpro.data.preferences.SecurityPrivacyPreferences
 import com.google.firebase.auth.EmailAuthProvider
 import com.google.firebase.auth.FirebaseAuth
@@ -16,12 +18,19 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
 import java.io.File
+import com.google.android.gms.auth.api.signin.GoogleSignIn
+import com.google.android.gms.auth.api.signin.GoogleSignInOptions
+import com.example.disiplinpro.data.preferences.CredentialManager
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.asStateFlow
 
 class SecurityPrivacyViewModel(application: Application) : AndroidViewModel(application) {
 
     private val auth = FirebaseAuth.getInstance()
     private val firestore = FirebaseFirestore.getInstance()
     private val preferences = SecurityPrivacyPreferences(application.applicationContext)
+    private val credentialManager = CredentialManager(application.applicationContext)
 
     val biometricLoginEnabled: StateFlow<Boolean> = preferences.biometricLoginFlow
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), false)
@@ -29,7 +38,7 @@ class SecurityPrivacyViewModel(application: Application) : AndroidViewModel(appl
     val twoFactorAuthEnabled: StateFlow<Boolean> = preferences.twoFactorAuthFlow
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), false)
 
-    val saveLoginInfoEnabled: StateFlow<Boolean> = preferences.saveLoginInfoFlow
+    val saveLoginInfoFlow: StateFlow<Boolean> = preferences.saveLoginInfoFlow
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), true)
 
     val shareActivityDataEnabled: StateFlow<Boolean> = preferences.shareActivityDataFlow
@@ -43,6 +52,81 @@ class SecurityPrivacyViewModel(application: Application) : AndroidViewModel(appl
     val error = mutableStateOf<String?>(null)
 
     val operationSuccess = mutableStateOf(false)
+
+    private val _savedCredentials = MutableStateFlow<Pair<String, String>>("" to "")
+    val savedCredentials = _savedCredentials.asStateFlow()
+
+    private val _hasCredentials = MutableStateFlow(false)
+    val hasCredentials = _hasCredentials.asStateFlow()
+
+    init {
+        loadSavedCredentials()
+    }
+
+    /**
+     * Memuat kredensial tersimpan (fungsi publik)
+     */
+    fun loadSavedCredentials() {
+        viewModelScope.launch {
+            val saveLoginEnabled = preferences.saveLoginInfoFlow.first()
+            if (saveLoginEnabled && credentialManager.hasCredentials()) {
+                val email = credentialManager.getSavedEmail() ?: ""
+                val password = credentialManager.getSavedPassword() ?: ""
+                _savedCredentials.value = email to password
+                _hasCredentials.value = true
+                Log.d("SecurityPrivacyViewModel", "Kredensial tersimpan dimuat")
+            } else {
+                _hasCredentials.value = false
+                Log.d("SecurityPrivacyViewModel", "Tidak ada kredensial tersimpan")
+            }
+        }
+    }
+
+    /**
+     * Menyimpan kredensial
+     */
+    fun saveCredentials(email: String, password: String) {
+        viewModelScope.launch {
+            val success = credentialManager.saveCredentials(email, password)
+            if (success) {
+                _savedCredentials.value = email to password
+                _hasCredentials.value = true
+
+                if (!preferences.saveLoginInfoFlow.first()) {
+                    preferences.updateSaveLoginInfo(true)
+                }
+
+                Toast.makeText(
+                    getApplication(),
+                    "Informasi login berhasil disimpan",
+                    Toast.LENGTH_SHORT
+                ).show()
+            } else {
+                Toast.makeText(
+                    getApplication(),
+                    "Gagal menyimpan informasi login",
+                    Toast.LENGTH_SHORT
+                ).show()
+            }
+        }
+    }
+
+    /**
+     * Menghapus kredensial tersimpan
+     */
+    fun deleteCredentials() {
+        viewModelScope.launch {
+            credentialManager.clearCredentials()
+            _savedCredentials.value = "" to ""
+            _hasCredentials.value = false
+
+            Toast.makeText(
+                getApplication(),
+                "Informasi login berhasil dihapus",
+                Toast.LENGTH_SHORT
+            ).show()
+        }
+    }
 
     fun updateBiometricLogin(enabled: Boolean) {
         viewModelScope.launch {
@@ -72,6 +156,22 @@ class SecurityPrivacyViewModel(application: Application) : AndroidViewModel(appl
     fun updateSaveLoginInfo(enabled: Boolean) {
         viewModelScope.launch {
             preferences.updateSaveLoginInfo(enabled)
+            if (!enabled) {
+                deleteCredentials()
+
+                val appContext = getApplication<Application>().applicationContext
+                val sharedPrefs = appContext.getSharedPreferences("login_prefs", Context.MODE_PRIVATE)
+                sharedPrefs.edit().clear().apply()
+
+                Log.d("SecurityPrivacyViewModel", "Informasi login yang tersimpan telah dihapus")
+                Toast.makeText(
+                    appContext,
+                    "Informasi login yang tersimpan telah dihapus",
+                    Toast.LENGTH_SHORT
+                ).show()
+            } else {
+                loadSavedCredentials()
+            }
         }
     }
 
@@ -84,6 +184,19 @@ class SecurityPrivacyViewModel(application: Application) : AndroidViewModel(appl
     fun updateAllowNotifications(enabled: Boolean) {
         viewModelScope.launch {
             preferences.updateAllowNotifications(enabled)
+            if (!enabled) {
+                val appContext = getApplication<Application>().applicationContext
+
+                WorkManager.getInstance(appContext).cancelAllWorkByTag("notification_tag")
+                WorkManager.getInstance(appContext).cancelAllWorkByTag("overdue_notification_tag")
+
+                Log.d("SecurityPrivacyViewModel", "Semua notifikasi terjadwal dibatalkan")
+                Toast.makeText(
+                    appContext,
+                    "Semua notifikasi telah dinonaktifkan",
+                    Toast.LENGTH_SHORT
+                ).show()
+            }
         }
     }
 
@@ -102,8 +215,6 @@ class SecurityPrivacyViewModel(application: Application) : AndroidViewModel(appl
 
                 FirebaseFirestore.getInstance().clearPersistence()
 
-                // Clear preferences related to history if needed
-                // This is app-specific; here's an example for clearing some history flags
                 viewModelScope.launch {
                     preferences.clearCacheAndHistory()
                 }
@@ -186,6 +297,8 @@ class SecurityPrivacyViewModel(application: Application) : AndroidViewModel(appl
                     return@launch
                 }
 
+                val isGoogleUser = user.providerData.any { it.providerId == "google.com" }
+
                 val credential = EmailAuthProvider.getCredential(user.email!!, password)
                 user.reauthenticate(credential).await()
 
@@ -205,6 +318,22 @@ class SecurityPrivacyViewModel(application: Application) : AndroidViewModel(appl
 
                 for (docSnapshot in schedulesSnapshot.documents) {
                     docSnapshot.reference.delete().await()
+                }
+
+                if (isGoogleUser) {
+                    try {
+                        val context = getApplication<Application>().applicationContext
+                        val gso = GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
+                            .requestEmail()
+                            .build()
+                        val googleSignInClient = GoogleSignIn.getClient(context, gso)
+
+                        googleSignInClient.revokeAccess().await()
+                        googleSignInClient.signOut().await()
+                        Log.d("SecurityPrivacyViewModel", "Google access revoked for user $userId")
+                    } catch (e: Exception) {
+                        Log.e("SecurityPrivacyViewModel", "Failed to revoke Google access: ${e.message}")
+                    }
                 }
 
                 user.delete().await()
