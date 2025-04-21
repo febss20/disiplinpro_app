@@ -7,6 +7,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.disiplinpro.data.model.User
+import com.example.disiplinpro.data.preferences.SecurityPrivacyPreferences
 import com.example.disiplinpro.data.repository.AuthRepository
 import com.google.android.gms.auth.api.signin.GoogleSignIn
 import com.google.android.gms.auth.api.signin.GoogleSignInAccount
@@ -16,13 +17,22 @@ import com.google.firebase.auth.FirebaseAuth
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
 
 private const val TAG = "AuthViewModel"
 
 class AuthViewModel : ViewModel() {
     private val auth: FirebaseAuth = FirebaseAuth.getInstance()
     private val authRepository = AuthRepository()
+
+    // Untuk menyimpan info login terakhir
+    private val context: Context? = null
+    private var securityPreferences: SecurityPrivacyPreferences? = null
+
+    private val _savedEmail = MutableStateFlow<String>("")
+    val savedEmail: StateFlow<String> = _savedEmail.asStateFlow()
 
     private val _authState = MutableStateFlow<AuthState>(AuthState.Initial)
     val authState: StateFlow<AuthState> = _authState.asStateFlow()
@@ -35,6 +45,63 @@ class AuthViewModel : ViewModel() {
     init {
         auth.currentUser?.let {
             refreshCurrentUser()
+        }
+    }
+
+    // Metode untuk inisialisasi konteks
+    fun initialize(context: Context) {
+        securityPreferences = SecurityPrivacyPreferences(context)
+        loadSavedLoginInfo(context)
+    }
+
+    // Load email yang tersimpan jika preferensi diaktifkan
+    private fun loadSavedLoginInfo(context: Context) {
+        viewModelScope.launch {
+            try {
+                val prefs = SecurityPrivacyPreferences(context)
+                val saveLoginEnabled = prefs.saveLoginInfoFlow.first()
+
+                if (saveLoginEnabled) {
+                    val sharedPrefs = context.getSharedPreferences("login_prefs", Context.MODE_PRIVATE)
+                    val email = sharedPrefs.getString("saved_email", "") ?: ""
+
+                    if (email.isNotEmpty()) {
+                        _savedEmail.value = email
+                        Log.d(TAG, "Email tersimpan dimuat: $email")
+                    }
+                }
+            } catch (e: Exception) {
+                Log.e(TAG, "Error loading saved login info: ${e.message}")
+            }
+        }
+    }
+
+    // Menyimpan atau menghapus info login berdasarkan preferensi
+    private fun saveClearLoginInfo(context: Context, email: String) {
+        viewModelScope.launch {
+            try {
+                val prefs = SecurityPrivacyPreferences(context)
+                val saveLoginEnabled = prefs.saveLoginInfoFlow.first()
+
+                val sharedPrefs = context.getSharedPreferences("login_prefs", Context.MODE_PRIVATE)
+                val editor = sharedPrefs.edit()
+
+                if (saveLoginEnabled) {
+                    // Simpan email (JANGAN simpan password karena alasan keamanan)
+                    editor.putString("saved_email", email)
+                    _savedEmail.value = email
+                    Log.d(TAG, "Email disimpan: $email")
+                } else {
+                    // Hapus info login yang tersimpan
+                    editor.clear()
+                    _savedEmail.value = ""
+                    Log.d(TAG, "Info login dihapus")
+                }
+
+                editor.apply()
+            } catch (e: Exception) {
+                Log.e(TAG, "Error saving/clearing login info: ${e.message}")
+            }
         }
     }
 
@@ -54,13 +121,15 @@ class AuthViewModel : ViewModel() {
         }
     }
 
-    fun loginUser(email: String, password: String, onResult: (Boolean) -> Unit) {
+    fun loginUser(context: Context, email: String, password: String, onResult: (Boolean) -> Unit) {
         isLoading.value = true
         auth.signInWithEmailAndPassword(email, password)
             .addOnCompleteListener { task ->
                 isLoading.value = false
                 if (task.isSuccessful) {
                     Log.d(TAG, "Login sukses")
+                    // Simpan info login jika preferensi diaktifkan
+                    saveClearLoginInfo(context, email)
                     refreshCurrentUser()
                     _authState.value = AuthState.Authenticated
                     onResult(true)
@@ -138,27 +207,49 @@ class AuthViewModel : ViewModel() {
     }
 
     fun logoutUser(context: Context, onResult: () -> Unit) {
-        auth.signOut()
+        isLoading.value = true
 
         try {
+            // 1. Pertama, lakukan revoke access dan sign out dari Google
             val gso = GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
                 .requestEmail()
                 .build()
             val googleSignInClient = GoogleSignIn.getClient(context, gso)
-            googleSignInClient.signOut().addOnCompleteListener {
-                Log.d(TAG, "Google sign out successful")
-            }
-            googleSignInClient.revokeAccess().addOnCompleteListener {
-                Log.d(TAG, "Google access revoked")
+
+            // Revoke akses terlebih dahulu
+            googleSignInClient.revokeAccess().addOnCompleteListener { revokeTask ->
+                if (revokeTask.isSuccessful) {
+                    Log.d(TAG, "Google access revoked successfully")
+                } else {
+                    Log.w(TAG, "Failed to revoke Google access: ${revokeTask.exception?.message}")
+                }
+
+                // Kemudian lakukan sign out dari Google
+                googleSignInClient.signOut().addOnCompleteListener { signOutTask ->
+                    if (signOutTask.isSuccessful) {
+                        Log.d(TAG, "Google sign out successful")
+                    } else {
+                        Log.w(TAG, "Failed to sign out from Google: ${signOutTask.exception?.message}")
+                    }
+
+                    // 2. Terakhir, logout dari Firebase Auth
+                    auth.signOut()
+                    _currentUser.value = null
+                    _authState.value = AuthState.Unauthenticated
+
+                    Log.d(TAG, "Logout berhasil")
+                    isLoading.value = false
+                    onResult()
+                }
             }
         } catch (e: Exception) {
-            Log.e(TAG, "Error signing out from Google: ${e.message}")
+            Log.e(TAG, "Error during logout: ${e.message}")
+            auth.signOut()
+            _currentUser.value = null
+            _authState.value = AuthState.Unauthenticated
+            isLoading.value = false
+            onResult()
         }
-
-        _currentUser.value = null
-        _authState.value = AuthState.Unauthenticated
-        Log.d(TAG, "Logout berhasil")
-        onResult()
     }
 
     fun sendPasswordResetEmail(email: String, onResult: (Boolean) -> Unit) {

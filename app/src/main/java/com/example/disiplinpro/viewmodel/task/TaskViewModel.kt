@@ -9,11 +9,14 @@ import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.WorkManager
 import androidx.work.workDataOf
 import com.example.disiplinpro.data.model.Task
+import com.example.disiplinpro.data.preferences.SecurityPrivacyPreferences
 import com.example.disiplinpro.data.repository.FirestoreRepository
 import com.example.disiplinpro.worker.NotificationWorker
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
 import java.text.SimpleDateFormat
 import java.util.Locale
 import java.util.concurrent.TimeUnit
@@ -130,6 +133,14 @@ class TaskViewModel : ViewModel() {
     fun scheduleNotification(context: Context, task: Task) {
         if (task.isCompleted || (task.completed == true)) {
             Log.d("TaskViewModel", "Not scheduling notification for completed task: ${task.judulTugas}")
+            return
+        }
+
+        val securityPrefs = SecurityPrivacyPreferences(context)
+        val globalNotificationsEnabled = runBlocking { securityPrefs.allowNotificationsFlow.first() }
+
+        if (!globalNotificationsEnabled) {
+            Log.d("TaskViewModel", "Global notifications disabled, not scheduling for task: ${task.judulTugas}")
             return
         }
 

@@ -11,11 +11,14 @@ import androidx.work.PeriodicWorkRequestBuilder
 import androidx.work.WorkManager
 import androidx.work.workDataOf
 import com.example.disiplinpro.data.model.Schedule
+import com.example.disiplinpro.data.preferences.SecurityPrivacyPreferences
 import com.example.disiplinpro.data.repository.FirestoreRepository
 import com.example.disiplinpro.worker.NotificationWorker
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
 import java.text.SimpleDateFormat
 import java.util.*
 import java.util.concurrent.TimeUnit
@@ -72,6 +75,14 @@ class ScheduleViewModel : ViewModel() {
     }
 
     fun scheduleNotification(context: Context, schedule: Schedule) {
+        val securityPrefs = SecurityPrivacyPreferences(context)
+        val globalNotificationsEnabled = runBlocking { securityPrefs.allowNotificationsFlow.first() }
+
+        if (!globalNotificationsEnabled) {
+            Log.d("ScheduleViewModel", "Global notifications disabled, not scheduling for schedule: ${schedule.matkul}")
+            return
+        }
+
         val prefs = context.getSharedPreferences("NotificationPrefs", Context.MODE_PRIVATE)
         val notificationEnabled = prefs.getBoolean("scheduleNotificationEnabled", false)
         if (!notificationEnabled) {
