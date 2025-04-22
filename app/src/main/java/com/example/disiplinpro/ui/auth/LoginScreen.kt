@@ -29,6 +29,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material3.HorizontalDivider
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
@@ -80,10 +81,16 @@ fun LoginScreen(
                 .requestEmail()
                 .requestProfile()
                 .requestId()
-                .requestServerAuthCode(context.getString(R.string.default_web_client_id))
-                .setHostedDomain("*")
                 .build()
-            GoogleSignIn.getClient(context, gso)
+
+            val client = GoogleSignIn.getClient(context, gso)
+
+            client.signOut().addOnCompleteListener {
+                Log.d("LoginScreen", "Signed out from previous Google session to force account picker")
+            }
+
+            client
+
         } catch (e: Exception) {
             Log.e("LoginScreen", "Error setting up Google Sign-In: ${e.message}")
             Toast.makeText(
@@ -391,11 +398,13 @@ fun LoginScreen(
 
             GoogleSignInButton(
                 onClick = {
-                    googleSignInClient.signOut().addOnCompleteListener {
-                        val signInIntent = googleSignInClient.signInIntent
-                        signInIntent.putExtra("prompt", "select_account")
-                        googleSignInLauncher.launch(signInIntent)
-                    }
+                    val signInIntent = googleSignInClient.signInIntent
+
+                    signInIntent.putExtra("prompt", "select_account")
+                    signInIntent.putExtra("account_chooser_enabled", true)
+                    signInIntent.putExtra("always_show_account_picker", true)
+
+                    googleSignInLauncher.launch(signInIntent)
                 },
                 text = "Masuk dengan Google",
                 modifier = Modifier
