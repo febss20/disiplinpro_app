@@ -65,10 +65,16 @@ fun RegisterScreen(
                 .requestEmail()
                 .requestProfile()
                 .requestId()
-                .requestServerAuthCode(context.getString(R.string.default_web_client_id))
-                .setHostedDomain("*")
                 .build()
-            GoogleSignIn.getClient(context, gso)
+
+            val client = GoogleSignIn.getClient(context, gso)
+
+            client.signOut().addOnCompleteListener {
+                Log.d("RegisterScreen", "Signed out from previous Google session to force account picker")
+            }
+
+            client
+
         } catch (e: Exception) {
             Log.e("RegisterScreen", "Error setting up Google Sign-In: ${e.message}")
             Toast.makeText(
@@ -388,15 +394,17 @@ fun RegisterScreen(
 
             GoogleSignInButton(
                 onClick = {
-                    googleSignInClient.signOut().addOnCompleteListener {
-                        val signInIntent = googleSignInClient.signInIntent
-                        signInIntent.putExtra("prompt", "select_account")
-                        googleSignInLauncher.launch(signInIntent)
-                    }
+                    val signInIntent = googleSignInClient.signInIntent
+
+                    signInIntent.putExtra("prompt", "select_account")
+                    signInIntent.putExtra("account_chooser_enabled", true)
+                    signInIntent.putExtra("always_show_account_picker", true)
+
+                    googleSignInLauncher.launch(signInIntent)
                 },
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 30.dp),
+                    .padding(horizontal = 30.dp)
+                    .fillMaxWidth(),
                 enabled = !isLoading
             )
 
