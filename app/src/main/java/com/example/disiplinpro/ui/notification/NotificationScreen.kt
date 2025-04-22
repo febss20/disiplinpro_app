@@ -7,11 +7,14 @@ import androidx.compose.animation.core.*
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.Schedule
 import androidx.compose.material.icons.filled.Task
 import androidx.compose.material.icons.outlined.NotificationsOff
@@ -85,16 +88,36 @@ fun NotificationScreen(navController: NavController) {
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(top = 40.dp, bottom = 16.dp, start = 20.dp, end = 20.dp),
+                .padding(top = 40.dp, bottom = 150.dp, start = 20.dp, end = 20.dp)
+                .verticalScroll(rememberScrollState()),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            Text(
-                "Pengaturan Notifikasi",
-                fontWeight = FontWeight.Bold,
-                fontSize = 24.sp,
-                color = Color(0xFF333333),
-                modifier = Modifier.padding(bottom = 16.dp)
-            )
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(bottom = 16.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Text(
+                    "Pengaturan Notifikasi",
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 24.sp,
+                    color = Color(0xFF333333)
+                )
+
+                IconButton(
+                    onClick = { navController.navigate("notification_history") },
+                    modifier = Modifier
+                        .size(40.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Filled.Notifications,
+                        contentDescription = "Lihat Riwayat Notifikasi",
+                        tint = primaryColor
+                    )
+                }
+            }
 
             // Schedule Notification Card
             NotificationSettingCard(
@@ -147,10 +170,14 @@ fun NotificationScreen(navController: NavController) {
                 ),
                 iconTintForSelectedItem = accentColor
             )
+        }
 
-            Spacer(modifier = Modifier.padding(bottom = 82.dp))
-
-            // Save Button
+        // Fixed Save Button container
+        Column(
+            modifier = Modifier
+                .align(Alignment.BottomCenter)
+                .padding(start = 20.dp, end = 20.dp, bottom = 120.dp)
+        ) {
             Button(
                 onClick = {
                     showSavedAnimation = true
@@ -206,8 +233,6 @@ fun NotificationScreen(navController: NavController) {
                     }
                 }
             }
-
-            Spacer(modifier = Modifier.height(80.dp))
         }
 
         BottomNavigationBar(
@@ -257,7 +282,6 @@ private fun NotificationSettingCard(
                 .fillMaxWidth()
                 .padding(16.dp)
         ) {
-            // Card Header
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
