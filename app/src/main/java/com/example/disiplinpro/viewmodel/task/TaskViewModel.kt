@@ -11,6 +11,8 @@ import androidx.work.workDataOf
 import com.example.disiplinpro.data.model.Task
 import com.example.disiplinpro.data.preferences.SecurityPrivacyPreferences
 import com.example.disiplinpro.data.repository.FirestoreRepository
+import com.example.disiplinpro.util.AlarmHelper
+import com.example.disiplinpro.viewmodel.notification.NotificationViewModel
 import com.example.disiplinpro.worker.NotificationWorker
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -20,7 +22,6 @@ import kotlinx.coroutines.runBlocking
 import java.text.SimpleDateFormat
 import java.util.Locale
 import java.util.concurrent.TimeUnit
-import com.example.disiplinpro.viewmodel.notification.NotificationViewModel
 
 class TaskViewModel : ViewModel() {
     private val repository = FirestoreRepository()
@@ -156,7 +157,7 @@ class TaskViewModel : ViewModel() {
         val deadlineTime = task.waktu.toDate().time
         val currentTime = System.currentTimeMillis()
 
-        // 1. Jadwalkan notifikasi sebelum deadline (pengingat)
+        // 1. Jadwalkan notifikasi sebelum deadline (pengingat) menggunakan WorkManager
         val timeBefore = prefs.getString("taskTimeBefore", "1 Jam sebelum") ?: "1 Jam sebelum"
         val delay = when (timeBefore) {
             "10 Menit sebelum" -> 10 * 60 * 1000L
@@ -188,11 +189,13 @@ class TaskViewModel : ViewModel() {
                     reminderWorkRequest
                 )
             Log.d("TaskViewModel", "Reminder notification for task ${task.judulTugas} at $reminderTime")
+
+            saveScheduledNotification(context, task.id, reminderTime, false)
         } else {
             Log.w("TaskViewModel", "Reminder time for task ${task.judulTugas} has passed: $reminderTime")
         }
 
-        // 2. Jadwalkan notifikasi keterlambatan pada waktu deadline
+        // 2. Jadwalkan notifikasi keterlambatan pada waktu deadline menggunakan WorkManager
         if (deadlineTime > currentTime) {
             val overdueData = workDataOf(
                 "title" to "Pengingat Tugas: ${task.judulTugas}",
@@ -214,8 +217,29 @@ class TaskViewModel : ViewModel() {
                     overdueWorkRequest
                 )
             Log.d("TaskViewModel", "Overdue notification for task ${task.judulTugas} scheduled at $deadlineTime")
+
+            saveScheduledNotification(context, task.id, deadlineTime, true)
+
+            // 3. Untuk keandalan tambahan, gunakan AlarmManager sebagai cadangan untuk deadline
+            try {
+                val alarmHelper = AlarmHelper(context)
+                alarmHelper.scheduleTaskAlarm(task)
+                Log.d("TaskViewModel", "Backup alarm scheduled for task ${task.judulTugas}")
+            } catch (e: Exception) {
+                Log.e("TaskViewModel", "Failed to schedule backup alarm: ${e.message}")
+            }
         } else {
             Log.w("TaskViewModel", "Deadline already passed for task ${task.judulTugas}: $deadlineTime")
         }
+    }
+
+    /**
+     * Simpan informasi tentang notifikasi yang dijadwalkan ke SharedPreferences
+     * Ini akan digunakan untuk menjadwalkan ulang notifikasi saat perangkat dimulai ulang
+     */
+    private fun saveScheduledNotification(context: Context, taskId: String, scheduleTime: Long, isOverdue: Boolean) {
+        val prefs = context.getSharedPreferences("ScheduledNotifications", Context.MODE_PRIVATE)
+        val key = if (isOverdue) "overdue_$taskId" else "reminder_$taskId"
+        prefs.edit().putLong(key, scheduleTime).apply()
     }
 }

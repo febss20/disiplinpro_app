@@ -43,6 +43,16 @@ import com.example.disiplinpro.ui.task.EditTaskScreen
 import com.example.disiplinpro.viewmodel.auth.AuthViewModel
 import com.example.disiplinpro.worker.NotificationWorker
 import com.google.firebase.auth.FirebaseAuth
+import com.example.disiplinpro.data.repository.FirestoreRepository
+import com.example.disiplinpro.viewmodel.notification.NotificationViewModel
+import com.example.disiplinpro.viewmodel.task.TaskViewModel
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import java.util.concurrent.TimeUnit
+import androidx.work.WorkManager
+import androidx.work.OneTimeWorkRequestBuilder
+import com.example.disiplinpro.worker.NotificationHealthCheckWorker
 
 class MainActivity : ComponentActivity() {
     private val requestPermissionLauncher = registerForActivityResult(
@@ -55,6 +65,12 @@ class MainActivity : ComponentActivity() {
         }
     }
 
+    private val requestAlarmPermissionLauncher = registerForActivityResult(
+        ActivityResultContracts.StartActivityForResult()
+    ) {
+        Log.d("MainActivity", "Hasil permintaan izin alarm: ${it.resultCode}")
+    }
+
     private var notificationType: String? = null
     private var notificationId: String? = null
 
@@ -62,8 +78,13 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         requestNotificationPermission()
         requestBatteryOptimizationExemption()
+        requestExactAlarmPermission()
         processNotificationIntent(intent)
         setupNavigation()
+
+        CoroutineScope(Dispatchers.IO).launch {
+            checkAndRestoreScheduledNotifications()
+        }
     }
 
     override fun onNewIntent(intent: Intent) {
@@ -122,11 +143,11 @@ class MainActivity : ComponentActivity() {
                 composable("list_tugas") { AllTasksScreen(navController) }
                 composable("kalender") { CalendarScreen(navController) }
                 composable("notifikasi") { NotificationScreen(navController) }
-                composable("notification_list") { NotificationListScreen(navController) }
                 composable("akun") { ProfileScreen(navController) }
                 composable("edit_akun") { ProfileEditScreen(navController) }
                 composable("keamanan_privasi") { SecurityPrivacyScreen(navController) }
                 composable("faq") { FAQScreen(navController) }
+                composable("notification_list") { NotificationListScreen(navController) }
             }
         }
     }
@@ -161,14 +182,84 @@ class MainActivity : ComponentActivity() {
         }
     }
 
+    private suspend fun checkAndRestoreScheduledNotifications() {
+        try {
+            val activeWorkInfos = WorkManager.getInstance(this).getWorkInfosByTag("notification_tag").get()
+
+            if (activeWorkInfos.isEmpty()) {
+                Log.d("MainActivity", "Tidak ada pekerjaan terjadwal aktif, memulihkan notifikasi...")
+
+                val notificationViewModel = NotificationViewModel()
+                val taskViewModel = TaskViewModel()
+
+                val repository = FirestoreRepository()
+                val tasks = repository.getTasks()
+                val schedules = repository.getSchedules()
+
+                tasks.filter { !it.isCompleted }.forEach { task ->
+                    Log.d("MainActivity", "Memulihkan notifikasi untuk tugas: ${task.judulTugas}")
+                    notificationViewModel.scheduleNotification(this, task)
+                }
+
+                schedules.forEach { schedule ->
+                    Log.d("MainActivity", "Memulihkan notifikasi untuk jadwal: ${schedule.matkul}")
+                    notificationViewModel.scheduleNotification(this, schedule)
+                }
+
+                scheduleNotificationHealthCheck()
+
+                Log.d("MainActivity", "Pemulihan notifikasi selesai")
+            } else {
+                Log.d("MainActivity", "Ditemukan ${activeWorkInfos.size} pekerjaan terjadwal aktif, pemulihan tidak diperlukan")
+            }
+        } catch (e: Exception) {
+            Log.e("MainActivity", "Error saat memeriksa/memulihkan notifikasi: ${e.message}")
+        }
+    }
+
+    private fun scheduleNotificationHealthCheck() {
+        val healthCheckRequest = OneTimeWorkRequestBuilder<NotificationHealthCheckWorker>()
+            .setInitialDelay(24, TimeUnit.HOURS)
+            .addTag("health_check_tag")
+            .build()
+
+        WorkManager.getInstance(this)
+            .enqueue(healthCheckRequest)
+
+        Log.d("MainActivity", "Pemeriksaan kesehatan notifikasi dijadwalkan untuk 24 jam berikutnya")
+    }
+
+    private fun requestExactAlarmPermission() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            val alarmManager = getSystemService(Context.ALARM_SERVICE) as android.app.AlarmManager
+            if (!alarmManager.canScheduleExactAlarms()) {
+                val intent = Intent(android.provider.Settings.ACTION_REQUEST_SCHEDULE_EXACT_ALARM)
+                intent.data = Uri.parse("package:$packageName")
+                requestAlarmPermissionLauncher.launch(intent)
+            }
+        }
+    }
+
     private fun requestNotificationPermission() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            if (ContextCompat.checkSelfPermission(
+            when {
+                ContextCompat.checkSelfPermission(
                     this,
                     Manifest.permission.POST_NOTIFICATIONS
-                ) != PackageManager.PERMISSION_GRANTED
-            ) {
-                requestPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+                ) == PackageManager.PERMISSION_GRANTED -> {
+                    Log.d("MainActivity", "Izin notifikasi sudah diberikan")
+                }
+                shouldShowRequestPermissionRationale(Manifest.permission.POST_NOTIFICATIONS) -> {
+                    Toast.makeText(
+                        this,
+                        "DisiplinPro memerlukan izin notifikasi untuk mengingatkan Anda tentang tugas dan jadwal",
+                        Toast.LENGTH_LONG
+                    ).show()
+                    requestPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+                }
+                else -> {
+                    requestPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+                }
             }
         }
     }
