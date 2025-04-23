@@ -27,6 +27,7 @@ import com.skydoves.landscapist.ImageOptions
 import com.skydoves.landscapist.coil.CoilImage
 import com.example.disiplinpro.R
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.outlined.CalendarMonth
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -187,20 +188,19 @@ fun AllSchedulesScreen(
                 }
 
                 // Tombol Tambah Jadwal
-                IconButton(
+                FloatingActionButton(
                     onClick = { navController.navigate("add_jadwal") },
                     modifier = Modifier
                         .align(Alignment.BottomEnd)
-                        .padding(bottom = 10.dp, end = 10.dp)
-                        .size(90.dp)
+                        .padding(bottom = 25.dp, end = 30.dp),
+                    containerColor = Color(0xFF7DAFCB),
+                    contentColor = Color.White,
+                    shape = CircleShape
                 ) {
-                    CoilImage(
-                        imageModel = { "https://storage.googleapis.com/tagjs-prod.appspot.com/v1/T7pdvlFwTn/78p77w0y.png" },
-                        modifier = Modifier.fillMaxSize(),
-                        imageOptions = ImageOptions(
-                            contentScale = ContentScale.Fit,
-                            alignment = Alignment.Center
-                        )
+                    Icon(
+                        imageVector = Icons.Default.Add,
+                        contentDescription = "Tambah Jadwal",
+                        modifier = Modifier.size(32.dp)
                     )
                 }
             }

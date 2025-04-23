@@ -28,6 +28,7 @@ import com.skydoves.landscapist.ImageOptions
 import com.skydoves.landscapist.coil.CoilImage
 import com.example.disiplinpro.R
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.outlined.Assignment
 import androidx.compose.ui.text.style.TextAlign
 
@@ -150,12 +151,12 @@ fun AllTasksScreen(
                             imageVector = Icons.Outlined.Assignment,
                             contentDescription = "Empty Tasks",
                             modifier = Modifier.size(120.dp),
-                            tint = Color(0xFF7DAFCB)
+                            tint = Color(0xFFF39C12)
                         )
                         Spacer(modifier = Modifier.height(16.dp))
                         Text(
                             text = "Belum ada tugas",
-                            color = Color(0xFF7DAFCB),
+                            color = Color(0xFFF39C12),
                             fontSize = 20.sp,
                             fontWeight = FontWeight.Bold
                         )
@@ -193,20 +194,19 @@ fun AllTasksScreen(
                 }
 
                 // Tombol Tambah Tugas
-                IconButton(
+                FloatingActionButton(
                     onClick = { navController.navigate("add_tugas") },
                     modifier = Modifier
                         .align(Alignment.BottomEnd)
-                        .padding(bottom = 10.dp, end = 10.dp)
-                        .size(90.dp)
+                        .padding(bottom = 25.dp, end = 30.dp),
+                    containerColor = Color(0xFFF39C12),
+                    contentColor = Color.White,
+                    shape = CircleShape
                 ) {
-                    CoilImage(
-                        imageModel = { "https://storage.googleapis.com/tagjs-prod.appspot.com/v1/T7pdvlFwTn/78p77w0y.png" },
-                        modifier = Modifier.fillMaxSize(),
-                        imageOptions = ImageOptions(
-                            contentScale = ContentScale.Fit,
-                            alignment = Alignment.Center
-                        )
+                    Icon(
+                        imageVector = Icons.Default.Add,
+                        contentDescription = "Tambah Tugas",
+                        modifier = Modifier.size(32.dp)
                     )
                 }
             }

@@ -56,7 +56,7 @@ fun AddTaskScreen(
             Row(
                 verticalAlignment = Alignment.CenterVertically,
                 modifier = Modifier
-                    .padding(top = 60.dp, bottom = 12.dp, start = 31.dp, end = 31.dp)
+                    .padding(top = 40.dp, bottom = 12.dp, start = 31.dp, end = 31.dp)
             ) {
                 Text(
                     "Tambah Tugas",

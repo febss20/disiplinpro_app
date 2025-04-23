@@ -20,6 +20,7 @@ import kotlinx.coroutines.runBlocking
 import java.text.SimpleDateFormat
 import java.util.Locale
 import java.util.concurrent.TimeUnit
+import com.example.disiplinpro.viewmodel.notification.NotificationViewModel
 
 class TaskViewModel : ViewModel() {
     private val repository = FirestoreRepository()
@@ -27,6 +28,7 @@ class TaskViewModel : ViewModel() {
     val tasks: StateFlow<List<Task>> = _tasks
 
     private var appContext: Context? = null
+    private val notificationViewModel = NotificationViewModel()
 
     private val pendingReschedules = mutableMapOf<String, Task>()
 
@@ -53,7 +55,7 @@ class TaskViewModel : ViewModel() {
             val iterator = pendingReschedules.iterator()
             while (iterator.hasNext()) {
                 val entry = iterator.next()
-                scheduleNotification(appContext!!, entry.value)
+                notificationViewModel.scheduleNotification(appContext!!, entry.value)
                 iterator.remove()
             }
         }
@@ -76,7 +78,7 @@ class TaskViewModel : ViewModel() {
         viewModelScope.launch {
             val success = repository.addTask(task)
             if (success) {
-                scheduleNotification(context, task)
+                notificationViewModel.scheduleNotification(context, task)
             }
         }
     }
@@ -98,7 +100,7 @@ class TaskViewModel : ViewModel() {
                 } else {
                     Log.d("TaskViewModel", "Task uncompleted, preparing to reschedule notification for task: ${task.judulTugas}")
                     if (appContext != null) {
-                        scheduleNotification(appContext!!, task)
+                        notificationViewModel.scheduleNotification(appContext!!, task)
                     } else {
                         pendingReschedules[taskId] = task
                         Log.d("TaskViewModel", "No context available, added to pending reschedules. Total pending: ${pendingReschedules.size}")
@@ -113,7 +115,7 @@ class TaskViewModel : ViewModel() {
         viewModelScope.launch {
             val success = repository.updateTask(taskId, updatedTask)
             if (success) {
-                scheduleNotification(context, updatedTask)
+                notificationViewModel.scheduleNotification(context, updatedTask)
             }
         }
     }

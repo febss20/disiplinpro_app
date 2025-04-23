@@ -35,9 +35,6 @@
         </DropdownSelection>
         <DialogSelection />
       </SelectionState>
-      <SelectionState runConfigName="PreviewAddScheduleScreen">
-        <option name="selectionMode" value="DROPDOWN" />
-      </SelectionState>
       <SelectionState runConfigName="PreviewAllSchedulesScreen">
         <option name="selectionMode" value="DROPDOWN" />
       </SelectionState>
