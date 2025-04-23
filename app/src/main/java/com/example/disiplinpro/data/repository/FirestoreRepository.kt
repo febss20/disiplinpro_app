@@ -50,6 +50,21 @@ class FirestoreRepository {
         }
     }
 
+    suspend fun getSchedules(): List<Schedule> {
+        return if (userId != null) {
+            try {
+                getSchedulesCollectionRef().get().await().documents
+                    .mapNotNull { it.toObject(Schedule::class.java) }
+            } catch (e: Exception) {
+                Log.e(TAG, "Error fetching schedules: ${e.message}")
+                emptyList()
+            }
+        } else {
+            Log.w(TAG, "Cannot fetch schedules: User not logged in")
+            emptyList()
+        }
+    }
+
     fun listenToTasks(onDataChanged: (List<Task>) -> Unit, onError: (Exception) -> Unit) {
         if (userId == null) {
             val exception = Exception("User not logged in")

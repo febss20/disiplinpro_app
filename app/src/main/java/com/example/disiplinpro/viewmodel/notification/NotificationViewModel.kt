@@ -1,6 +1,10 @@
 package com.example.disiplinpro.viewmodel.notification
 
+import android.app.AlarmManager
+import android.app.PendingIntent
 import android.content.Context
+import android.content.Intent
+import android.os.Build
 import android.util.Log
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
@@ -19,7 +23,9 @@ import com.example.disiplinpro.data.model.Schedule
 import com.example.disiplinpro.data.model.Task
 import com.example.disiplinpro.data.preferences.SecurityPrivacyPreferences
 import com.example.disiplinpro.data.repository.NotificationRepository
+import com.example.disiplinpro.receiver.AlarmReceiver
 import com.example.disiplinpro.worker.NotificationWorker
+import com.google.gson.Gson
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -217,7 +223,6 @@ class NotificationViewModel : ViewModel() {
             "10 Menit sebelum" -> 10
             "30 Menit sebelum" -> 30
             "1 Jam sebelum" -> 60
-            "3 Jam sebelum" -> 3 * 60
             "1 Hari sebelum" -> 24 * 60
             else -> 60
         }
@@ -333,19 +338,23 @@ class NotificationViewModel : ViewModel() {
                     Locale.getDefault()
                 ).format(schedule.waktuMulai.toDate())
             }",
-            "scheduleId" to schedule.id
+            "scheduleId" to schedule.id,
+            "dayOfWeek" to dayOfWeek,
+            "hour" to schedule.waktuMulai.toDate().hours,
+            "minute" to schedule.waktuMulai.toDate().minutes,
+            "delayMinutes" to delayMinutes
         )
+
+        val constraints = Constraints.Builder()
+            .setRequiresBatteryNotLow(false)
+            .setRequiredNetworkType(NetworkType.NOT_REQUIRED)
+            .build()
 
         val workRequest = PeriodicWorkRequestBuilder<NotificationWorker>(7, TimeUnit.DAYS)
             .setInitialDelay(calculateInitialDelay(calendar), TimeUnit.MILLISECONDS)
             .setInputData(data)
             .addTag("notification_tag")
-            .setConstraints(
-                Constraints.Builder()
-                    .setRequiresBatteryNotLow(false)
-                    .setRequiredNetworkType(NetworkType.NOT_REQUIRED)
-                    .build()
-            )
+            .setConstraints(constraints)
             .build()
 
         WorkManager.getInstance(context)
@@ -355,6 +364,27 @@ class NotificationViewModel : ViewModel() {
                 workRequest
             )
         Log.d("NotificationViewModel", "Scheduled periodic notification for ${schedule.matkul}")
+
+        val scheduleInfo = mapOf(
+            "id" to schedule.id,
+            "matkul" to schedule.matkul,
+            "ruangan" to schedule.ruangan,
+            "dayOfWeek" to dayOfWeek,
+            "hour" to schedule.waktuMulai.toDate().hours,
+            "minute" to schedule.waktuMulai.toDate().minutes,
+            "delayMinutes" to delayMinutes
+        )
+
+        saveScheduleInfo(context, schedule.id, scheduleInfo)
+
+        val today = Calendar.getInstance()
+        if (today.get(Calendar.DAY_OF_WEEK) == dayOfWeek) {
+            try {
+                scheduleAlarmForToday(context, schedule, calendar.timeInMillis)
+            } catch (e: Exception) {
+                Log.e("NotificationViewModel", "Failed to schedule alarm for today: ${e.message}")
+            }
+        }
     }
 
     private fun calculateInitialDelay(targetCalendar: Calendar): Long {
@@ -365,5 +395,56 @@ class NotificationViewModel : ViewModel() {
             triggerTime = targetCalendar.timeInMillis
         }
         return triggerTime - currentTime
+    }
+
+    private fun scheduleAlarmForToday(context: Context, schedule: Schedule, triggerTimeMillis: Long) {
+        val intent = Intent(context, AlarmReceiver::class.java).apply {
+            putExtra("scheduleId", schedule.id)
+            putExtra("title", "Pengingat Jadwal: ${schedule.matkul}")
+            putExtra("message", "Jadwal di ${schedule.ruangan} dimulai pukul ${
+                SimpleDateFormat("HH:mm", Locale.getDefault()).format(schedule.waktuMulai.toDate())
+            }")
+            putExtra("isSchedule", true)
+        }
+
+        val pendingIntent = PendingIntent.getBroadcast(
+            context,
+            "schedule_${schedule.id}".hashCode(),
+            intent,
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+        )
+
+        val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            if (alarmManager.canScheduleExactAlarms()) {
+                alarmManager.setExactAndAllowWhileIdle(
+                    AlarmManager.RTC_WAKEUP,
+                    triggerTimeMillis,
+                    pendingIntent
+                )
+            } else {
+                alarmManager.set(
+                    AlarmManager.RTC_WAKEUP,
+                    triggerTimeMillis,
+                    pendingIntent
+                )
+            }
+        } else {
+            alarmManager.setExactAndAllowWhileIdle(
+                AlarmManager.RTC_WAKEUP,
+                triggerTimeMillis,
+                pendingIntent
+            )
+        }
+
+        Log.d("NotificationViewModel", "Scheduled backup alarm for schedule: ${schedule.matkul} at ${Date(triggerTimeMillis)}")
+    }
+
+    private fun saveScheduleInfo(context: Context, scheduleId: String, scheduleInfo: Map<String, Any>) {
+        val prefs = context.getSharedPreferences("ScheduledNotifications", Context.MODE_PRIVATE)
+        val gson = Gson()
+        val json = gson.toJson(scheduleInfo)
+        prefs.edit().putString("schedule_$scheduleId", json).apply()
     }
 }
