@@ -27,12 +27,15 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import androidx.navigation.compose.currentBackStackEntryAsState
 import com.example.disiplinpro.ui.components.BottomNavigationBar
 import kotlinx.coroutines.delay
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.disiplinpro.viewmodel.notification.NotificationViewModel
 
 private const val PREFS_NAME = "NotificationPrefs"
 private const val PREF_SCHEDULE_ENABLED = "scheduleNotificationEnabled"
@@ -51,6 +54,13 @@ fun NotificationScreen(navController: NavController) {
     val backgroundColor = Color(0xFFFAF3E0)
     val primaryColor = Color(0xFF1E88E5)
     val accentColor = Color(0xFFFFA000)
+
+    val notificationViewModel: NotificationViewModel = viewModel()
+    val unreadCount by notificationViewModel.unreadCount.collectAsState()
+
+    LaunchedEffect(Unit) {
+        notificationViewModel.loadNotifications()
+    }
 
     val prefs = remember { context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE) }
     var scheduleNotificationEnabled by remember { mutableStateOf(prefs.getBoolean(PREF_SCHEDULE_ENABLED, false)) }
@@ -88,14 +98,14 @@ fun NotificationScreen(navController: NavController) {
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(top = 40.dp, bottom = 150.dp, start = 20.dp, end = 20.dp)
+                .padding(horizontal = 20.dp, vertical = 30.dp)
                 .verticalScroll(rememberScrollState()),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(bottom = 16.dp),
+                    .padding(bottom = 8.dp),
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
@@ -106,16 +116,41 @@ fun NotificationScreen(navController: NavController) {
                     color = Color(0xFF333333)
                 )
 
-                IconButton(
-                    onClick = { navController.navigate("notification_history") },
-                    modifier = Modifier
-                        .size(40.dp)
-                ) {
-                    Icon(
-                        imageVector = Icons.Filled.Notifications,
-                        contentDescription = "Lihat Riwayat Notifikasi",
-                        tint = primaryColor
-                    )
+                Box {
+                    IconButton(
+                        onClick = { navController.navigate("notification_list") },
+                        modifier = Modifier
+                            .size(40.dp)
+                            .background(Color.Transparent, CircleShape)
+                            .padding(start = 15.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Filled.Notifications,
+                            contentDescription = "Lihat Notifikasi",
+                            tint = primaryColor
+                        )
+                    }
+
+                    if (unreadCount > 0) {
+                        Box(
+                            modifier = Modifier
+                                .align(Alignment.TopEnd)
+                                .offset(x = 4.dp, y = (-2).dp)
+                                .size(20.dp)
+                                .background(Color.Red, CircleShape)
+                                .padding(2.dp),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text(
+                                text = if (unreadCount > 99) "99+" else unreadCount.toString(),
+                                color = Color.White,
+                                fontSize = if (unreadCount > 99) 8.sp else 10.sp,
+                                fontWeight = FontWeight.Bold,
+                                textAlign = TextAlign.Center,
+                                maxLines = 1
+                            )
+                        }
+                    }
                 }
             }
 
@@ -172,7 +207,6 @@ fun NotificationScreen(navController: NavController) {
             )
         }
 
-        // Fixed Save Button container
         Column(
             modifier = Modifier
                 .align(Alignment.BottomCenter)
@@ -282,6 +316,7 @@ private fun NotificationSettingCard(
                 .fillMaxWidth()
                 .padding(16.dp)
         ) {
+            // Card Header
             Row(
                 modifier = Modifier
                     .fillMaxWidth()

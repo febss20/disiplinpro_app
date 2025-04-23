@@ -22,11 +22,13 @@ import kotlinx.coroutines.runBlocking
 import java.text.SimpleDateFormat
 import java.util.*
 import java.util.concurrent.TimeUnit
+import com.example.disiplinpro.viewmodel.notification.NotificationViewModel
 
 class ScheduleViewModel : ViewModel() {
     private val repository = FirestoreRepository()
     private val _schedules = MutableStateFlow<List<Schedule>>(emptyList())
     val schedules: StateFlow<List<Schedule>> = _schedules
+    private val notificationViewModel = NotificationViewModel()
 
     init {
         listenToSchedules()
@@ -49,7 +51,7 @@ class ScheduleViewModel : ViewModel() {
             val success = repository.addSchedule(schedule)
             if (success) {
                 Log.d("ScheduleViewModel", "Schedule added: ${schedule.matkul}")
-                scheduleNotification(context, schedule)
+                notificationViewModel.scheduleNotification(context, schedule)
             }
         }
     }
@@ -59,7 +61,7 @@ class ScheduleViewModel : ViewModel() {
             val success = repository.updateSchedule(scheduleId, updatedSchedule)
             if (success) {
                 Log.d("ScheduleViewModel", "Schedule updated: ${updatedSchedule.matkul}")
-                scheduleNotification(context, updatedSchedule)
+                notificationViewModel.scheduleNotification(context, updatedSchedule)
             }
         }
     }

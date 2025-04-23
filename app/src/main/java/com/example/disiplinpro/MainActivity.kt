@@ -28,7 +28,7 @@ import com.example.disiplinpro.ui.auth.OnboardingScreen
 import com.example.disiplinpro.ui.auth.RegisterScreen
 import com.example.disiplinpro.ui.calender.CalendarScreen
 import com.example.disiplinpro.ui.home.HomeScreen
-import com.example.disiplinpro.ui.notification.NotificationHistoryScreen
+import com.example.disiplinpro.ui.notification.NotificationListScreen
 import com.example.disiplinpro.ui.notification.NotificationScreen
 import com.example.disiplinpro.ui.profile.ProfileScreen
 import com.example.disiplinpro.ui.profile.ProfileEditScreen
@@ -122,7 +122,7 @@ class MainActivity : ComponentActivity() {
                 composable("list_tugas") { AllTasksScreen(navController) }
                 composable("kalender") { CalendarScreen(navController) }
                 composable("notifikasi") { NotificationScreen(navController) }
-                composable("notification_history") { NotificationHistoryScreen(navController) }
+                composable("notification_list") { NotificationListScreen(navController) }
                 composable("akun") { ProfileScreen(navController) }
                 composable("edit_akun") { ProfileEditScreen(navController) }
                 composable("keamanan_privasi") { SecurityPrivacyScreen(navController) }

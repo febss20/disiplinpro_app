@@ -30,22 +30,23 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
-import com.example.disiplinpro.data.model.NotificationHistory
+import com.example.disiplinpro.data.model.Notification
 import com.example.disiplinpro.data.model.NotificationType
-import com.example.disiplinpro.viewmodel.notification.NotificationHistoryViewModel
+import com.example.disiplinpro.viewmodel.notification.NotificationViewModel
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.delay
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun NotificationHistoryScreen(
+fun NotificationListScreen(
     navController: NavController,
-    viewModel: NotificationHistoryViewModel = viewModel()
+    viewModel: NotificationViewModel = viewModel()
 ) {
     val notifications by viewModel.notifications.collectAsState()
     val currentFilter by viewModel.currentFilter.collectAsState()
     val isLoading by remember { viewModel.isLoading }
     val error by remember { viewModel.error }
+    val unreadCount by viewModel.unreadCount.collectAsState()
 
     var deletingNotifications by remember { mutableStateOf<Set<String>>(emptySet()) }
 
@@ -60,6 +61,7 @@ fun NotificationHistoryScreen(
 
     val scope = rememberCoroutineScope()
     var showClearDialog by remember { mutableStateOf(false) }
+    var showMarkAllReadDialog by remember { mutableStateOf(false) }
 
     LaunchedEffect(Unit) {
         viewModel.loadNotifications()
@@ -77,11 +79,30 @@ fun NotificationHistoryScreen(
         ) {
             TopAppBar(
                 title = {
-                    Text(
-                        "Riwayat Notifikasi",
-                        fontWeight = FontWeight.Bold,
-                        color = Color(0xFF333333)
-                    )
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Text(
+                            "Riwayat Notifikasi",
+                            fontWeight = FontWeight.Bold,
+                            color = Color(0xFF333333)
+                        )
+
+                        if (unreadCount > 0) {
+                            Box(
+                                modifier = Modifier
+                                    .padding(start = 8.dp)
+                                    .size(24.dp)
+                                    .background(Color(0xFF1E88E5), CircleShape),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Text(
+                                    text = unreadCount.toString(),
+                                    color = Color.White,
+                                    fontSize = 12.sp,
+                                    fontWeight = FontWeight.Bold
+                                )
+                            }
+                        }
+                    }
                 },
                 navigationIcon = {
                     IconButton(onClick = { navController.popBackStack() }) {
@@ -93,6 +114,18 @@ fun NotificationHistoryScreen(
                     }
                 },
                 actions = {
+                    if (unreadCount > 0) {
+                        IconButton(
+                            onClick = { showMarkAllReadDialog = true }
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.DoneAll,
+                                contentDescription = "Tandai Semua Dibaca",
+                                tint = Color(0xFF1E88E5)
+                            )
+                        }
+                    }
+
                     IconButton(onClick = { showClearDialog = true }) {
                         Icon(
                             imageVector = Icons.Default.DeleteSweep,
@@ -143,7 +176,8 @@ fun NotificationHistoryScreen(
                                     delay(500)
                                     deletingNotifications = deletingNotifications - notification.id
                                 }
-                            }
+                            },
+                            viewModel = viewModel
                         )
                     }
                     item { Spacer(modifier = Modifier.height(80.dp)) }
@@ -171,37 +205,71 @@ fun NotificationHistoryScreen(
                 Text(it)
             }
         }
-    }
 
-    if (showClearDialog) {
-        AlertDialog(
-            onDismissRequest = { showClearDialog = false },
-            title = { Text("Konfirmasi") },
-            text = { Text("Hapus semua notifikasi yang sudah dibaca?") },
-            confirmButton = {
-                Button(
-                    onClick = {
-                        scope.launch {
-                            viewModel.clearReadNotifications()
-                            showClearDialog = false
-                        }
-                    },
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = Color(0xFF1E88E5)
-                    )
-                ) {
-                    Text("Hapus")
+        if (showClearDialog) {
+            AlertDialog(
+                onDismissRequest = { showClearDialog = false },
+                title = { Text("Konfirmasi") },
+                text = { Text("Hapus semua notifikasi yang sudah dibaca?") },
+                confirmButton = {
+                    Button(
+                        onClick = {
+                            scope.launch {
+                                viewModel.clearReadNotifications()
+                                showClearDialog = false
+                            }
+                        },
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = Color(0xFF1E88E5)
+                        )
+                    ) {
+                        Text("Hapus")
+                    }
+                },
+                dismissButton = {
+                    OutlinedButton(
+                        onClick = { showClearDialog = false }
+                    ) {
+                        Text("Batal")
+                    }
                 }
-            },
-            dismissButton = {
-                OutlinedButton(
-                    onClick = { showClearDialog = false }
-                ) {
-                    Text("Batal")
+            )
+        }
+
+        if (showMarkAllReadDialog) {
+            AlertDialog(
+                onDismissRequest = { showMarkAllReadDialog = false },
+                title = { Text("Konfirmasi") },
+                text = { Text("Tandai semua notifikasi sebagai sudah dibaca?") },
+                confirmButton = {
+                    Button(
+                        onClick = {
+                            scope.launch {
+                                markAllNotificationsAsRead(viewModel, notifications)
+                                showMarkAllReadDialog = false
+                            }
+                        },
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = Color(0xFF1E88E5)
+                        )
+                    ) {
+                        Text("Tandai Semua")
+                    }
+                },
+                dismissButton = {
+                    OutlinedButton(
+                        onClick = { showMarkAllReadDialog = false }
+                    ) {
+                        Text("Batal")
+                    }
                 }
-            }
-        )
+            )
+        }
     }
+}
+
+private suspend fun markAllNotificationsAsRead(viewModel: NotificationViewModel, notifications: List<Notification>) {
+    viewModel.markAllAsRead()
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -250,10 +318,10 @@ fun NotificationFilterChips(
 
 @Composable
 fun NotificationItem(
-    notification: NotificationHistory,
+    notification: Notification,
     onMarkAsRead: () -> Unit,
     onDelete: () -> Unit,
-    viewModel: NotificationHistoryViewModel = viewModel()
+    viewModel: NotificationViewModel = viewModel()
 ) {
     var expanded by remember { mutableStateOf(false) }
     var isReadLocally by remember { mutableStateOf(notification.isRead) }
