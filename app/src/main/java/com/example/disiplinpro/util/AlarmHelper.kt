@@ -82,6 +82,56 @@ class AlarmHelper(private val context: Context) {
     }
 
     /**
+     * Jadwalkan alarm untuk jadwal mingguan (lebih andal dari PeriodicWorkRequest)
+     * Ini menjadwalkan alarm untuk beberapa minggu ke depan
+     */
+    fun scheduleRecurringWeeklyAlarm(schedule: Schedule, dayOfWeek: Int, hourOfDay: Int, minute: Int, delayMinutes: Int) {
+        val calendar = Calendar.getInstance()
+
+        if (calendar.get(Calendar.DAY_OF_WEEK) > dayOfWeek) {
+            calendar.add(Calendar.WEEK_OF_YEAR, 1)
+        }
+        calendar.set(Calendar.DAY_OF_WEEK, dayOfWeek)
+
+        calendar.set(Calendar.HOUR_OF_DAY, hourOfDay)
+        calendar.set(Calendar.MINUTE, minute)
+        calendar.set(Calendar.SECOND, 0)
+        calendar.set(Calendar.MILLISECOND, 0)
+
+        calendar.add(Calendar.MINUTE, -delayMinutes)
+
+        if (calendar.timeInMillis <= System.currentTimeMillis()) {
+            calendar.add(Calendar.WEEK_OF_YEAR, 1)
+        }
+
+        for (week in 0..3) {
+            val targetTime = calendar.timeInMillis + (week * 7 * 24 * 60 * 60 * 1000L)
+            val uniqueId = ("schedule_${schedule.id}_${week}").hashCode()
+
+            val intent = Intent(context, AlarmReceiver::class.java).apply {
+                putExtra("scheduleId", schedule.id)
+                putExtra("title", "Pengingat Jadwal: ${schedule.matkul}")
+                putExtra("message", "Jadwal di ${schedule.ruangan} dimulai pukul ${
+                    SimpleDateFormat("HH:mm", Locale.getDefault()).format(schedule.waktuMulai.toDate())
+                }")
+                putExtra("isSchedule", true)
+                putExtra("recurringWeek", week)
+            }
+
+            val pendingIntent = PendingIntent.getBroadcast(
+                context,
+                uniqueId,
+                intent,
+                PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+            )
+
+            scheduleAlarm(targetTime, pendingIntent)
+
+            Log.d(TAG, "Scheduled recurring alarm for ${schedule.matkul} (week $week) at ${Date(targetTime)}")
+        }
+    }
+
+    /**
      * Batalkan alarm untuk tugas berdasarkan ID
      */
     fun cancelTaskAlarm(taskId: String) {
