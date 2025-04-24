@@ -30,7 +30,6 @@ class NotificationWorker(
         const val CHANNEL_ID = "disiplinpro_channel"
         const val CHANNEL_ID_HIGH = "disiplinpro_important_channel"
 
-        // Navigation types
         const val EXTRA_NOTIFICATION_TYPE = "notification_type"
         const val EXTRA_ID = "id"
         const val TYPE_TASK = "task"
@@ -45,14 +44,31 @@ class NotificationWorker(
             return Result.success()
         }
 
-        Log.d("NotificationWorker", "Pekerjaan dijalankan")
+        Log.d("NotificationWorker", "Pekerjaan dijalankan pada: ${java.util.Date()}")
         val title = inputData.getString("title") ?: "Pengingat"
         val message = inputData.getString("message") ?: "Waktu untuk memulai!"
         val scheduleId = inputData.getString("scheduleId")
         val taskId = inputData.getString("taskId")
         val isOverdue = inputData.getBoolean("isOverdue", false)
 
-        Log.d("NotificationWorker", "Processing notification: $title, $message, scheduleId=$scheduleId, taskId=$taskId, isOverdue=$isOverdue")
+        val dayOfWeek = inputData.getInt("dayOfWeek", -1)
+        val hour = inputData.getInt("hour", -1)
+        val minute = inputData.getInt("minute", -1)
+        val delayMinutes = inputData.getInt("delayMinutes", -1)
+
+        val idInfo = when {
+            scheduleId != null -> "scheduleId=$scheduleId"
+            taskId != null -> "taskId=$taskId (isOverdue=$isOverdue)"
+            else -> "no specific ID"
+        }
+
+        val scheduleInfo = if (dayOfWeek != -1 && hour != -1 && minute != -1) {
+            ", dayOfWeek=$dayOfWeek, time=$hour:$minute, delayMinutes=$delayMinutes"
+        } else {
+            ""
+        }
+
+        Log.d("NotificationWorker", "Processing notification: $title, $idInfo$scheduleInfo")
 
         if (isOverdue && taskId != null) {
             val isTaskCompleted = checkTaskCompletionStatus(taskId)
@@ -62,17 +78,39 @@ class NotificationWorker(
             }
         }
 
-        createNotificationChannels()
+        try {
+            createNotificationChannels()
 
-        when {
-            taskId != null -> showTaskNotification(title, message, taskId, isOverdue)
-            scheduleId != null -> showScheduleNotification(title, message, scheduleId)
-            else -> showSimpleNotification(title, message)
+            when {
+                taskId != null -> {
+                    showTaskNotification(title, message, taskId, isOverdue)
+                    if (isOverdue) {
+                        Log.d("NotificationWorker", "Overdue notification for task $taskId completed, no rescheduling needed")
+                    }
+                }
+                scheduleId != null -> {
+                    showScheduleNotification(title, message, scheduleId)
+
+                    if (dayOfWeek != -1 && hour != -1 && minute != -1) {
+                        Log.d("NotificationWorker", "Periodic schedule notification completed, would reschedule if needed")
+                    }
+                }
+                else -> showSimpleNotification(title, message)
+            }
+
+            Log.d("NotificationWorker", "Notifikasi berhasil ditampilkan untuk: $title")
+            return Result.success()
+        } catch (e: Exception) {
+            Log.e("NotificationWorker", "Error showing notification: ${e.message}")
+            val runAttemptCount = runAttemptCount
+            return if (runAttemptCount < 3) {
+                Log.w("NotificationWorker", "Akan mencoba lagi (attempt $runAttemptCount)")
+                Result.retry()
+            } else {
+                Log.e("NotificationWorker", "Menyerah setelah $runAttemptCount percobaan")
+                Result.failure()
+            }
         }
-
-        Log.d("NotificationWorker", "Notifikasi ditampilkan")
-
-        return Result.success()
     }
 
     private suspend fun checkTaskCompletionStatus(taskId: String): Boolean {
