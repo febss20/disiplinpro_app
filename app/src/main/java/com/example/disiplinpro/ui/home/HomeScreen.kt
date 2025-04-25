@@ -40,6 +40,8 @@ import java.util.*
 import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.spring
+import com.example.disiplinpro.data.preferences.ThemePreferences
+import com.example.disiplinpro.ui.theme.*
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -55,6 +57,10 @@ fun HomeScreen(
     val schedules by scheduleViewModel.schedules.collectAsState()
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = navBackStackEntry?.destination?.route
+
+    // Cek dark mode
+    val themePreferences = ThemePreferences(context)
+    val isDarkMode by themePreferences.isDarkMode.collectAsState(initial = false)
 
     LaunchedEffect(Unit) {
         taskViewModel.fetchTasks()
@@ -75,22 +81,26 @@ fun HomeScreen(
     val currentDate = remember { SimpleDateFormat("EEEE, d MMMM yyyy", Locale("id", "ID")).format(Date()) }
 
     Box(
-        modifier = Modifier.fillMaxSize().background(Color(0xFFFAF3E0))
+        modifier = Modifier
+            .fillMaxSize()
+            .background(if (isDarkMode) DarkBackground else Color(0xFFFAF3E0))
     ) {
         LazyColumn(
-            modifier = Modifier.fillMaxSize().padding(bottom = 8.dp)
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(bottom = 8.dp)
         ) {
-            item { UserProfileSection(user?.username, user?.fotoProfil, currentDate, navController) }
-            item { CategorySection(tasks.size, schedules.size, navController) }
-            item { SectionHeader("Jadwal Hari Ini", Icons.Outlined.WatchLater, Color(0xFF7DAFCB)) { navController.navigate("add_jadwal") } }
+            item { UserProfileSection(user?.username, user?.fotoProfil, currentDate, navController, isDarkMode) }
+            item { CategorySection(tasks.size, schedules.size, navController, isDarkMode) }
+            item { SectionHeader("Jadwal Hari Ini", Icons.Outlined.WatchLater, Color(0xFF7DAFCB), isDarkMode) { navController.navigate("add_jadwal") } }
             item {
                 if (todaySchedules.isNotEmpty()) ScheduleItem(todaySchedules)
-                else EmptyItemMessage("Tidak ada jadwal hari ini")
+                else EmptyItemMessage("Tidak ada jadwal hari ini", isDarkMode)
             }
-            item { SectionHeader("Tugas Hari Ini", Icons.Outlined.CheckCircle, Color(0xFFF39C12)) { navController.navigate("add_tugas") } }
+            item { SectionHeader("Tugas Hari Ini", Icons.Outlined.CheckCircle, Color(0xFFF39C12), isDarkMode) { navController.navigate("add_tugas") } }
             item {
                 if (todayTasks.isNotEmpty()) TaskItem(todayTasks, taskViewModel)
-                else EmptyItemMessage("Tidak ada tugas hari ini")
+                else EmptyItemMessage("Tidak ada tugas hari ini", isDarkMode)
             }
             item { Spacer(modifier = Modifier.height(120.dp)) }
         }
@@ -99,7 +109,7 @@ fun HomeScreen(
             modifier = Modifier
                 .fillMaxWidth()
                 .height(100.dp)
-                .background(Color(0xFFFAF3E0))
+                .background(if (isDarkMode) DarkBackground else Color(0xFFFAF3E0))
                 .align(Alignment.BottomCenter)
         ) {
             BottomNavigationBar(
@@ -112,7 +122,13 @@ fun HomeScreen(
 }
 
 @Composable
-private fun UserProfileSection(username: String?, profilePic: String?, currentDate: String, navController: NavController) {
+private fun UserProfileSection(
+    username: String?,
+    profilePic: String?,
+    currentDate: String,
+    navController: NavController,
+    isDarkMode: Boolean
+) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
@@ -131,14 +147,14 @@ private fun UserProfileSection(username: String?, profilePic: String?, currentDa
                         text = "Halo,",
                         style = MaterialTheme.typography.bodyLarge,
                         fontSize = 16.sp,
-                        color = Color(0xFF333333),
+                        color = if (isDarkMode) DarkTextLight else Color(0xFF333333)
                     )
                     Text(
                         text = username ?: "Guest",
                         style = MaterialTheme.typography.titleMedium,
                         fontSize = 24.sp,
                         fontWeight = FontWeight.Bold,
-                        color = Color(0xFF333333),
+                        color = if (isDarkMode) DarkTextLight else Color(0xFF333333)
                     )
                     Spacer(modifier = Modifier.height(4.dp))
                     Row(verticalAlignment = Alignment.CenterVertically) {
@@ -153,7 +169,7 @@ private fun UserProfileSection(username: String?, profilePic: String?, currentDa
                             text = currentDate,
                             style = MaterialTheme.typography.bodyMedium,
                             fontSize = 12.sp,
-                            color = Color(0xFF666666),
+                            color = if (isDarkMode) DarkTextGrey else Color(0xFF757575)
                         )
                     }
                 }
@@ -205,10 +221,15 @@ private fun ProfilePicture(profilePic: String?, navController: NavController) {
 }
 
 @Composable
-private fun CategorySection(taskCount: Int, scheduleCount: Int, navController: NavController) {
+private fun CategorySection(
+    taskCount: Int,
+    scheduleCount: Int,
+    navController: NavController,
+    isDarkMode: Boolean
+) {
     Text(
         "Kategori",
-        color = Color(0xFF333333),
+        color = if (isDarkMode) DarkTextLight else Color(0xFF333333),
         fontSize = 20.sp,
         fontWeight = FontWeight.Bold,
         modifier = Modifier.padding(horizontal = 24.dp, vertical = 12.dp)
@@ -227,6 +248,7 @@ private fun CategorySection(taskCount: Int, scheduleCount: Int, navController: N
                 icon = Icons.Outlined.Assignment,
                 iconBgColor = Color(0x33F39C12),
                 iconColor = Color(0xFFF39C12),
+                isDarkMode = isDarkMode,
                 onClick = { navController.navigate("list_tugas") }
             )
         }
@@ -238,6 +260,7 @@ private fun CategorySection(taskCount: Int, scheduleCount: Int, navController: N
                 icon = Icons.Outlined.CalendarMonth,
                 iconBgColor = Color(0x332196F3),
                 iconColor = Color(0xFF2196F3),
+                isDarkMode = isDarkMode,
                 onClick = { navController.navigate("list_jadwal") }
             )
         }
@@ -253,6 +276,7 @@ private fun CategoryCard(
     icon: androidx.compose.ui.graphics.vector.ImageVector,
     iconBgColor: Color,
     iconColor: Color,
+    isDarkMode: Boolean,
     onClick: () -> Unit
 ) {
     Card(
@@ -265,7 +289,9 @@ private fun CategoryCard(
                 )
             )
             .clickable { onClick() },
-        colors = CardDefaults.cardColors(containerColor = Color(0x332196F3))
+        colors = CardDefaults.cardColors(
+            containerColor = if (isDarkMode) DarkCardLight else Color(0x332196F3)
+        )
     ) {
         Column(
             modifier = Modifier
@@ -277,7 +303,7 @@ private fun CategoryCard(
                 modifier = Modifier
                     .size(60.dp)
                     .clip(CircleShape),
-                color = iconBgColor,
+                color = if (isDarkMode) iconBgColor.copy(alpha = 0.3f) else iconBgColor,
                 shape = CircleShape
             ) {
                 Icon(
@@ -294,13 +320,13 @@ private fun CategoryCard(
                 text = title,
                 fontWeight = FontWeight.Bold,
                 fontSize = 16.sp,
-                color = Color(0xFF333333)
+                color = if (isDarkMode) DarkTextLight else Color(0xFF333333)
             )
             Spacer(modifier = Modifier.height(4.dp))
             Text(
                 text = "$count $title".lowercase(),
                 fontSize = 12.sp,
-                color = Color(0xFF666666)
+                color = if (isDarkMode) DarkTextGrey else Color(0xFF666666)
             )
         }
     }
@@ -311,6 +337,7 @@ private fun SectionHeader(
     title: String,
     icon: androidx.compose.ui.graphics.vector.ImageVector,
     tint: Color,
+    isDarkMode: Boolean,
     onAddClick: () -> Unit
 ) {
     Row(
@@ -329,7 +356,7 @@ private fun SectionHeader(
         )
         Text(
             title,
-            color = Color(0xFF333333),
+            color = if (isDarkMode) DarkTextLight else Color(0xFF333333),
             fontSize = 20.sp,
             fontWeight = FontWeight.Bold,
             modifier = Modifier.weight(1f)
@@ -351,7 +378,7 @@ private fun SectionHeader(
 }
 
 @Composable
-private fun EmptyItemMessage(message: String) {
+private fun EmptyItemMessage(message: String, isDarkMode: Boolean) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -361,7 +388,7 @@ private fun EmptyItemMessage(message: String) {
         Spacer(modifier = Modifier.height(8.dp))
         Text(
             text = message,
-            color = Color(0xFF7DAFCB),
+            color = if (isDarkMode) DarkPrimaryBlue else Color(0xFF7DAFCB),
             fontSize = 16.sp,
             fontWeight = FontWeight.Bold,
             textAlign = TextAlign.Center

@@ -17,6 +17,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.disiplinpro.data.model.Schedule
+import com.example.disiplinpro.ui.theme.DarkCardLight
+import com.example.disiplinpro.ui.theme.DarkTextLight
 import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Locale
@@ -27,6 +29,7 @@ fun ScheduleDescription(
     schedules: List<Schedule>,
     selectedDate: Calendar,
     timeFormat: SimpleDateFormat,
+    isDarkMode: Boolean = false,
     onDelete: (String) -> Unit
 ) {
     Column(
@@ -39,7 +42,7 @@ fun ScheduleDescription(
                 modifier = Modifier
                     .padding(vertical = 8.dp)
                     .clip(RoundedCornerShape(10.dp))
-                    .background(Color(0x1A2196F3))
+                    .background(if (isDarkMode) DarkCardLight else Color(0x1A2196F3))
                     .padding(16.dp)
                     .fillMaxWidth()
             ) {
@@ -65,19 +68,19 @@ fun ScheduleDescription(
                 }
                 Text(
                     timeFormat.format(schedule.waktuMulai.toDate()),
-                    color = Color(0xFF333333),
+                    color = if (isDarkMode) DarkTextLight else Color(0xFF333333),
                     fontSize = 16.sp,
                     modifier = Modifier.padding(top = 8.dp)
                 )
                 Text(
                     schedule.ruangan,
-                    color = Color(0xFF333333),
+                    color = if (isDarkMode) DarkTextLight else Color(0xFF333333),
                     fontSize = 16.sp,
                     modifier = Modifier.padding(top = 4.dp)
                 )
                 Text(
                     schedule.matkul,
-                    color = Color(0xFF333333),
+                    color = if (isDarkMode) DarkTextLight else Color(0xFF333333),
                     fontSize = 20.sp,
                     modifier = Modifier.padding(top = 4.dp)
                 )

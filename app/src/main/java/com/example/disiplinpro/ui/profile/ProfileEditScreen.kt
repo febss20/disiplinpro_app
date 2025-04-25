@@ -30,20 +30,25 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import coil.compose.AsyncImage
+import com.example.disiplinpro.ui.theme.*
 import com.example.disiplinpro.util.rememberImagePicker
 import com.example.disiplinpro.util.RequestStoragePermission
 import com.example.disiplinpro.viewmodel.profile.ProfileEditViewModel
+import com.example.disiplinpro.viewmodel.theme.ThemeViewModel
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ProfileEditScreen(
     navController: NavController,
-    profileViewModel: ProfileEditViewModel = viewModel()
+    profileViewModel: ProfileEditViewModel = viewModel(),
+    themeViewModel: ThemeViewModel
 ) {
     val context = LocalContext.current
     val uiState by profileViewModel.uiState.collectAsState()
     val selectedImageUri by profileViewModel.selectedImageUri.collectAsState()
+
+    val isDarkMode by themeViewModel.isDarkMode.collectAsState()
 
     val scrollState = rememberScrollState()
     val snackbarHostState = remember { SnackbarHostState() }
@@ -52,6 +57,15 @@ fun ProfileEditScreen(
     val imagePicker = rememberImagePicker(context) { uri ->
         profileViewModel.setSelectedImageUri(uri)
     }
+
+    val backgroundColor = if (isDarkMode) DarkBackground else Color(0xFFFAF3E0)
+    val textColor = if (isDarkMode) DarkTextLight else Color(0xFF333333)
+    val textSecondaryColor = if (isDarkMode) DarkTextGrey else Color(0xFF666666)
+    val primaryBlueColor = if (isDarkMode) DarkPrimaryBlue else Color(0xFF7DAFCB)
+    val iconBackgroundColor = if (isDarkMode) DarkCardLight else Color(0xFFE6F1F8)
+    val borderColor = if (isDarkMode) DarkPrimaryBlue.copy(alpha = 0.7f) else Color(0xFF7DAFCB)
+    val outlinedBorderFocused = if (isDarkMode) DarkPrimaryBlue else Color(0xFF7DAFCB)
+    val outlinedBorderUnfocused = if (isDarkMode) DarkPrimaryBlue.copy(alpha = 0.5f) else Color(0x807DAFCB)
 
     RequestStoragePermission(
         context = context,
@@ -93,7 +107,7 @@ fun ProfileEditScreen(
         Box(
             modifier = Modifier
                 .fillMaxSize()
-                .background(Color(0xFFFAF3E0))
+                .background(backgroundColor)
                 .padding(paddingValues)
         ) {
             Row(
@@ -106,12 +120,12 @@ fun ProfileEditScreen(
                     Icon(
                         imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                         contentDescription = "Back",
-                        tint = Color(0xFF333333)
+                        tint = textColor
                     )
                 }
                 Text(
                     "Edit Akun",
-                    color = Color(0xFF333333),
+                    color = textColor,
                     fontSize = 24.sp,
                     fontWeight = FontWeight.Bold,
                     modifier = Modifier.padding(start = 8.dp)
@@ -128,22 +142,21 @@ fun ProfileEditScreen(
             ) {
                 if (uiState.isLoading && selectedImageUri == null) {
                     CircularProgressIndicator(
-                        color = Color(0xFF7DAFCB),
+                        color = primaryBlueColor,
                         modifier = Modifier.padding(top = 16.dp)
                     )
                 } else {
-                    // Profile Photo
                     Box(
                         modifier = Modifier
                             .size(120.dp)
                             .clip(CircleShape)
-                            .background(Color(0xFFE6F1F8))
+                            .background(iconBackgroundColor)
                             .clickable {
                                 if (!uiState.isLoading) {
                                     imagePicker.pickImage()
                                 }
                             }
-                            .border(2.dp, Color(0xFF7DAFCB), CircleShape),
+                            .border(2.dp, borderColor, CircleShape),
                         contentAlignment = Alignment.Center
                     ) {
                         if (selectedImageUri != null) {
@@ -180,7 +193,7 @@ fun ProfileEditScreen(
                             Icon(
                                 imageVector = Icons.Default.Person,
                                 contentDescription = "Profile",
-                                tint = Color(0xFF7DAFCB),
+                                tint = primaryBlueColor,
                                 modifier = Modifier.size(60.dp)
                             )
                         }
@@ -192,20 +205,22 @@ fun ProfileEditScreen(
                     OutlinedTextField(
                         value = uiState.username,
                         onValueChange = { profileViewModel.setUsername(it) },
-                        label = { Text("Username") },
+                        label = { Text("Username", color = if (isDarkMode) DarkTextLight else Color.Gray) },
                         leadingIcon = {
                             Icon(
                                 imageVector = Icons.Default.Person,
                                 contentDescription = "Username",
-                                tint = Color(0xFF7DAFCB)
+                                tint = primaryBlueColor
                             )
                         },
                         modifier = Modifier.fillMaxWidth(),
                         shape = RoundedCornerShape(8.dp),
                         colors = OutlinedTextFieldDefaults.colors(
-                            focusedBorderColor = Color(0xFF7DAFCB),
-                            unfocusedBorderColor = Color(0x807DAFCB),
-                            cursorColor = Color(0xFF7DAFCB)
+                            focusedBorderColor = outlinedBorderFocused,
+                            unfocusedBorderColor = outlinedBorderUnfocused,
+                            cursorColor = primaryBlueColor,
+                            focusedTextColor = textColor,
+                            unfocusedTextColor = textColor
                         ),
                         enabled = !uiState.isLoading
                     )
@@ -216,20 +231,22 @@ fun ProfileEditScreen(
                     OutlinedTextField(
                         value = uiState.email,
                         onValueChange = { profileViewModel.setEmail(it) },
-                        label = { Text("Email") },
+                        label = { Text("Email", color = if (isDarkMode) DarkTextLight else Color.Gray) },
                         leadingIcon = {
                             Icon(
                                 imageVector = Icons.Default.Email,
                                 contentDescription = "Email",
-                                tint = Color(0xFF7DAFCB)
+                                tint = primaryBlueColor
                             )
                         },
                         modifier = Modifier.fillMaxWidth(),
                         shape = RoundedCornerShape(8.dp),
                         colors = OutlinedTextFieldDefaults.colors(
-                            focusedBorderColor = Color(0xFF7DAFCB),
-                            unfocusedBorderColor = Color(0x807DAFCB),
-                            cursorColor = Color(0xFF7DAFCB)
+                            focusedBorderColor = outlinedBorderFocused,
+                            unfocusedBorderColor = outlinedBorderUnfocused,
+                            cursorColor = primaryBlueColor,
+                            focusedTextColor = textColor,
+                            unfocusedTextColor = textColor
                         ),
                         enabled = !uiState.isLoading
                     )
@@ -240,12 +257,12 @@ fun ProfileEditScreen(
                     OutlinedTextField(
                         value = uiState.currentPassword,
                         onValueChange = { profileViewModel.setCurrentPassword(it) },
-                        label = { Text("Password Saat Ini") },
+                        label = { Text("Password Saat Ini", color = if (isDarkMode) DarkTextLight else Color.Gray) },
                         leadingIcon = {
                             Icon(
                                 imageVector = Icons.Default.Lock,
                                 contentDescription = "Current Password",
-                                tint = Color(0xFF7DAFCB)
+                                tint = primaryBlueColor
                             )
                         },
                         trailingIcon = {
@@ -253,7 +270,7 @@ fun ProfileEditScreen(
                                 Icon(
                                     imageVector = if (uiState.showCurrentPassword) Icons.Default.VisibilityOff else Icons.Default.Visibility,
                                     contentDescription = if (uiState.showCurrentPassword) "Hide Password" else "Show Password",
-                                    tint = Color(0xFF7DAFCB)
+                                    tint = primaryBlueColor
                                 )
                             }
                         },
@@ -261,9 +278,11 @@ fun ProfileEditScreen(
                         modifier = Modifier.fillMaxWidth(),
                         shape = RoundedCornerShape(8.dp),
                         colors = OutlinedTextFieldDefaults.colors(
-                            focusedBorderColor = Color(0xFF7DAFCB),
-                            unfocusedBorderColor = Color(0x807DAFCB),
-                            cursorColor = Color(0xFF7DAFCB)
+                            focusedBorderColor = outlinedBorderFocused,
+                            unfocusedBorderColor = outlinedBorderUnfocused,
+                            cursorColor = primaryBlueColor,
+                            focusedTextColor = textColor,
+                            unfocusedTextColor = textColor
                         ),
                         enabled = !uiState.isLoading
                     )
@@ -274,12 +293,12 @@ fun ProfileEditScreen(
                     OutlinedTextField(
                         value = uiState.newPassword,
                         onValueChange = { profileViewModel.setNewPassword(it) },
-                        label = { Text("Password Baru") },
+                        label = { Text("Password Baru", color = if (isDarkMode) DarkTextLight else Color.Gray) },
                         leadingIcon = {
                             Icon(
-                                imageVector = Icons.Default.Lock,
+                                imageVector = Icons.Default.LockReset,
                                 contentDescription = "New Password",
-                                tint = Color(0xFF7DAFCB)
+                                tint = primaryBlueColor
                             )
                         },
                         trailingIcon = {
@@ -287,7 +306,7 @@ fun ProfileEditScreen(
                                 Icon(
                                     imageVector = if (uiState.showNewPassword) Icons.Default.VisibilityOff else Icons.Default.Visibility,
                                     contentDescription = if (uiState.showNewPassword) "Hide Password" else "Show Password",
-                                    tint = Color(0xFF7DAFCB)
+                                    tint = primaryBlueColor
                                 )
                             }
                         },
@@ -295,14 +314,16 @@ fun ProfileEditScreen(
                         modifier = Modifier.fillMaxWidth(),
                         shape = RoundedCornerShape(8.dp),
                         colors = OutlinedTextFieldDefaults.colors(
-                            focusedBorderColor = Color(0xFF7DAFCB),
-                            unfocusedBorderColor = Color(0x807DAFCB),
-                            cursorColor = Color(0xFF7DAFCB)
+                            focusedBorderColor = outlinedBorderFocused,
+                            unfocusedBorderColor = outlinedBorderUnfocused,
+                            cursorColor = primaryBlueColor,
+                            focusedTextColor = textColor,
+                            unfocusedTextColor = textColor
                         ),
                         enabled = !uiState.isLoading
                     )
 
-                    Spacer(modifier = Modifier.weight(1f))
+                    Spacer(modifier = Modifier.height(32.dp))
 
                     // Save Button
                     Button(
@@ -310,7 +331,7 @@ fun ProfileEditScreen(
                         modifier = Modifier
                             .fillMaxWidth()
                             .height(50.dp),
-                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF7DAFCB)),
+                        colors = ButtonDefaults.buttonColors(containerColor = primaryBlueColor),
                         shape = RoundedCornerShape(8.dp),
                         enabled = !uiState.isLoading
                     ) {

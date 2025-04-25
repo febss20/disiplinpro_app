@@ -32,12 +32,14 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.example.disiplinpro.viewmodel.profile.FAQCategory
 import com.example.disiplinpro.viewmodel.profile.FAQViewModel
+import com.example.disiplinpro.viewmodel.theme.ThemeViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun FAQScreen(
     navController: NavController,
-    viewModel: FAQViewModel = viewModel()
+    viewModel: FAQViewModel = viewModel(),
+    themeViewModel: ThemeViewModel
 ) {
     val context = LocalContext.current
 
@@ -48,10 +50,19 @@ fun FAQScreen(
 
     val categories = remember { listOf(FAQCategory.ALL, FAQCategory.ACCOUNT, FAQCategory.TASK, FAQCategory.OTHER) }
 
+    val isDarkMode by themeViewModel.isDarkMode.collectAsState()
+    val backgroundColor = if (isDarkMode) Color(0xFF121212) else Color(0xFFFAF3E0)
+    val cardBackgroundColor = if (isDarkMode) Color(0xFF2C2C2C) else Color(0x332196F3)
+    val primaryTextColor = if (isDarkMode) Color.White else Color(0xFF333333)
+    val secondaryTextColor = if (isDarkMode) Color(0xFFBBBBBB) else Color(0xFF666666)
+    val accentColor = Color(0xFF7DAFCB)
+    val accentColorLight = if (isDarkMode) Color(0x507DAFCB) else Color(0x807DAFCB)
+    val dividerColor = if (isDarkMode) Color(0xFF444444) else Color(0xFFEEEEEE)
+
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color(0xFFFAF3E0))
+            .background(backgroundColor)
     ) {
         Row(
             modifier = Modifier
@@ -63,12 +74,12 @@ fun FAQScreen(
                 Icon(
                     imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                     contentDescription = "Back",
-                    tint = Color(0xFF333333)
+                    tint = primaryTextColor
                 )
             }
             Text(
                 "Pertanyaan Umum (FAQ)",
-                color = Color(0xFF333333),
+                color = primaryTextColor,
                 fontSize = 22.sp,
                 fontWeight = FontWeight.Bold,
                 modifier = Modifier.padding(start = 8.dp)
@@ -80,7 +91,7 @@ fun FAQScreen(
                 modifier = Modifier
                     .size(50.dp)
                     .align(Alignment.Center),
-                color = Color(0xFF7DAFCB)
+                color = accentColor
             )
         }
 
@@ -93,12 +104,12 @@ fun FAQScreen(
             OutlinedTextField(
                 value = searchQuery,
                 onValueChange = { viewModel.updateSearchQuery(it) },
-                placeholder = { Text("Cari pertanyaan...") },
+                placeholder = { Text("Cari pertanyaan...", color = secondaryTextColor) },
                 leadingIcon = {
                     Icon(
                         imageVector = Icons.Default.Search,
                         contentDescription = "Search",
-                        tint = Color(0xFF7DAFCB)
+                        tint = accentColor
                     )
                 },
                 modifier = Modifier
@@ -106,9 +117,11 @@ fun FAQScreen(
                     .padding(bottom = 16.dp),
                 shape = RoundedCornerShape(8.dp),
                 colors = OutlinedTextFieldDefaults.colors(
-                    focusedBorderColor = Color(0xFF7DAFCB),
-                    unfocusedBorderColor = Color(0x807DAFCB),
-                    cursorColor = Color(0xFF7DAFCB)
+                    focusedBorderColor = accentColor,
+                    unfocusedBorderColor = accentColorLight,
+                    cursorColor = accentColor,
+                    focusedTextColor = primaryTextColor,
+                    unfocusedTextColor = primaryTextColor
                 ),
                 singleLine = true
             )
@@ -123,7 +136,11 @@ fun FAQScreen(
                     CategoryChip(
                         text = category.toDisplayName(),
                         selected = category == selectedCategory,
-                        onClick = { viewModel.updateSelectedCategory(category) }
+                        onClick = { viewModel.updateSelectedCategory(category) },
+                        selectedColor = accentColor,
+                        unselectedColor = accentColorLight,
+                        selectedTextColor = Color.White,
+                        unselectedTextColor = primaryTextColor
                     )
                 }
             }
@@ -138,7 +155,7 @@ fun FAQScreen(
                 ) {
                     Text(
                         text = "Tidak ada pertanyaan yang cocok dengan pencarian Anda",
-                        color = Color(0xFF666666),
+                        color = secondaryTextColor,
                         fontSize = 16.sp,
                         textAlign = TextAlign.Center
                     )
@@ -154,7 +171,7 @@ fun FAQScreen(
                     if (groupedFaqs.containsKey(FAQCategory.ACCOUNT)) {
                         Text(
                             text = "Akun & Pengaturan",
-                            color = Color(0xFF7DAFCB),
+                            color = accentColor,
                             fontSize = 16.sp,
                             fontWeight = FontWeight.Bold,
                             modifier = Modifier.padding(bottom = 8.dp, top = 8.dp)
@@ -163,7 +180,12 @@ fun FAQScreen(
                         groupedFaqs[FAQCategory.ACCOUNT]?.forEach { faqItem ->
                             FAQItem(
                                 question = faqItem.question,
-                                answer = faqItem.answer
+                                answer = faqItem.answer,
+                                cardBackgroundColor = cardBackgroundColor,
+                                primaryTextColor = primaryTextColor,
+                                secondaryTextColor = secondaryTextColor,
+                                accentColor = accentColor,
+                                dividerColor = dividerColor
                             )
                         }
                     }
@@ -171,7 +193,7 @@ fun FAQScreen(
                     if (groupedFaqs.containsKey(FAQCategory.TASK)) {
                         Text(
                             text = "Tugas & Jadwal",
-                            color = Color(0xFF7DAFCB),
+                            color = accentColor,
                             fontSize = 16.sp,
                             fontWeight = FontWeight.Bold,
                             modifier = Modifier.padding(bottom = 8.dp, top = if (groupedFaqs.containsKey(FAQCategory.ACCOUNT)) 16.dp else 8.dp)
@@ -180,7 +202,12 @@ fun FAQScreen(
                         groupedFaqs[FAQCategory.TASK]?.forEach { faqItem ->
                             FAQItem(
                                 question = faqItem.question,
-                                answer = faqItem.answer
+                                answer = faqItem.answer,
+                                cardBackgroundColor = cardBackgroundColor,
+                                primaryTextColor = primaryTextColor,
+                                secondaryTextColor = secondaryTextColor,
+                                accentColor = accentColor,
+                                dividerColor = dividerColor
                             )
                         }
                     }
@@ -188,7 +215,7 @@ fun FAQScreen(
                     if (groupedFaqs.containsKey(FAQCategory.OTHER)) {
                         Text(
                             text = "Lainnya",
-                            color = Color(0xFF7DAFCB),
+                            color = accentColor,
                             fontSize = 16.sp,
                             fontWeight = FontWeight.Bold,
                             modifier = Modifier.padding(bottom = 8.dp, top = if (groupedFaqs.isNotEmpty()) 16.dp else 8.dp)
@@ -197,7 +224,12 @@ fun FAQScreen(
                         groupedFaqs[FAQCategory.OTHER]?.forEach { faqItem ->
                             FAQItem(
                                 question = faqItem.question,
-                                answer = faqItem.answer
+                                answer = faqItem.answer,
+                                cardBackgroundColor = cardBackgroundColor,
+                                primaryTextColor = primaryTextColor,
+                                secondaryTextColor = secondaryTextColor,
+                                accentColor = accentColor,
+                                dividerColor = dividerColor
                             )
                         }
                     }
@@ -211,7 +243,7 @@ fun FAQScreen(
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(50.dp),
-                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF7DAFCB)),
+                colors = ButtonDefaults.buttonColors(containerColor = accentColor),
                 shape = RoundedCornerShape(8.dp)
             ) {
                 Text("Hubungi Dukungan", color = Color.White, fontSize = 16.sp)
@@ -224,13 +256,17 @@ fun FAQScreen(
 fun CategoryChip(
     text: String,
     selected: Boolean,
-    onClick: () -> Unit
+    onClick: () -> Unit,
+    selectedColor: Color,
+    unselectedColor: Color,
+    selectedTextColor: Color,
+    unselectedTextColor: Color
 ) {
     Box(
         modifier = Modifier
             .clip(RoundedCornerShape(16.dp))
             .background(
-                if (selected) Color(0xFF7DAFCB) else Color(0x337DAFCB)
+                if (selected) selectedColor else unselectedColor
             )
             .clickable(onClick = onClick)
             .padding(horizontal = 16.dp, vertical = 8.dp),
@@ -238,7 +274,7 @@ fun CategoryChip(
     ) {
         Text(
             text = text,
-            color = if (selected) Color.White else Color(0xFF333333),
+            color = if (selected) selectedTextColor else unselectedTextColor,
             fontSize = 14.sp,
             fontWeight = if (selected) FontWeight.Bold else FontWeight.Normal
         )
@@ -248,7 +284,12 @@ fun CategoryChip(
 @Composable
 fun FAQItem(
     question: String,
-    answer: String
+    answer: String,
+    cardBackgroundColor: Color,
+    primaryTextColor: Color,
+    secondaryTextColor: Color,
+    accentColor: Color,
+    dividerColor: Color
 ) {
     var expanded by remember { mutableStateOf(false) }
     val rotationState by animateFloatAsState(
@@ -261,7 +302,7 @@ fun FAQItem(
             .padding(vertical = 8.dp)
             .clickable { expanded = !expanded },
         colors = CardDefaults.cardColors(
-            containerColor = Color(0x332196F3)
+            containerColor = cardBackgroundColor
         ),
         shape = RoundedCornerShape(12.dp)
     ) {
@@ -277,7 +318,7 @@ fun FAQItem(
                     text = question,
                     fontWeight = FontWeight.Bold,
                     fontSize = 16.sp,
-                    color = Color(0xFF333333),
+                    color = primaryTextColor,
                     modifier = Modifier.weight(1f)
                 )
 
@@ -288,7 +329,7 @@ fun FAQItem(
                     Icon(
                         imageVector = Icons.Default.ExpandMore,
                         contentDescription = if (expanded) "Collapse" else "Expand",
-                        tint = Color(0xFF7DAFCB),
+                        tint = accentColor,
                         modifier = Modifier.rotate(rotationState)
                     )
                 }
@@ -303,12 +344,12 @@ fun FAQItem(
                     HorizontalDivider(
                         modifier = Modifier.padding(vertical = 8.dp),
                         thickness = 1.dp,
-                        color = Color(0xFFEEEEEE)
+                        color = dividerColor
                     )
                     Text(
                         text = answer,
                         fontSize = 14.sp,
-                        color = Color(0xFF666666),
+                        color = secondaryTextColor,
                         textAlign = TextAlign.Justify,
                         lineHeight = 20.sp
                     )

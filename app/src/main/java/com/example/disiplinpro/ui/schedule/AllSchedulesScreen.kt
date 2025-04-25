@@ -22,6 +22,7 @@ import androidx.navigation.NavController
 import androidx.navigation.compose.currentBackStackEntryAsState
 import com.example.disiplinpro.data.model.Schedule
 import com.example.disiplinpro.ui.components.BottomNavigationBar
+import com.example.disiplinpro.ui.theme.*
 import com.example.disiplinpro.viewmodel.schedule.ScheduleViewModel
 import com.skydoves.landscapist.ImageOptions
 import com.skydoves.landscapist.coil.CoilImage
@@ -30,6 +31,8 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.outlined.CalendarMonth
+import androidx.compose.ui.platform.LocalContext
+import com.example.disiplinpro.data.preferences.ThemePreferences
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -37,6 +40,19 @@ fun AllSchedulesScreen(
     navController: NavController,
     viewModel: ScheduleViewModel = viewModel()
 ) {
+    val context = LocalContext.current
+
+    val themePreferences = ThemePreferences(context)
+    val isDarkMode by themePreferences.isDarkMode.collectAsState(initial = false)
+
+    val backgroundColor = if (isDarkMode) DarkBackground else Color(0xFFFAF3E0)
+    val textColor = if (isDarkMode) DarkTextLight else Color(0xFF333333)
+    val secondaryTextColor = if (isDarkMode) DarkTextGrey else Color(0xFF757575)
+    val accentColor = if (isDarkMode) DarkPrimaryBlue else Color(0xFF7DAFCB)
+    val accentColorDisabled = if (isDarkMode) DarkPrimaryBlue.copy(alpha = 0.5f) else Color(0xFF7DAFCB).copy(alpha = 0.5f)
+    val deleteColor = if (isDarkMode) Color(0xFFFF5252) else Color(0xFFD86F6F)
+    val deleteColorDisabled = if (isDarkMode) Color(0xFFFF5252).copy(alpha = 0.5f) else Color(0xFFD86F6F).copy(alpha = 0.5f)
+
     val schedules by viewModel.schedules.collectAsState(initial = emptyList())
     var selectedSchedule by remember { mutableStateOf<Schedule?>(null) }
     val navBackStackEntry by navController.currentBackStackEntryAsState()
@@ -54,7 +70,7 @@ fun AllSchedulesScreen(
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color(0xFFFAF3E0))
+            .background(backgroundColor)
     ) {
         Column(
             modifier = Modifier
@@ -73,12 +89,12 @@ fun AllSchedulesScreen(
                             Icon(
                                 imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                                 contentDescription = "Back",
-                                tint = Color(0xFF333333)
+                                tint = textColor
                             )
                         }
                         Text(
                             "Semua Jadwal",
-                            color = Color(0xFF333333),
+                            color = textColor,
                             fontSize = 20.sp,
                             fontWeight = FontWeight.Bold
                         )
@@ -95,7 +111,7 @@ fun AllSchedulesScreen(
                                 .size(40.dp)
                                 .clip(CircleShape)
                                 .background(
-                                    if (selectedSchedule != null) Color(0xFF7DAFCB) else Color(0xFF7DAFCB).copy(alpha = 0.5f)
+                                    if (selectedSchedule != null) accentColor else accentColorDisabled
                                 )
                         ) {
                             CoilImage(
@@ -120,7 +136,7 @@ fun AllSchedulesScreen(
                                 .size(40.dp)
                                 .clip(CircleShape)
                                 .background(
-                                    if (selectedSchedule != null) Color(0xFFD86F6F) else Color(0xFFD86F6F).copy(alpha = 0.5f)
+                                    if (selectedSchedule != null) deleteColor else deleteColorDisabled
                                 )
                         ) {
                             CoilImage(
@@ -132,7 +148,7 @@ fun AllSchedulesScreen(
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = Color(0xFFFAF3E0)
+                    containerColor = backgroundColor
                 )
             )
 
@@ -154,19 +170,19 @@ fun AllSchedulesScreen(
                             imageVector = Icons.Outlined.CalendarMonth,
                             contentDescription = "Empty Schedule",
                             modifier = Modifier.size(120.dp),
-                            tint = Color(0xFF7DAFCB)
+                            tint = accentColor
                         )
                         Spacer(modifier = Modifier.height(16.dp))
                         Text(
                             text = "Belum ada jadwal",
-                            color = Color(0xFF7DAFCB),
+                            color = accentColor,
                             fontSize = 20.sp,
                             fontWeight = FontWeight.Bold
                         )
                         Spacer(modifier = Modifier.height(8.dp))
                         Text(
                             text = "Tambahkan jadwal baru dengan tombol di bawah",
-                            color = Color(0xFF757575),
+                            color = secondaryTextColor,
                             fontSize = 14.sp,
                             fontWeight = FontWeight.Normal,
                             modifier = Modifier.padding(horizontal = 32.dp),
@@ -201,7 +217,7 @@ fun AllSchedulesScreen(
                     modifier = Modifier
                         .align(Alignment.BottomEnd)
                         .padding(bottom = 25.dp, end = 30.dp),
-                    containerColor = Color(0xFF7DAFCB),
+                    containerColor = accentColor,
                     contentColor = Color.White,
                     shape = CircleShape
                 ) {
