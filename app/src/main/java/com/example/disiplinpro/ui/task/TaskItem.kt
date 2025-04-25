@@ -4,25 +4,26 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Subject
+import androidx.compose.material.icons.outlined.CalendarMonth
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.CheckboxDefaults
+import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.disiplinpro.data.model.Task
 import com.example.disiplinpro.viewmodel.task.TaskViewModel
-import com.skydoves.landscapist.ImageOptions
-import com.skydoves.landscapist.coil.CoilImage
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -36,6 +37,7 @@ fun TaskItem(
     val cardColor = if (isSelected) Color(0xFF7DAFCB) else Color(0x332196F3)
     val cardTextColor = if (isSelected) Color(0xFF333333) else Color(0xFF333333)
     val checkboxColor = if (isSelected) Color.White else Color(0xFF7DAFCB)
+    val iconTint = if (isSelected) Color(0xFF333333) else Color(0xFF333333)
 
     val completedStatusColor = Color(0xFF4CAF50)
     val pendingStatusColor = Color(0xFFFF9800)
@@ -122,13 +124,13 @@ fun TaskItem(
                         verticalAlignment = Alignment.CenterVertically,
                         modifier = Modifier.padding(top = 8.dp, start = 60.dp, end = 15.dp)
                     ) {
-                        CoilImage(
-                            imageModel = { "https://storage.googleapis.com/tagjs-prod.appspot.com/v1/T7pdvlFwTn/xhhozfad.png" },
-                            modifier = Modifier
-                                .width(30.dp)
-                                .padding(end = 8.dp),
-                            imageOptions = ImageOptions(contentScale = ContentScale.Crop)
+                        Icon(
+                            imageVector = Icons.Filled.Subject,
+                            contentDescription = "Mata Kuliah",
+                            modifier = Modifier.size(24.dp),
+                            tint = iconTint
                         )
+                        Spacer(modifier = Modifier.width(8.dp))
                         Text(
                             text = task.matkul,
                             color = cardTextColor,
@@ -140,13 +142,13 @@ fun TaskItem(
                         verticalAlignment = Alignment.CenterVertically,
                         modifier = Modifier.padding(top = 8.dp, bottom = 15.dp, start = 60.dp, end = 15.dp)
                     ) {
-                        CoilImage(
-                            imageModel = { "https://storage.googleapis.com/tagjs-prod.appspot.com/v1/T7pdvlFwTn/egtmj8ve.png" },
-                            modifier = Modifier
-                                .width(30.dp)
-                                .padding(end = 8.dp),
-                            imageOptions = ImageOptions(contentScale = ContentScale.Crop)
+                        Icon(
+                            imageVector = Icons.Outlined.CalendarMonth,
+                            contentDescription = "Tanggal",
+                            modifier = Modifier.size(24.dp),
+                            tint = iconTint
                         )
+                        Spacer(modifier = Modifier.width(8.dp))
                         Text(
                             text = SimpleDateFormat("dd MMM yyyy, HH:mm", Locale.getDefault()).format(task.tanggal.toDate()),
                             color = cardTextColor,

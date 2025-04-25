@@ -1,5 +1,6 @@
 package com.example.disiplinpro.ui.components
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
@@ -19,6 +20,15 @@ fun BottomNavigationBar(
     currentRoute: String?,
     modifier: Modifier = Modifier
 ) {
+    if (currentRoute != null && currentRoute != "home") {
+        BackHandler {
+            navController.navigate("home") {
+                popUpTo("home") {
+                    inclusive = false
+                }
+            }
+        }
+    }
     Surface(
         modifier = modifier
             .fillMaxWidth()
@@ -48,7 +58,17 @@ fun BottomNavigationBar(
                     },
                     label = { Text("Home") },
                     selected = currentRoute == "home",
-                    onClick = { navController.navigate("home") },
+                    onClick = {
+                        if (currentRoute != "home") {
+                            navController.navigate("home") {
+                                popUpTo(navController.graph.startDestinationId) {
+                                    saveState = true
+                                }
+                                launchSingleTop = true
+                                restoreState = true
+                            }
+                        }
+                    },
                     colors = NavigationBarItemDefaults.colors(
                         indicatorColor = Color.Transparent,
                         selectedIconColor = Color(0xFF2196F3),
@@ -66,7 +86,17 @@ fun BottomNavigationBar(
                     },
                     label = { Text("Kalender") },
                     selected = currentRoute == "kalender",
-                    onClick = { navController.navigate("kalender") },
+                    onClick = {
+                        if (currentRoute != "kalender") {
+                            navController.navigate("kalender") {
+                                popUpTo(navController.graph.startDestinationId) {
+                                    saveState = true
+                                }
+                                launchSingleTop = true
+                                restoreState = true
+                            }
+                        }
+                    },
                     colors = NavigationBarItemDefaults.colors(
                         indicatorColor = Color.Transparent,
                         selectedIconColor = Color(0xFF2196F3),
@@ -84,7 +114,17 @@ fun BottomNavigationBar(
                     },
                     label = { Text("Notifikasi") },
                     selected = currentRoute == "notifikasi",
-                    onClick = { navController.navigate("notifikasi") },
+                    onClick = {
+                        if (currentRoute != "notifikasi") {
+                            navController.navigate("notifikasi") {
+                                popUpTo(navController.graph.startDestinationId) {
+                                    saveState = true
+                                }
+                                launchSingleTop = true
+                                restoreState = true
+                            }
+                        }
+                    },
                     colors = NavigationBarItemDefaults.colors(
                         indicatorColor = Color.Transparent,
                         selectedIconColor = Color(0xFF2196F3),
@@ -102,7 +142,17 @@ fun BottomNavigationBar(
                     },
                     label = { Text("Akun") },
                     selected = currentRoute == "akun",
-                    onClick = { navController.navigate("akun") },
+                    onClick = {
+                        if (currentRoute != "akun") {
+                            navController.navigate("akun") {
+                                popUpTo(navController.graph.startDestinationId) {
+                                    saveState = true
+                                }
+                                launchSingleTop = true
+                                restoreState = true
+                            }
+                        }
+                    },
                     colors = NavigationBarItemDefaults.colors(
                         indicatorColor = Color.Transparent,
                         selectedIconColor = Color(0xFF2196F3),

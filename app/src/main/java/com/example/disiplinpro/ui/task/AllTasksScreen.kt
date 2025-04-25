@@ -28,6 +28,7 @@ import com.skydoves.landscapist.ImageOptions
 import com.skydoves.landscapist.coil.CoilImage
 import com.example.disiplinpro.R
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.outlined.Assignment
 import androidx.compose.ui.text.style.TextAlign
@@ -69,8 +70,15 @@ fun AllTasksScreen(
                         verticalAlignment = Alignment.CenterVertically,
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(start = 20.dp, end = 30.dp)
+                            .padding(end = 30.dp)
                     ) {
+                        IconButton(onClick = { navController.popBackStack() }) {
+                            Icon(
+                                imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                                contentDescription = "Back",
+                                tint = Color(0xFF333333)
+                            )
+                        }
                         Text(
                             "Semua Tugas",
                             color = Color(0xFF333333),
