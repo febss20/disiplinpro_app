@@ -43,6 +43,10 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import com.example.disiplinpro.data.model.Schedule
+import com.example.disiplinpro.ui.theme.DarkCardBackground
+import com.example.disiplinpro.ui.theme.DarkCardLight
+import com.example.disiplinpro.ui.theme.DarkPrimaryBlue
+import com.example.disiplinpro.ui.theme.DarkTextLight
 import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Locale
@@ -72,7 +76,8 @@ fun AdvancedCalendarView(
     schedules: List<Schedule>,
     selectedDate: Calendar,
     onDateSelected: (Calendar) -> Unit,
-    onMonthChanged: (Calendar) -> Unit
+    onMonthChanged: (Calendar) -> Unit,
+    isDarkMode: Boolean = false
 ) {
     val monthFormat = SimpleDateFormat("MMMM yyyy", Locale.getDefault())
 
@@ -92,7 +97,7 @@ fun AdvancedCalendarView(
         modifier = Modifier
             .fillMaxWidth()
             .padding(20.dp)
-            .background(Color.White, RoundedCornerShape(10.dp))
+            .background(if (isDarkMode) DarkCardBackground else Color.White, RoundedCornerShape(10.dp))
             .padding(8.dp)
     ) {
         CalendarHeader(
@@ -108,12 +113,13 @@ fun AdvancedCalendarView(
                 newMonth.add(Calendar.MONTH, 1)
                 onMonthChanged(newMonth)
             },
-            onMonthYearClick = { showYearRangeDialog = true }
+            onMonthYearClick = { showYearRangeDialog = true },
+            isDarkMode = isDarkMode
         )
 
-        DaysOfWeekHeader()
+        DaysOfWeekHeader(isDarkMode)
 
-        CalendarGrid(calendarDays, onDateSelected)
+        CalendarGrid(calendarDays, onDateSelected, isDarkMode)
     }
 
     if (showYearRangeDialog) {
@@ -123,7 +129,8 @@ fun AdvancedCalendarView(
                 selectedYear = year
                 showYearRangeDialog = false
                 showMonthSelectionDialog = true
-            }
+            },
+            isDarkMode = isDarkMode
         )
     }
 
@@ -141,7 +148,8 @@ fun AdvancedCalendarView(
                 newDate.set(Calendar.YEAR, selectedYear)
                 newDate.set(Calendar.MONTH, month)
                 onMonthChanged(newDate)
-            }
+            },
+            isDarkMode = isDarkMode
         )
     }
 }
@@ -152,7 +160,8 @@ private fun CalendarHeader(
     monthFormat: SimpleDateFormat,
     onPreviousMonth: () -> Unit,
     onNextMonth: () -> Unit,
-    onMonthYearClick: () -> Unit
+    onMonthYearClick: () -> Unit,
+    isDarkMode: Boolean
 ) {
     Row(
         modifier = Modifier
@@ -162,13 +171,17 @@ private fun CalendarHeader(
         verticalAlignment = Alignment.CenterVertically
     ) {
         IconButton(onClick = onPreviousMonth) {
-            Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Previous Month")
+            Icon(
+                Icons.AutoMirrored.Filled.ArrowBack,
+                contentDescription = "Previous Month",
+                tint = if (isDarkMode) DarkTextLight else Color.Black
+            )
         }
 
         Box(
             modifier = Modifier
                 .clip(RoundedCornerShape(8.dp))
-                .background(Color(0xFFE6F1F8))
+                .background(if (isDarkMode) DarkCardLight else Color(0xFFE6F1F8))
                 .clickable(onClick = onMonthYearClick)
                 .padding(horizontal = 16.dp, vertical = 8.dp)
         ) {
@@ -180,7 +193,7 @@ private fun CalendarHeader(
                     monthFormat.format(currentMonth.time),
                     fontSize = 18.sp,
                     fontWeight = FontWeight.Bold,
-                    color = Color(0xFF7DAFCB)
+                    color = if (isDarkMode) DarkPrimaryBlue else Color(0xFF7DAFCB)
                 )
 
                 Spacer(modifier = Modifier.width(4.dp))
@@ -188,34 +201,43 @@ private fun CalendarHeader(
                 Icon(
                     imageVector = Icons.Filled.ArrowDropDown,
                     contentDescription = "Select Month & Year",
-                    tint = Color(0xFF7DAFCB),
+                    tint = if (isDarkMode) DarkPrimaryBlue else Color(0xFF7DAFCB),
                     modifier = Modifier.size(24.dp)
                 )
             }
         }
 
         IconButton(onClick = onNextMonth) {
-            Icon(Icons.AutoMirrored.Filled.ArrowForward, contentDescription = "Next Month")
-        }
-    }
-}
-
-@Composable
-private fun DaysOfWeekHeader() {
-    Row(modifier = Modifier.fillMaxWidth()) {
-        DAY_ABBREVIATIONS.forEach { day ->
-            Text(
-                text = day,
-                fontSize = 14.sp,
-                modifier = Modifier.weight(1f),
-                textAlign = TextAlign.Center
+            Icon(
+                Icons.AutoMirrored.Filled.ArrowForward,
+                contentDescription = "Next Month",
+                tint = if (isDarkMode) DarkTextLight else Color.Black
             )
         }
     }
 }
 
 @Composable
-private fun CalendarGrid(calendarDays: List<List<CalendarDay?>>, onDateSelected: (Calendar) -> Unit) {
+private fun DaysOfWeekHeader(isDarkMode: Boolean) {
+    Row(modifier = Modifier.fillMaxWidth()) {
+        DAY_ABBREVIATIONS.forEach { day ->
+            Text(
+                text = day,
+                fontSize = 14.sp,
+                modifier = Modifier.weight(1f),
+                textAlign = TextAlign.Center,
+                color = if (isDarkMode) DarkTextLight else Color.Black
+            )
+        }
+    }
+}
+
+@Composable
+private fun CalendarGrid(
+    calendarDays: List<List<CalendarDay?>>,
+    onDateSelected: (Calendar) -> Unit,
+    isDarkMode: Boolean
+) {
     calendarDays.forEach { week ->
         Row(modifier = Modifier.fillMaxWidth()) {
             week.forEach { day ->
@@ -229,8 +251,8 @@ private fun CalendarGrid(calendarDays: List<List<CalendarDay?>>, onDateSelected:
                             .clip(CircleShape)
                             .background(
                                 when {
-                                    day.isSelected -> Color(0xFF7DAFCB)
-                                    day.hasSchedule -> Color(0xFFCCE5FF)
+                                    day.isSelected -> if (isDarkMode) DarkPrimaryBlue else Color(0xFF7DAFCB)
+                                    day.hasSchedule -> if (isDarkMode) Color(0xFF1E4B6B) else Color(0xFFCCE5FF)
                                     else -> Color.Transparent
                                 }
                             )
@@ -241,7 +263,11 @@ private fun CalendarGrid(calendarDays: List<List<CalendarDay?>>, onDateSelected:
                     ) {
                         Text(
                             text = day.date.get(Calendar.DAY_OF_MONTH).toString(),
-                            color = if (day.isSelected) Color.White else Color.Black,
+                            color = when {
+                                day.isSelected -> Color.White
+                                isDarkMode -> DarkTextLight
+                                else -> Color.Black
+                            },
                             fontSize = 14.sp
                         )
                     }
@@ -254,7 +280,8 @@ private fun CalendarGrid(calendarDays: List<List<CalendarDay?>>, onDateSelected:
 @Composable
 fun YearRangeSelectionDialog(
     onDismiss: () -> Unit,
-    onYearRangeSelected: (Int) -> Unit
+    onYearRangeSelected: (Int) -> Unit,
+    isDarkMode: Boolean
 ) {
     val currentYear = Calendar.getInstance().get(Calendar.YEAR)
     val baseYear = ((currentYear - 5) / 5) * 5
@@ -271,21 +298,20 @@ fun YearRangeSelectionDialog(
     Dialog(onDismissRequest = onDismiss) {
         Card(
             modifier = Modifier
-                .padding(16.dp)
-                .fillMaxWidth(),
+                .fillMaxWidth()
+                .padding(16.dp),
             shape = RoundedCornerShape(16.dp),
-            colors = CardDefaults.cardColors(containerColor = Color.White)
+            colors = CardDefaults.cardColors(
+                containerColor = if (isDarkMode) DarkCardBackground else Color.White
+            )
         ) {
-            Column(
-                modifier = Modifier.padding(16.dp),
-                horizontalAlignment = Alignment.CenterHorizontally
-            ) {
+            Column(modifier = Modifier.padding(16.dp)) {
                 Text(
-                    text = "Pilih Rentang Tahun",
+                    "Pilih Tahun",
                     fontWeight = FontWeight.Bold,
                     fontSize = 18.sp,
                     modifier = Modifier.padding(bottom = 16.dp),
-                    color = Color(0xFF7DAFCB)
+                    color = if (isDarkMode) DarkTextLight else Color.Black
                 )
 
                 LazyVerticalGrid(
@@ -298,12 +324,13 @@ fun YearRangeSelectionDialog(
                             text = "$start–$end",
                             fontSize = 16.sp,
                             textAlign = TextAlign.Center,
-                            color = if (isCurrentRange) Color.White else Color.Black,
+                            color = if (isCurrentRange) Color.White else if (isDarkMode) DarkTextLight else Color.Black,
                             modifier = Modifier
                                 .padding(8.dp)
                                 .clip(RoundedCornerShape(8.dp))
                                 .background(
-                                    if (isCurrentRange) Color(0xFF7DAFCB) else Color(0xFFE0E0E0)
+                                    if (isCurrentRange) if (isDarkMode) DarkPrimaryBlue else Color(0xFF7DAFCB)
+                                    else if (isDarkMode) DarkCardLight else Color(0xFFE0E0E0)
                                 )
                                 .padding(vertical = 12.dp, horizontal = 16.dp)
                                 .fillMaxWidth()
@@ -323,7 +350,8 @@ fun MonthSelectionDialog(
     selectedYear: Int,
     onDismiss: () -> Unit,
     onBackPressed: () -> Unit,
-    onMonthSelected: (Int) -> Unit
+    onMonthSelected: (Int) -> Unit,
+    isDarkMode: Boolean
 ) {
     val currentMonth = Calendar.getInstance().get(Calendar.MONTH)
     val currentYear = Calendar.getInstance().get(Calendar.YEAR)
@@ -331,39 +359,32 @@ fun MonthSelectionDialog(
     Dialog(onDismissRequest = onDismiss) {
         Card(
             modifier = Modifier
-                .padding(16.dp)
-                .fillMaxWidth(),
+                .fillMaxWidth()
+                .padding(16.dp),
             shape = RoundedCornerShape(16.dp),
-            colors = CardDefaults.cardColors(containerColor = Color.White)
+            colors = CardDefaults.cardColors(
+                containerColor = if (isDarkMode) DarkCardBackground else Color.White
+            )
         ) {
-            Column(
-                modifier = Modifier.padding(16.dp),
-                horizontalAlignment = Alignment.CenterHorizontally
-            ) {
+            Column(modifier = Modifier.padding(16.dp)) {
                 Row(
                     modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    IconButton(
-                        onClick = onBackPressed,
-                        modifier = Modifier.padding(end = 8.dp)
-                    ) {
+                    IconButton(onClick = onBackPressed) {
                         Icon(
                             Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "Kembali ke pilihan tahun",
-                            tint = Color(0xFF7DAFCB)
+                            contentDescription = "Back",
+                            tint = if (isDarkMode) DarkTextLight else Color.Black
                         )
                     }
-
                     Text(
-                        text = "Tahun: $selectedYear",
+                        "Pilih Bulan $selectedYear",
                         fontWeight = FontWeight.Bold,
                         fontSize = 18.sp,
-                        color = Color(0xFF7DAFCB)
+                        modifier = Modifier.weight(1f),
+                        color = if (isDarkMode) DarkTextLight else Color.Black
                     )
-
-                    Box(modifier = Modifier.width(48.dp))
                 }
 
                 Spacer(modifier = Modifier.height(16.dp))
@@ -378,12 +399,13 @@ fun MonthSelectionDialog(
                             text = MONTH_NAMES[index],
                             fontSize = 14.sp,
                             textAlign = TextAlign.Center,
-                            color = if (isCurrentMonth) Color.White else Color.Black,
+                            color = if (isCurrentMonth) Color.White else if (isDarkMode) DarkTextLight else Color.Black,
                             modifier = Modifier
                                 .padding(4.dp)
                                 .clip(RoundedCornerShape(8.dp))
                                 .background(
-                                    if (isCurrentMonth) Color(0xFF7DAFCB) else Color(0xFFE0E0E0)
+                                    if (isCurrentMonth) if (isDarkMode) DarkPrimaryBlue else Color(0xFF7DAFCB)
+                                    else if (isDarkMode) DarkCardLight else Color(0xFFE0E0E0)
                                 )
                                 .padding(vertical = 12.dp, horizontal = 8.dp)
                                 .fillMaxWidth()

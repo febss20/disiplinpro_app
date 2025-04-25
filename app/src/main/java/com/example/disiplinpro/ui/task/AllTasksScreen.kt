@@ -32,6 +32,11 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.outlined.Assignment
 import androidx.compose.ui.text.style.TextAlign
+import com.example.disiplinpro.data.preferences.ThemePreferences
+import com.example.disiplinpro.ui.theme.DarkBackground
+import com.example.disiplinpro.ui.theme.DarkPrimaryBlue
+import com.example.disiplinpro.ui.theme.DarkTextGrey
+import com.example.disiplinpro.ui.theme.DarkTextLight
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -39,11 +44,23 @@ fun AllTasksScreen(
     navController: NavController,
     viewModel: TaskViewModel = viewModel()
 ) {
+    val context = LocalContext.current
+
+    val themePreferences = ThemePreferences(context)
+    val isDarkMode by themePreferences.isDarkMode.collectAsState(initial = false)
+
+    val backgroundColor = if (isDarkMode) DarkBackground else Color(0xFFFAF3E0)
+    val textColor = if (isDarkMode) DarkTextLight else Color(0xFF333333)
+    val secondaryTextColor = if (isDarkMode) DarkTextGrey else Color(0xFF757575)
+    val accentColor = if (isDarkMode) DarkPrimaryBlue else Color(0xFF7DAFCB)
+    val accentColorDisabled = if (isDarkMode) DarkPrimaryBlue.copy(alpha = 0.5f) else Color(0xFF7DAFCB).copy(alpha = 0.5f)
+    val deleteColor = if (isDarkMode) Color(0xFFFF5252) else Color(0xFFD86F6F)
+    val deleteColorDisabled = if (isDarkMode) Color(0xFFFF5252).copy(alpha = 0.5f) else Color(0xFFD86F6F).copy(alpha = 0.5f)
+
     LaunchedEffect(key1 = Unit) {
         viewModel.fetchTasks()
     }
 
-    val context = LocalContext.current
     LaunchedEffect(key1 = Unit) {
         viewModel.provideAppContext(context)
     }
@@ -57,7 +74,7 @@ fun AllTasksScreen(
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color(0xFFFAF3E0))
+            .background(backgroundColor)
     ) {
         Column(
             modifier = Modifier
@@ -76,12 +93,12 @@ fun AllTasksScreen(
                             Icon(
                                 imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                                 contentDescription = "Back",
-                                tint = Color(0xFF333333)
+                                tint = textColor
                             )
                         }
                         Text(
                             "Semua Tugas",
-                            color = Color(0xFF333333),
+                            color = textColor,
                             fontSize = 20.sp,
                             fontWeight = FontWeight.Bold
                         )
@@ -98,8 +115,7 @@ fun AllTasksScreen(
                                 .size(40.dp)
                                 .clip(CircleShape)
                                 .background(
-                                    if (selectedTask != null) Color(0xFF7DAFCB)
-                                    else Color(0xFF7DAFCB).copy(alpha = 0.5f)
+                                    if (selectedTask != null) accentColor else accentColorDisabled
                                 )
                         ) {
                             CoilImage(
@@ -124,8 +140,7 @@ fun AllTasksScreen(
                                 .size(40.dp)
                                 .clip(CircleShape)
                                 .background(
-                                    if (selectedTask != null) Color(0xFFD86F6F)
-                                    else Color(0xFFD86F6F).copy(alpha = 0.5f)
+                                    if (selectedTask != null) deleteColor else deleteColorDisabled
                                 )
                         ) {
                             CoilImage(
@@ -137,7 +152,7 @@ fun AllTasksScreen(
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = Color(0xFFFAF3E0)
+                    containerColor = backgroundColor
                 )
             )
 
@@ -159,19 +174,19 @@ fun AllTasksScreen(
                             imageVector = Icons.Outlined.Assignment,
                             contentDescription = "Empty Tasks",
                             modifier = Modifier.size(120.dp),
-                            tint = Color(0xFFF39C12)
+                            tint = accentColor
                         )
                         Spacer(modifier = Modifier.height(16.dp))
                         Text(
                             text = "Belum ada tugas",
-                            color = Color(0xFFF39C12),
+                            color = accentColor,
                             fontSize = 20.sp,
                             fontWeight = FontWeight.Bold
                         )
                         Spacer(modifier = Modifier.height(8.dp))
                         Text(
                             text = "Tambahkan tugas baru dengan tombol di bawah",
-                            color = Color(0xFF757575),
+                            color = secondaryTextColor,
                             fontSize = 14.sp,
                             fontWeight = FontWeight.Normal,
                             modifier = Modifier.padding(horizontal = 32.dp),

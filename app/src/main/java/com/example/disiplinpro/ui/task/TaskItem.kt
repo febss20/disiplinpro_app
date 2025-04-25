@@ -18,11 +18,16 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.disiplinpro.data.model.Task
+import com.example.disiplinpro.data.preferences.ThemePreferences
+import com.example.disiplinpro.ui.theme.DarkCardBackground
+import com.example.disiplinpro.ui.theme.DarkPrimaryBlue
+import com.example.disiplinpro.ui.theme.DarkTextLight
 import com.example.disiplinpro.viewmodel.task.TaskViewModel
 import java.text.SimpleDateFormat
 import java.util.*
@@ -34,10 +39,18 @@ fun TaskItem(
     isSelected: Boolean = false,
     modifier: Modifier = Modifier
 ) {
-    val cardColor = if (isSelected) Color(0xFF7DAFCB) else Color(0x332196F3)
-    val cardTextColor = if (isSelected) Color(0xFF333333) else Color(0xFF333333)
-    val checkboxColor = if (isSelected) Color.White else Color(0xFF7DAFCB)
-    val iconTint = if (isSelected) Color(0xFF333333) else Color(0xFF333333)
+    val context = LocalContext.current
+
+    val themePreferences = ThemePreferences(context)
+    val isDarkMode by themePreferences.isDarkMode.collectAsState(initial = false)
+
+    val containerColor = if (isSelected) {
+        if (isDarkMode) DarkPrimaryBlue.copy(alpha = 0.3f) else Color(0x802196F3)
+    } else {
+        if (isDarkMode) DarkCardBackground else Color(0x332196F3)
+    }
+    val textColor = if (isDarkMode) DarkTextLight else Color(0xFF333333)
+    val iconTint = if (isDarkMode) DarkTextLight else Color(0xFF333333)
 
     val completedStatusColor = Color(0xFF4CAF50)
     val pendingStatusColor = Color(0xFFFF9800)
@@ -47,7 +60,7 @@ fun TaskItem(
             .fillMaxWidth()
             .padding(start = 30.dp, end = 30.dp, bottom = 20.dp),
         colors = CardDefaults.cardColors(
-            containerColor = cardColor
+            containerColor = containerColor
         ),
         shape = RoundedCornerShape(10.dp)
     ) {
@@ -80,7 +93,7 @@ fun TaskItem(
                                 colors = CheckboxDefaults.colors(
                                     checkedColor = if (isSelected) Color.White else Color(0xFF7DAFCB),
                                     uncheckedColor = if (isSelected) Color.White.copy(alpha = 0.7f) else Color(0xFF7DAFCB).copy(alpha = 0.7f),
-                                    checkmarkColor = if (isSelected) cardColor else Color.White
+                                    checkmarkColor = if (isSelected) containerColor else Color.White
                                 )
                             )
                         }
@@ -90,7 +103,7 @@ fun TaskItem(
                         ) {
                             Text(
                                 text = task.judulTugas,
-                                color = cardTextColor,
+                                color = textColor,
                                 fontSize = 19.sp,
                                 fontWeight = FontWeight.SemiBold,
                                 textDecoration = if (isChecked) TextDecoration.LineThrough else TextDecoration.None
@@ -133,7 +146,7 @@ fun TaskItem(
                         Spacer(modifier = Modifier.width(8.dp))
                         Text(
                             text = task.matkul,
-                            color = cardTextColor,
+                            color = textColor,
                             fontSize = 19.sp
                         )
                     }
@@ -151,7 +164,7 @@ fun TaskItem(
                         Spacer(modifier = Modifier.width(8.dp))
                         Text(
                             text = SimpleDateFormat("dd MMM yyyy, HH:mm", Locale.getDefault()).format(task.tanggal.toDate()),
-                            color = cardTextColor,
+                            color = textColor,
                             fontSize = 19.sp
                         )
                     }

@@ -53,6 +53,10 @@ import java.util.concurrent.TimeUnit
 import androidx.work.WorkManager
 import androidx.work.OneTimeWorkRequestBuilder
 import com.example.disiplinpro.worker.NotificationHealthCheckWorker
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import com.example.disiplinpro.ui.theme.DisiplinproTheme
+import com.example.disiplinpro.viewmodel.theme.ThemeViewModel
 
 class MainActivity : ComponentActivity() {
     private val requestPermissionLauncher = registerForActivityResult(
@@ -73,6 +77,7 @@ class MainActivity : ComponentActivity() {
 
     private var notificationType: String? = null
     private var notificationId: String? = null
+    private val themeViewModel = ThemeViewModel()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -80,6 +85,7 @@ class MainActivity : ComponentActivity() {
         requestBatteryOptimizationExemption()
         requestExactAlarmPermission()
         processNotificationIntent(intent)
+        themeViewModel.initialize(this)
         setupNavigation()
 
         CoroutineScope(Dispatchers.IO).launch {
@@ -106,6 +112,7 @@ class MainActivity : ComponentActivity() {
         setContent {
             val navController = rememberNavController()
             val authViewModel = AuthViewModel()
+            val isDarkMode by themeViewModel.isDarkMode.collectAsState()
 
             LaunchedEffect(Unit) {
                 authViewModel.initialize(this@MainActivity)
@@ -117,37 +124,44 @@ class MainActivity : ComponentActivity() {
                 "onboarding"
             }
 
-            HandleNotificationNavigation(navController)
+            DisiplinproTheme(darkTheme = isDarkMode) {
+                HandleNotificationNavigation(navController)
 
-            NavHost(navController = navController, startDestination = startDestination) {
-                composable("onboarding") { OnboardingScreen(navController) }
-                composable("login") { LoginScreen(navController) }
-                composable("register") { RegisterScreen(navController) }
-                composable("home") { HomeScreen(navController) }
-                composable("forgot_password") { ForgotPasswordScreen(navController, authViewModel) }
-                composable("email_verification/{email}") { backStackEntry ->
-                    val email = backStackEntry.arguments?.getString("email") ?: ""
-                    EmailVerificationScreen(navController, email, authViewModel)
+                NavHost(navController = navController, startDestination = startDestination) {
+                    composable("onboarding") { OnboardingScreen(navController) }
+                    composable("login") { LoginScreen(navController) }
+                    composable("register") { RegisterScreen(navController) }
+                    composable("home") { HomeScreen(navController) }
+                    composable("forgot_password") {
+                        ForgotPasswordScreen(
+                            navController,
+                            authViewModel
+                        )
+                    }
+                    composable("email_verification/{email}") { backStackEntry ->
+                        val email = backStackEntry.arguments?.getString("email") ?: ""
+                        EmailVerificationScreen(navController, email, authViewModel)
+                    }
+                    composable("add_jadwal") { AddScheduleScreen(navController) }
+                    composable("edit_jadwal/{scheduleId}") { backStackEntry ->
+                        val scheduleId = backStackEntry.arguments?.getString("scheduleId") ?: ""
+                        EditScheduleScreen(navController, scheduleId)
+                    }
+                    composable("list_jadwal") { AllSchedulesScreen(navController) }
+                    composable("add_tugas") { AddTaskScreen(navController) }
+                    composable("edit_tugas/{taskId}") { backStackEntry ->
+                        val taskId = backStackEntry.arguments?.getString("taskId") ?: ""
+                        EditTaskScreen(navController, taskId)
+                    }
+                    composable("list_tugas") { AllTasksScreen(navController) }
+                    composable("kalender") { CalendarScreen(navController) }
+                    composable("notifikasi") { NotificationScreen(navController) }
+                    composable("akun") { ProfileScreen(navController, themeViewModel = themeViewModel) }
+                    composable("edit_akun") { ProfileEditScreen(navController, themeViewModel = themeViewModel) }
+                    composable("keamanan_privasi") { SecurityPrivacyScreen(navController, themeViewModel = themeViewModel) }
+                    composable("faq") { FAQScreen(navController, themeViewModel = themeViewModel) }
+                    composable("notification_list") { NotificationListScreen(navController) }
                 }
-                composable("add_jadwal") { AddScheduleScreen(navController) }
-                composable("edit_jadwal/{scheduleId}") { backStackEntry ->
-                    val scheduleId = backStackEntry.arguments?.getString("scheduleId") ?: ""
-                    EditScheduleScreen(navController, scheduleId)
-                }
-                composable("list_jadwal") { AllSchedulesScreen(navController) }
-                composable("add_tugas") { AddTaskScreen(navController) }
-                composable("edit_tugas/{taskId}") { backStackEntry ->
-                    val taskId = backStackEntry.arguments?.getString("taskId") ?: ""
-                    EditTaskScreen(navController, taskId)
-                }
-                composable("list_tugas") { AllTasksScreen(navController) }
-                composable("kalender") { CalendarScreen(navController) }
-                composable("notifikasi") { NotificationScreen(navController) }
-                composable("akun") { ProfileScreen(navController) }
-                composable("edit_akun") { ProfileEditScreen(navController) }
-                composable("keamanan_privasi") { SecurityPrivacyScreen(navController) }
-                composable("faq") { FAQScreen(navController) }
-                composable("notification_list") { NotificationListScreen(navController) }
             }
         }
     }

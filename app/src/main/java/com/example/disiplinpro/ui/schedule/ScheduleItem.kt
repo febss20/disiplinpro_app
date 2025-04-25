@@ -11,15 +11,20 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.disiplinpro.R
 import com.example.disiplinpro.data.model.Schedule
+import com.example.disiplinpro.data.preferences.ThemePreferences
+import com.example.disiplinpro.ui.theme.*
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -29,18 +34,32 @@ fun ScheduleItem(
     isSelected: Boolean = false,
     modifier: Modifier = Modifier
 ) {
+    val context = LocalContext.current
+
+    val themePreferences = ThemePreferences(context)
+    val isDarkMode by themePreferences.isDarkMode.collectAsState(initial = false)
+
+    val containerColor = if (isSelected) {
+        if (isDarkMode) DarkPrimaryBlue.copy(alpha = 0.3f) else Color(0x802196F3)
+    } else {
+        if (isDarkMode) DarkCardBackground else Color(0x332196F3)
+    }
+    val textColor = if (isDarkMode) DarkTextLight else Color(0xFF333333)
+    val dividerColor = if (isDarkMode) Color(0xFF444444) else Color(0xFF000000)
+    val iconTint = if (isDarkMode) DarkTextLight else Color(0xFF333333)
+
     Card(
         modifier = modifier
             .fillMaxWidth()
             .padding(start = 30.dp, end = 30.dp, bottom = 20.dp),
         colors = CardDefaults.cardColors(
-            containerColor = if (isSelected) Color(0x802196F3) else Color(0x332196F3)
+            containerColor = containerColor
         ),
     ) {
         Column(modifier = Modifier.padding(top = 14.dp, bottom = 22.dp)) {
             Text(
                 text = schedules.first().hari,
-                color = Color(0xFF333333),
+                color = textColor,
                 fontSize = 20.sp,
                 modifier = Modifier.padding(top = 1.dp, bottom = 12.dp, start = 23.dp)
             )
@@ -48,7 +67,7 @@ fun ScheduleItem(
                 .height(1.dp)
                 .fillMaxWidth()
                 .padding(start = 23.dp, end = 23.dp)
-                .background(Color(0xFF000000)))
+                .background(dividerColor))
             schedules.forEach { schedule ->
                 Column {
                     Row(
@@ -63,7 +82,7 @@ fun ScheduleItem(
                         )
                         Text(
                             text = schedule.matkul,
-                            color = Color(0xFF333333),
+                            color = textColor,
                             fontSize = 19.sp,
                             modifier = Modifier.padding(start = 5.dp),
                         )
@@ -76,12 +95,12 @@ fun ScheduleItem(
                             imageVector = Icons.Outlined.DoorFront,
                             contentDescription = "Ruangan",
                             modifier = Modifier.size(24.dp),
-                            tint = Color(0xFF333333)
+                            tint = iconTint
                         )
                         Spacer(modifier = Modifier.width(8.dp))
                         Text(
                             text = schedule.ruangan,
-                            color = Color(0xFF333333),
+                            color = textColor,
                             fontSize = 19.sp
                         )
                     }
@@ -93,13 +112,13 @@ fun ScheduleItem(
                             imageVector = Icons.Outlined.WatchLater,
                             contentDescription = "Waktu",
                             modifier = Modifier.size(24.dp),
-                            tint = Color(0xFF333333)
+                            tint = iconTint
                         )
                         Spacer(modifier = Modifier.width(8.dp))
                         Text(
                             text = "${SimpleDateFormat("HH:mm", Locale.getDefault()).format(schedule.waktuMulai.toDate())} - " +
                                     "${SimpleDateFormat("HH:mm", Locale.getDefault()).format(schedule.waktuSelesai.toDate())}",
-                            color = Color(0xFF333333),
+                            color = textColor,
                             fontSize = 19.sp
                         )
                     }

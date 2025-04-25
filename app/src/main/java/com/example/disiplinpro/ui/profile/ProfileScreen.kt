@@ -32,8 +32,13 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.work.WorkManager
 import coil.compose.AsyncImage
 import com.example.disiplinpro.ui.components.BottomNavigationBar
+import com.example.disiplinpro.ui.components.DarkModeToggle
+import com.example.disiplinpro.ui.theme.DarkBackground
+import com.example.disiplinpro.ui.theme.DarkCardBackground
+import com.example.disiplinpro.ui.theme.DarkTextLight
 import com.example.disiplinpro.viewmodel.auth.AuthViewModel
 import com.example.disiplinpro.viewmodel.home.HomeViewModel
+import com.example.disiplinpro.viewmodel.theme.ThemeViewModel
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -42,7 +47,8 @@ import java.util.*
 fun ProfileScreen(
     navController: NavController,
     authViewModel: AuthViewModel = viewModel(),
-    homeViewModel: HomeViewModel = viewModel()
+    homeViewModel: HomeViewModel = viewModel(),
+    themeViewModel: ThemeViewModel
 ) {
     val user by homeViewModel.user.collectAsState()
     val navBackStackEntry by navController.currentBackStackEntryAsState()
@@ -50,20 +56,33 @@ fun ProfileScreen(
     val currentDate = SimpleDateFormat("dd MMMM yyyy", Locale.getDefault()).format(Date())
     val context = LocalContext.current
 
+    // Observe dark mode status
+    val isDarkMode by themeViewModel.isDarkMode.collectAsState()
+
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color(0xFFFAF3E0))
+            .background(if (isDarkMode) DarkBackground else Color(0xFFFAF3E0))
     ) {
-        Text(
-            "Profile",
-            color = Color(0xFF333333),
-            fontSize = 24.sp,
-            fontWeight = FontWeight.Bold,
+        Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(top = 40.dp, start = 20.dp)
-        )
+                .padding(top = 40.dp, start = 20.dp, end = 20.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(
+                "Profile",
+                color = if (isDarkMode) DarkTextLight else Color(0xFF333333),
+                fontSize = 24.sp,
+                fontWeight = FontWeight.Bold,
+                modifier = Modifier.weight(1f)
+            )
+
+            DarkModeToggle(
+                isDarkMode = isDarkMode,
+                onToggle = { themeViewModel.toggleDarkMode() }
+            )
+        }
 
         Column(
             modifier = Modifier
@@ -72,12 +91,11 @@ fun ProfileScreen(
         ) {
             Spacer(modifier = Modifier.height(70.dp))
 
-            // Card untuk Foto Profil dan Username
             Card(
                 modifier = Modifier
                     .fillMaxWidth()
                     .clip(RoundedCornerShape(10.dp))
-                    .background(Color(0x332196F3))
+                    .background(if (isDarkMode) Color(0x332196F3).copy(alpha = 0.2f) else Color(0x332196F3))
                     .padding(20.dp),
                 colors = CardDefaults.cardColors(containerColor = Color.Transparent)
             ) {
@@ -85,17 +103,16 @@ fun ProfileScreen(
                     verticalAlignment = Alignment.CenterVertically,
                     modifier = Modifier.fillMaxWidth()
                 ) {
-                    // Foto Profil di kiri
                     if (user?.fotoProfil.isNullOrEmpty()) {
                         Icon(
                             imageVector = Icons.Default.Person,
                             contentDescription = "Profile",
-                            tint = Color(0x4D333333),
+                            tint = if (isDarkMode) Color(0x8DFFFFFF) else Color(0x4D333333),
                             modifier = Modifier
                                 .size(50.dp)
                                 .clip(RoundedCornerShape(100.dp))
-                                .border(1.dp, Color(0x4D333333), RoundedCornerShape(100.dp))
-                                .background(Color(0xFFFFFFFF))
+                                .border(1.dp, if (isDarkMode) Color(0x8DFFFFFF) else Color(0x4D333333), RoundedCornerShape(100.dp))
+                                .background(if (isDarkMode) DarkCardBackground else Color(0xFFFFFFFF))
                         )
                     } else {
                         AsyncImage(
@@ -114,13 +131,13 @@ fun ProfileScreen(
                     Column {
                         Text(
                             text = user?.username ?: "Guest",
-                            color = Color(0xFF333333),
+                            color = if (isDarkMode) DarkTextLight else Color(0xFF333333),
                             fontSize = 24.sp,
                             fontWeight = FontWeight.Bold
                         )
                         Text(
                             text = currentDate,
-                            color = Color(0xFF333333),
+                            color = if (isDarkMode) DarkTextLight.copy(alpha = 0.7f) else Color(0xFF333333),
                             fontSize = 12.sp
                         )
                     }
@@ -132,19 +149,23 @@ fun ProfileScreen(
             // Opsi Menu
             ProfileMenuItem(
                 title = "Edit Akun",
-                onClick = { navController.navigate("edit_akun") }
+                onClick = { navController.navigate("edit_akun") },
+                isDarkMode = isDarkMode
             )
             ProfileMenuItem(
                 title = "Notifikasi",
-                onClick = { navController.navigate("notifikasi") }
+                onClick = { navController.navigate("notifikasi") },
+                isDarkMode = isDarkMode
             )
             ProfileMenuItem(
                 title = "Keamanan dan Privasi",
-                onClick = { navController.navigate("keamanan_privasi") }
+                onClick = { navController.navigate("keamanan_privasi") },
+                isDarkMode = isDarkMode
             )
             ProfileMenuItem(
                 title = "FAQ",
-                onClick = { navController.navigate("faq") }
+                onClick = { navController.navigate("faq") },
+                isDarkMode = isDarkMode
             )
 
             Spacer(modifier = Modifier.weight(1f))
@@ -181,7 +202,7 @@ fun ProfileScreen(
             modifier = Modifier
                 .fillMaxWidth()
                 .height(100.dp)
-                .background(Color(0xFFFAF3E0))
+                .background(if (isDarkMode) DarkBackground else Color(0xFFFAF3E0))
                 .align(Alignment.BottomCenter)
         ) {
             BottomNavigationBar(navController = navController, currentRoute = currentRoute)
@@ -190,7 +211,11 @@ fun ProfileScreen(
 }
 
 @Composable
-fun ProfileMenuItem(title: String, onClick: () -> Unit) {
+fun ProfileMenuItem(
+    title: String,
+    onClick: () -> Unit,
+    isDarkMode: Boolean
+) {
     Row(
         verticalAlignment = Alignment.CenterVertically,
         modifier = Modifier
@@ -224,7 +249,7 @@ fun ProfileMenuItem(title: String, onClick: () -> Unit) {
             modifier = Modifier
                 .size(40.dp)
                 .clip(RoundedCornerShape(100.dp))
-                .background(backgroundColor.copy(alpha = 0.7f)),
+                .background(backgroundColor.copy(alpha = if (isDarkMode) 0.5f else 0.7f)),
             contentAlignment = Alignment.Center
         ) {
             Icon(
@@ -237,7 +262,7 @@ fun ProfileMenuItem(title: String, onClick: () -> Unit) {
 
         Text(
             text = title,
-            color = Color(0xFF333333),
+            color = if (isDarkMode) DarkTextLight else Color(0xFF333333),
             fontSize = 16.sp,
             fontWeight = FontWeight.SemiBold,
             modifier = Modifier
@@ -251,7 +276,7 @@ fun ProfileMenuItem(title: String, onClick: () -> Unit) {
                 .clickable { onClick() },
             shape = RoundedCornerShape(8.dp),
             colors = CardDefaults.cardColors(
-                containerColor = Color(0x337DAFCB)
+                containerColor = if (isDarkMode) Color(0x337DAFCB).copy(alpha = 0.2f) else Color(0x337DAFCB)
             )
         ) {
             Box(
@@ -261,7 +286,7 @@ fun ProfileMenuItem(title: String, onClick: () -> Unit) {
                 Icon(
                     imageVector = Icons.Default.ArrowForwardIos,
                     contentDescription = "Arrow Right",
-                    tint = Color(0xFF7DAFCB),
+                    tint = if (isDarkMode) Color(0xFF5A8CA8) else Color(0xFF7DAFCB),
                     modifier = Modifier.size(14.dp)
                 )
             }

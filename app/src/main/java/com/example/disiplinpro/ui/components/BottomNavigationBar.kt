@@ -5,14 +5,22 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.example.disiplinpro.R
+import com.example.disiplinpro.data.preferences.ThemePreferences
+import com.example.disiplinpro.ui.theme.DarkCardBackground
+import com.example.disiplinpro.ui.theme.DarkIconInactive
+import com.example.disiplinpro.ui.theme.DarkPrimaryBlue
+import com.example.disiplinpro.ui.theme.DarkTextLight
 
 @Composable
 fun BottomNavigationBar(
@@ -29,6 +37,12 @@ fun BottomNavigationBar(
             }
         }
     }
+
+    // Cek apakah dark mode aktif
+    val context = LocalContext.current
+    val themePreferences = ThemePreferences(context)
+    val isDarkMode by themePreferences.isDarkMode.collectAsState(initial = false)
+
     Surface(
         modifier = modifier
             .fillMaxWidth()
@@ -37,7 +51,7 @@ fun BottomNavigationBar(
         shape = RoundedCornerShape(50.dp),
         tonalElevation = 8.dp,
         shadowElevation = 8.dp,
-        color = Color(0xFFFFF8E1)
+        color = if (isDarkMode) DarkCardBackground else Color(0xFFFFF8E1)
     ) {
         NavigationBar(
             modifier = Modifier.fillMaxSize(),
@@ -53,7 +67,9 @@ fun BottomNavigationBar(
                         Icon(
                             painter = painterResource(R.drawable.vector),
                             contentDescription = "Home",
-                            modifier = Modifier.size(22.dp).scale(1.2f)
+                            modifier = Modifier
+                                .size(22.dp)
+                                .scale(1.2f)
                         )
                     },
                     label = { Text("Home") },
@@ -71,9 +87,9 @@ fun BottomNavigationBar(
                     },
                     colors = NavigationBarItemDefaults.colors(
                         indicatorColor = Color.Transparent,
-                        selectedIconColor = Color(0xFF2196F3),
-                        unselectedIconColor = Color(0xFF333333),
-                        selectedTextColor = Color(0xFF7DAFCB)
+                        selectedIconColor = if (isDarkMode) DarkPrimaryBlue else Color(0xFF2196F3),
+                        unselectedIconColor = if (isDarkMode) DarkIconInactive else Color(0xFF333333),
+                        selectedTextColor = if (isDarkMode) DarkPrimaryBlue else Color(0xFF7DAFCB)
                     )
                 )
                 NavigationBarItem(
@@ -81,7 +97,9 @@ fun BottomNavigationBar(
                         Icon(
                             painter = painterResource(R.drawable.kalender),
                             contentDescription = "Kalender",
-                            modifier = Modifier.size(22.dp).scale(1f)
+                            modifier = Modifier
+                                .size(22.dp)
+                                .scale(1f)
                         )
                     },
                     label = { Text("Kalender") },
@@ -99,9 +117,9 @@ fun BottomNavigationBar(
                     },
                     colors = NavigationBarItemDefaults.colors(
                         indicatorColor = Color.Transparent,
-                        selectedIconColor = Color(0xFF2196F3),
-                        unselectedIconColor = Color(0xFF333333),
-                        selectedTextColor = Color(0xFF7DAFCB)
+                        selectedIconColor = if (isDarkMode) DarkPrimaryBlue else Color(0xFF2196F3),
+                        unselectedIconColor = if (isDarkMode) DarkIconInactive else Color(0xFF333333),
+                        selectedTextColor = if (isDarkMode) DarkPrimaryBlue else Color(0xFF7DAFCB)
                     )
                 )
                 NavigationBarItem(
@@ -109,7 +127,9 @@ fun BottomNavigationBar(
                         Icon(
                             painter = painterResource(R.drawable.notif),
                             contentDescription = "Notifikasi",
-                            modifier = Modifier.size(22.dp).scale(1.4f)
+                            modifier = Modifier
+                                .size(22.dp)
+                                .scale(1.4f)
                         )
                     },
                     label = { Text("Notifikasi") },
@@ -127,9 +147,9 @@ fun BottomNavigationBar(
                     },
                     colors = NavigationBarItemDefaults.colors(
                         indicatorColor = Color.Transparent,
-                        selectedIconColor = Color(0xFF2196F3),
-                        unselectedIconColor = Color(0xFF333333),
-                        selectedTextColor = Color(0xFF7DAFCB)
+                        selectedIconColor = if (isDarkMode) DarkPrimaryBlue else Color(0xFF2196F3),
+                        unselectedIconColor = if (isDarkMode) DarkIconInactive else Color(0xFF333333),
+                        selectedTextColor = if (isDarkMode) DarkPrimaryBlue else Color(0xFF7DAFCB)
                     )
                 )
                 NavigationBarItem(
@@ -137,7 +157,9 @@ fun BottomNavigationBar(
                         Icon(
                             painter = painterResource(R.drawable.akun),
                             contentDescription = "Akun",
-                            modifier = Modifier.size(22.dp).scale(1f)
+                            modifier = Modifier
+                                .size(22.dp)
+                                .scale(1f)
                         )
                     },
                     label = { Text("Akun") },
@@ -155,9 +177,9 @@ fun BottomNavigationBar(
                     },
                     colors = NavigationBarItemDefaults.colors(
                         indicatorColor = Color.Transparent,
-                        selectedIconColor = Color(0xFF2196F3),
-                        unselectedIconColor = Color(0xFF333333),
-                        selectedTextColor = Color(0xFF7DAFCB)
+                        selectedIconColor = if (isDarkMode) DarkPrimaryBlue else Color(0xFF2196F3),
+                        unselectedIconColor = if (isDarkMode) DarkIconInactive else Color(0xFF333333),
+                        selectedTextColor = if (isDarkMode) DarkPrimaryBlue else Color(0xFF7DAFCB)
                     )
                 )
             }

@@ -6,6 +6,7 @@ import androidx.compose.animation.*
 import androidx.compose.animation.core.*
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
@@ -32,7 +33,12 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import androidx.navigation.compose.currentBackStackEntryAsState
+import com.example.disiplinpro.data.preferences.ThemePreferences
 import com.example.disiplinpro.ui.components.BottomNavigationBar
+import com.example.disiplinpro.ui.theme.DarkBackground
+import com.example.disiplinpro.ui.theme.DarkCardBackground
+import com.example.disiplinpro.ui.theme.DarkPrimaryBlue
+import com.example.disiplinpro.ui.theme.DarkTextLight
 import kotlinx.coroutines.delay
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.disiplinpro.viewmodel.notification.NotificationViewModel
@@ -51,7 +57,10 @@ fun NotificationScreen(navController: NavController) {
     val context = LocalContext.current
     val timeOptions = listOf("10 Menit sebelum", "30 Menit sebelum", "1 Jam sebelum", "1 Hari sebelum")
 
-    val backgroundColor = Color(0xFFFAF3E0)
+    // Cek dark mode
+    val themePreferences = ThemePreferences(context)
+    val isDarkMode by themePreferences.isDarkMode.collectAsState(initial = false)
+
     val primaryColor = Color(0xFF1E88E5)
     val accentColor = Color(0xFFFFA000)
 
@@ -93,7 +102,7 @@ fun NotificationScreen(navController: NavController) {
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(backgroundColor)
+            .background(if (isDarkMode) DarkBackground else Color(0xFFFAF3E0))
     ) {
         Column(
             modifier = Modifier
@@ -113,7 +122,7 @@ fun NotificationScreen(navController: NavController) {
                     "Pengaturan Notifikasi",
                     fontWeight = FontWeight.Bold,
                     fontSize = 24.sp,
-                    color = Color(0xFF333333)
+                    color = if (isDarkMode) DarkTextLight else Color(0xFF333333)
                 )
 
                 Box {
@@ -127,95 +136,85 @@ fun NotificationScreen(navController: NavController) {
                         Icon(
                             imageVector = Icons.Filled.Notifications,
                             contentDescription = "Lihat Notifikasi",
-                            tint = primaryColor
+                            tint = if (isDarkMode) DarkPrimaryBlue else primaryColor
                         )
                     }
-
                     if (unreadCount > 0) {
                         Box(
                             modifier = Modifier
-                                .align(Alignment.TopEnd)
-                                .offset(x = 4.dp, y = (-2).dp)
-                                .size(20.dp)
-                                .background(Color.Red, CircleShape)
-                                .padding(2.dp),
+                                .size(16.dp)
+                                .background(
+                                    if (isDarkMode) Color(0xFFE57373) else Color(0xFFFF5252),
+                                    CircleShape
+                                )
+                                .align(Alignment.TopEnd),
                             contentAlignment = Alignment.Center
                         ) {
                             Text(
-                                text = if (unreadCount > 99) "99+" else unreadCount.toString(),
+                                text = if (unreadCount > 9) "9+" else unreadCount.toString(),
                                 color = Color.White,
-                                fontSize = if (unreadCount > 99) 8.sp else 10.sp,
-                                fontWeight = FontWeight.Bold,
-                                textAlign = TextAlign.Center,
-                                maxLines = 1
+                                fontSize = 10.sp,
+                                fontWeight = FontWeight.Bold
                             )
                         }
                     }
                 }
             }
 
-            // Schedule Notification Card
-            NotificationSettingCard(
-                title = "Notifikasi Jadwal Kuliah",
+            NotificationSectionCard(
+                title = "Jadwal",
+                description = "Dapatkan pengingat tentang jadwal kuliah Anda",
                 icon = Icons.Filled.Schedule,
                 iconTint = primaryColor,
                 isEnabled = scheduleNotificationEnabled,
-                onEnabledChange = { scheduleNotificationEnabled = it },
-                disabledMessage = "Notifikasi jadwal dinonaktifkan",
                 timeBefore = scheduleTimeBefore,
-                isExpanded = scheduleExpanded,
-                onExpandedChange = { scheduleExpanded = it },
                 timeOptions = timeOptions,
-                onTimeSelected = { scheduleTimeBefore = it },
-                switchColors = SwitchDefaults.colors(
-                    checkedThumbColor = primaryColor,
-                    checkedTrackColor = primaryColor.copy(alpha = 0.5f),
-                    uncheckedThumbColor = Color.Gray,
-                    uncheckedTrackColor = Color.Gray.copy(alpha = 0.5f)
-                ),
-                textFieldColors = OutlinedTextFieldDefaults.colors(
-                    focusedBorderColor = primaryColor,
-                    unfocusedBorderColor = Color.Gray.copy(alpha = 0.5f)
-                ),
-                iconTintForSelectedItem = primaryColor
+                isExpanded = scheduleExpanded,
+                onExpandChange = { scheduleExpanded = it },
+                onToggleChange = { scheduleNotificationEnabled = it },
+                onTimeBeforeChange = { scheduleTimeBefore = it },
+                isDarkMode = isDarkMode
             )
 
-            // Task Notification Card
-            NotificationSettingCard(
-                title = "Notifikasi Tugas",
+            NotificationSectionCard(
+                title = "Tugas",
+                description = "Dapatkan pengingat tentang tenggat waktu tugas Anda",
                 icon = Icons.Filled.Task,
                 iconTint = accentColor,
                 isEnabled = taskNotificationEnabled,
-                onEnabledChange = { taskNotificationEnabled = it },
-                disabledMessage = "Notifikasi tugas dinonaktifkan",
                 timeBefore = taskTimeBefore,
-                isExpanded = taskExpanded,
-                onExpandedChange = { taskExpanded = it },
                 timeOptions = timeOptions,
-                onTimeSelected = { taskTimeBefore = it },
-                switchColors = SwitchDefaults.colors(
-                    checkedThumbColor = accentColor,
-                    checkedTrackColor = accentColor.copy(alpha = 0.5f),
-                    uncheckedThumbColor = Color.Gray,
-                    uncheckedTrackColor = Color.Gray.copy(alpha = 0.5f)
-                ),
-                textFieldColors = OutlinedTextFieldDefaults.colors(
-                    focusedBorderColor = accentColor,
-                    unfocusedBorderColor = Color.Gray.copy(alpha = 0.5f)
-                ),
-                iconTintForSelectedItem = accentColor
+                isExpanded = taskExpanded,
+                onExpandChange = { taskExpanded = it },
+                onToggleChange = { taskNotificationEnabled = it },
+                onTimeBeforeChange = { taskTimeBefore = it },
+                isDarkMode = isDarkMode
             )
-        }
 
-        Column(
-            modifier = Modifier
-                .align(Alignment.BottomCenter)
-                .padding(start = 20.dp, end = 20.dp, bottom = 120.dp)
-        ) {
+            // Disclaimer
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = 8.dp)
+            ) {
+                Text(
+                    "Catatan",
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 16.sp,
+                    color = if (isDarkMode) DarkTextLight else Color(0xFF333333)
+                )
+                Spacer(modifier = Modifier.height(4.dp))
+                Text(
+                    "Jika perangkat Anda memiliki fitur pengoptimalan baterai yang agresif, Anda mungkin perlu mengecualikan DisiplinPro dari pengoptimalan baterai untuk memastikan pengingat berfungsi dengan baik.",
+                    fontSize = 14.sp,
+                    color = if (isDarkMode) DarkTextLight.copy(alpha = 0.7f) else Color(0xFF757575),
+                    lineHeight = 20.sp
+                )
+            }
+
+            // Tombol Simpan
             Button(
                 onClick = {
-                    showSavedAnimation = true
-
                     with(prefs.edit()) {
                         putBoolean(PREF_SCHEDULE_ENABLED, scheduleNotificationEnabled)
                         putBoolean(PREF_TASK_ENABLED, taskNotificationEnabled)
@@ -223,17 +222,16 @@ fun NotificationScreen(navController: NavController) {
                         putString(PREF_TASK_TIME, taskTimeBefore)
                         apply()
                     }
-                    Log.d("NotificationScreen", "Saved prefs: scheduleEnabled=$scheduleNotificationEnabled, taskEnabled=$taskNotificationEnabled")
-
-                    shouldNavigateBack = true
+                    Log.d("NotificationScreen", "Preferences saved")
+                    showSavedAnimation = true
                 },
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(50.dp),
+                shape = RoundedCornerShape(10.dp),
                 colors = ButtonDefaults.buttonColors(
-                    containerColor = if (showSavedAnimation) Color(0xFF66BB4F) else Color(0xFF7DAFCB)
-                ),
-                shape = RoundedCornerShape(10.dp)
+                    containerColor = Color(0xFF7DAFCB)
+                )
             ) {
                 AnimatedContent(
                     targetState = showSavedAnimation,
@@ -281,34 +279,26 @@ fun NotificationScreen(navController: NavController) {
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun NotificationSettingCard(
+private fun NotificationSectionCard(
     title: String,
+    description: String,
     icon: ImageVector,
     iconTint: Color,
     isEnabled: Boolean,
-    onEnabledChange: (Boolean) -> Unit,
-    disabledMessage: String,
     timeBefore: String,
-    isExpanded: Boolean,
-    onExpandedChange: (Boolean) -> Unit,
     timeOptions: List<String>,
-    onTimeSelected: (String) -> Unit,
-    switchColors: SwitchColors,
-    textFieldColors: TextFieldColors,
-    iconTintForSelectedItem: Color
+    isExpanded: Boolean,
+    onExpandChange: (Boolean) -> Unit,
+    onToggleChange: (Boolean) -> Unit,
+    onTimeBeforeChange: (String) -> Unit,
+    isDarkMode: Boolean
 ) {
     Card(
         modifier = Modifier
-            .fillMaxWidth()
-            .animateContentSize(
-                animationSpec = spring(
-                    dampingRatio = Spring.DampingRatioMediumBouncy,
-                    stiffness = Spring.StiffnessLow
-                )
-            ),
+            .fillMaxWidth(),
         shape = RoundedCornerShape(10.dp),
         colors = CardDefaults.cardColors(
-            containerColor = Color(0x332196F3)
+            containerColor = if (isDarkMode) DarkCardBackground else Color(0x332196F3)
         )
     ) {
         Column(
@@ -316,150 +306,137 @@ private fun NotificationSettingCard(
                 .fillMaxWidth()
                 .padding(16.dp)
         ) {
-            // Card Header
             Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(bottom = 12.dp),
-                verticalAlignment = Alignment.CenterVertically
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween,
+                modifier = Modifier.fillMaxWidth()
             ) {
-                Icon(
-                    imageVector = icon,
-                    contentDescription = null,
-                    tint = iconTint,
-                    modifier = Modifier
-                        .size(28.dp)
-                        .background(iconTint.copy(alpha = 0.1f), CircleShape)
-                        .padding(4.dp)
-                )
-                Text(
-                    title,
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 18.sp,
-                    color = Color.DarkGray,
-                    modifier = Modifier.padding(start = 12.dp)
-                )
-                Spacer(modifier = Modifier.weight(1f))
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier.weight(1f)
+                ) {
+                    Icon(
+                        imageVector = icon,
+                        contentDescription = null,
+                        tint = iconTint,
+                        modifier = Modifier.size(32.dp)
+                    )
+                    Spacer(modifier = Modifier.width(16.dp))
+                    Column {
+                        Text(
+                            text = title,
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 18.sp,
+                            color = if (isDarkMode) DarkTextLight else Color(0xFF333333)
+                        )
+                        Text(
+                            text = description,
+                            fontSize = 14.sp,
+                            color = if (isDarkMode) DarkTextLight.copy(alpha = 0.7f) else Color(0xFF757575)
+                        )
+                    }
+                }
                 Switch(
                     checked = isEnabled,
-                    onCheckedChange = onEnabledChange,
-                    colors = switchColors
-                )
-            }
-
-            HorizontalDivider(
-                modifier = Modifier.padding(vertical = 8.dp),
-                thickness = 1.dp,
-                color = Color.LightGray.copy(alpha = 0.7f)
-            )
-
-            // Conditional content based on enabled state
-            if (isEnabled) {
-                NotificationEnabledContent(
-                    timeBefore = timeBefore,
-                    isExpanded = isExpanded,
-                    onExpandedChange = onExpandedChange,
-                    timeOptions = timeOptions,
-                    onTimeSelected = onTimeSelected,
-                    textFieldColors = textFieldColors,
-                    iconTintForSelectedItem = iconTintForSelectedItem
-                )
-            } else {
-                NotificationDisabledMessage(message = disabledMessage)
-            }
-        }
-    }
-}
-
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-private fun NotificationEnabledContent(
-    timeBefore: String,
-    isExpanded: Boolean,
-    onExpandedChange: (Boolean) -> Unit,
-    timeOptions: List<String>,
-    onTimeSelected: (String) -> Unit,
-    textFieldColors: TextFieldColors,
-    iconTintForSelectedItem: Color
-) {
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(top = 8.dp)
-    ) {
-        Text(
-            "Waktu Pengingat",
-            fontSize = 14.sp,
-            color = Color.Gray,
-            modifier = Modifier.padding(bottom = 8.dp)
-        )
-
-        ExposedDropdownMenuBox(
-            expanded = isExpanded,
-            onExpandedChange = { onExpandedChange(!isExpanded) },
-        ) {
-            OutlinedTextField(
-                value = timeBefore,
-                onValueChange = {},
-                readOnly = true,
-                trailingIcon = {
-                    Icon(
-                        imageVector = Icons.Filled.ArrowDropDown,
-                        contentDescription = "Dropdown Menu"
+                    onCheckedChange = onToggleChange,
+                    colors = SwitchDefaults.colors(
+                        checkedThumbColor = if (isDarkMode) Color.White else Color.White,
+                        checkedTrackColor = if (isDarkMode) DarkPrimaryBlue else iconTint,
+                        uncheckedThumbColor = if (isDarkMode) DarkTextLight.copy(alpha = 0.5f) else Color.LightGray,
+                        uncheckedTrackColor = if (isDarkMode) DarkCardBackground.copy(alpha = 0.5f) else Color(0xFFDDDDDD)
                     )
-                },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .menuAnchor(),
-                shape = RoundedCornerShape(8.dp),
-                colors = textFieldColors
-            )
+                )
+            }
 
-            ExposedDropdownMenu(
-                expanded = isExpanded,
-                onDismissRequest = { onExpandedChange(false) },
-                modifier = Modifier.background(Color(0x332196F3))
-            ) {
-                timeOptions.forEach { time ->
-                    DropdownMenuItem(
-                        text = { Text(time) },
-                        onClick = {
-                            onTimeSelected(time)
-                            onExpandedChange(false)
-                        },
-                        trailingIcon = {
-                            if (timeBefore == time) {
-                                Icon(
-                                    imageVector = Icons.Filled.Check,
-                                    contentDescription = "Selected",
-                                    tint = iconTintForSelectedItem
+            if (isEnabled) {
+                HorizontalDivider(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 12.dp),
+                    color = if (isDarkMode) Color(0xFF333333) else Color(0xFFEEEEEE),
+                    thickness = 1.dp
+                )
+
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text(
+                        text = "Waktu pengingat",
+                        fontSize = 16.sp,
+                        color = if (isDarkMode) DarkTextLight else Color(0xFF333333)
+                    )
+
+                    Box {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            modifier = Modifier
+                                .clickable { onExpandChange(!isExpanded) }
+                                .padding(8.dp)
+                        ) {
+                            Text(
+                                text = timeBefore,
+                                fontSize = 16.sp,
+                                color = if (isDarkMode) DarkPrimaryBlue else iconTint
+                            )
+                            Icon(
+                                imageVector = Icons.Default.ArrowDropDown,
+                                contentDescription = "Pilih Waktu",
+                                tint = if (isDarkMode) DarkPrimaryBlue else iconTint,
+                                modifier = Modifier.size(24.dp)
+                            )
+                        }
+
+                        DropdownMenu(
+                            expanded = isExpanded,
+                            onDismissRequest = { onExpandChange(false) },
+                            modifier = Modifier.background(if (isDarkMode) DarkCardBackground else Color.White)
+                        ) {
+                            timeOptions.forEach { option ->
+                                DropdownMenuItem(
+                                    text = {
+                                        Text(
+                                            text = option,
+                                            color = if (isDarkMode) DarkTextLight else Color(0xFF333333)
+                                        )
+                                    },
+                                    onClick = {
+                                        onTimeBeforeChange(option)
+                                        onExpandChange(false)
+                                    }
                                 )
                             }
                         }
-                    )
+                    }
+                }
+            } else {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(top = 12.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.Center
+                    ) {
+                        Icon(
+                            imageVector = Icons.Outlined.NotificationsOff,
+                            contentDescription = "Notifikasi Dimatikan",
+                            tint = if (isDarkMode) DarkTextLight.copy(alpha = 0.5f) else Color(0xFFAAAAAA),
+                            modifier = Modifier.size(16.dp)
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text(
+                            text = "Notifikasi dimatikan",
+                            fontSize = 14.sp,
+                            color = if (isDarkMode) DarkTextLight.copy(alpha = 0.5f) else Color(0xFFAAAAAA),
+                            fontWeight = FontWeight.Medium
+                        )
+                    }
                 }
             }
         }
-    }
-}
-
-@Composable
-private fun NotificationDisabledMessage(message: String) {
-    Row(
-        verticalAlignment = Alignment.CenterVertically,
-        modifier = Modifier.padding(vertical = 8.dp)
-    ) {
-        Icon(
-            imageVector = Icons.Outlined.NotificationsOff,
-            contentDescription = null,
-            tint = Color.Gray,
-            modifier = Modifier.size(20.dp)
-        )
-        Text(
-            message,
-            fontSize = 14.sp,
-            color = Color.Gray,
-            modifier = Modifier.padding(start = 8.dp)
-        )
     }
 }

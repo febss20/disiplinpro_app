@@ -9,15 +9,21 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
+import androidx.navigation.compose.currentBackStackEntryAsState
+import com.example.disiplinpro.data.preferences.ThemePreferences
 import com.example.disiplinpro.ui.components.AdvancedCalendarView
 import com.example.disiplinpro.ui.components.BottomNavigationBar
 import com.example.disiplinpro.ui.components.ScheduleDescription
+import com.example.disiplinpro.ui.theme.DarkBackground
+import com.example.disiplinpro.ui.theme.DarkPrimaryBlue
+import com.example.disiplinpro.ui.theme.DarkTextLight
 import com.example.disiplinpro.viewmodel.schedule.ScheduleViewModel
 import com.google.firebase.auth.FirebaseAuth
 import java.text.SimpleDateFormat
@@ -34,6 +40,13 @@ fun CalendarScreen(
     var currentMonth by remember { mutableStateOf(Calendar.getInstance()) }
     val dateFormat = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
     val timeFormat = SimpleDateFormat("HH:mm", Locale.getDefault())
+    val navBackStackEntry by navController.currentBackStackEntryAsState()
+    val currentRoute = navBackStackEntry?.destination?.route
+
+    // Cek dark mode
+    val context = LocalContext.current
+    val themePreferences = ThemePreferences(context)
+    val isDarkMode by themePreferences.isDarkMode.collectAsState(initial = false)
 
     if (FirebaseAuth.getInstance().currentUser == null) {
         Text(
@@ -60,11 +73,11 @@ fun CalendarScreen(
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color(0xFFFAF3E0))
+            .background(if (isDarkMode) DarkBackground else Color(0xFFFAF3E0))
     ) {
         Text(
             "Kalender",
-            color = Color(0xFF7DAFCB),
+            color = if (isDarkMode) DarkPrimaryBlue else Color(0xFF7DAFCB),
             fontSize = 24.sp,
             fontWeight = FontWeight.Bold,
             modifier = Modifier
@@ -89,43 +102,56 @@ fun CalendarScreen(
                     schedules = schedules,
                     selectedDate = selectedDate,
                     onDateSelected = { newDate -> selectedDate = newDate },
-                    onMonthChanged = { newMonth -> currentMonth = newMonth }
+                    onMonthChanged = { newMonth -> currentMonth = newMonth },
+                    isDarkMode = isDarkMode
                 )
 
-                if (schedules.isEmpty()) {
-                    CircularProgressIndicator(
-                        modifier = Modifier
-                            .align(Alignment.CenterHorizontally)
-                            .padding(16.dp)
-                    )
+                Text(
+                    "Jadwal Hari ${SimpleDateFormat("EEEE", Locale("id", "ID")).format(selectedDate.time)}",
+                    color = if (isDarkMode) DarkTextLight else Color(0xFF333333),
+                    fontSize = 18.sp,
+                    fontWeight = FontWeight.Bold,
+                    modifier = Modifier.padding(horizontal = 30.dp, vertical = 12.dp)
+                )
+
+                if (selectedSchedules.isEmpty()) {
                     Text(
-                        "Memuat jadwal...",
-                        color = Color(0xFF333333),
+                        "Tidak ada jadwal pada hari ini",
+                        color = if (isDarkMode) DarkTextLight.copy(alpha = 0.7f) else Color(0xFF757575),
                         fontSize = 16.sp,
                         modifier = Modifier
-                            .align(Alignment.CenterHorizontally)
-                            .padding(16.dp)
-                    )
-                } else if (selectedSchedules.isNotEmpty()) {
-                    ScheduleDescription(
-                        schedules = selectedSchedules,
-                        selectedDate = selectedDate,
-                        timeFormat = timeFormat,
-                        onDelete = { scheduleId -> viewModel.deleteSchedule(scheduleId) }
+                            .fillMaxWidth()
+                            .padding(horizontal = 20.dp, vertical = 16.dp),
+                        textAlign = TextAlign.Center
                     )
                 } else {
-                    Text(
-                        "Tidak ada jadwal pada tanggal ini",
-                        color = Color(0xFF333333),
-                        fontSize = 16.sp,
-                        modifier = Modifier
-                            .padding(16.dp)
-                            .align(Alignment.CenterHorizontally)
-                    )
+                    selectedSchedules.forEach { schedule ->
+                        ScheduleDescription(
+                            schedules = selectedSchedules,
+                            selectedDate = selectedDate,
+                            timeFormat = timeFormat,
+                            isDarkMode = isDarkMode,
+                            onDelete = { scheduleId -> viewModel.deleteSchedule(scheduleId) }
+                        )
+                    }
                 }
-            }
 
-            BottomNavigationBar(navController = navController, currentRoute = "kalender")
+                Spacer(modifier = Modifier.height(120.dp))
+            }
+        }
+
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(100.dp)
+                .background(if (isDarkMode) DarkBackground else Color(0xFFFAF3E0))
+                .align(Alignment.BottomCenter)
+        ) {
+            BottomNavigationBar(
+                navController = navController,
+                currentRoute = currentRoute,
+                modifier = Modifier.padding(bottom = 20.dp)
+            )
         }
     }
 

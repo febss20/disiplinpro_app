@@ -24,6 +24,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -32,6 +33,8 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.example.disiplinpro.data.model.Notification
 import com.example.disiplinpro.data.model.NotificationType
+import com.example.disiplinpro.data.preferences.ThemePreferences
+import com.example.disiplinpro.ui.theme.*
 import com.example.disiplinpro.viewmodel.notification.NotificationViewModel
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.delay
@@ -48,10 +51,17 @@ fun NotificationListScreen(
     val error by remember { viewModel.error }
     val unreadCount by viewModel.unreadCount.collectAsState()
 
+    // Dark mode support
+    val context = LocalContext.current
+    val themePreferences = ThemePreferences(context)
+    val isDarkMode by themePreferences.isDarkMode.collectAsState(initial = false)
+
     var deletingNotifications by remember { mutableStateOf<Set<String>>(emptySet()) }
 
-    val backgroundColor = Color(0xFFFAF3E0)
-    val headerColor = Color(0xFF1E88E5)
+    val backgroundColor = if (isDarkMode) DarkBackground else Color(0xFFFAF3E0)
+    val headerColor = if (isDarkMode) DarkPrimaryBlue else Color(0xFF1E88E5)
+    val textColor = if (isDarkMode) DarkTextLight else Color(0xFF333333)
+    val textSecondaryColor = if (isDarkMode) DarkTextGrey else Color(0xFF757575)
 
     val filteredNotifications = if (currentFilter == null) {
         notifications.filter { it.id !in deletingNotifications }
@@ -83,7 +93,7 @@ fun NotificationListScreen(
                         Text(
                             "Riwayat Notifikasi",
                             fontWeight = FontWeight.Bold,
-                            color = Color(0xFF333333)
+                            color = textColor
                         )
 
                         if (unreadCount > 0) {
@@ -91,7 +101,7 @@ fun NotificationListScreen(
                                 modifier = Modifier
                                     .padding(start = 8.dp)
                                     .size(24.dp)
-                                    .background(Color(0xFF1E88E5), CircleShape),
+                                    .background(headerColor, CircleShape),
                                 contentAlignment = Alignment.Center
                             ) {
                                 Text(
@@ -109,7 +119,7 @@ fun NotificationListScreen(
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                             contentDescription = "Kembali",
-                            tint = Color(0xFF333333)
+                            tint = textColor
                         )
                     }
                 },
@@ -121,7 +131,7 @@ fun NotificationListScreen(
                             Icon(
                                 imageVector = Icons.Default.DoneAll,
                                 contentDescription = "Tandai Semua Dibaca",
-                                tint = Color(0xFF1E88E5)
+                                tint = headerColor
                             )
                         }
                     }
@@ -130,19 +140,20 @@ fun NotificationListScreen(
                         Icon(
                             imageVector = Icons.Default.DeleteSweep,
                             contentDescription = "Hapus Notifikasi Dibaca",
-                            tint = Color(0xFF333333)
+                            tint = textColor
                         )
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = backgroundColor,
-                    titleContentColor = Color(0xFF333333)
+                    titleContentColor = textColor
                 )
             )
 
             NotificationFilterChips(
                 currentFilter = currentFilter,
-                onFilterSelected = { viewModel.setFilter(it) }
+                onFilterSelected = { viewModel.setFilter(it) },
+                isDarkMode = isDarkMode
             )
 
             if (isLoading) {
@@ -153,7 +164,7 @@ fun NotificationListScreen(
                     CircularProgressIndicator(color = headerColor)
                 }
             } else if (filteredNotifications.isEmpty()) {
-                EmptyNotificationView()
+                EmptyNotificationView(isDarkMode = isDarkMode)
             } else {
                 LazyColumn(
                     modifier = Modifier
@@ -177,7 +188,8 @@ fun NotificationListScreen(
                                     deletingNotifications = deletingNotifications - notification.id
                                 }
                             },
-                            viewModel = viewModel
+                            viewModel = viewModel,
+                            isDarkMode = isDarkMode
                         )
                     }
                     item { Spacer(modifier = Modifier.height(80.dp)) }
@@ -209,8 +221,8 @@ fun NotificationListScreen(
         if (showClearDialog) {
             AlertDialog(
                 onDismissRequest = { showClearDialog = false },
-                title = { Text("Konfirmasi") },
-                text = { Text("Hapus semua notifikasi yang sudah dibaca?") },
+                title = { Text("Konfirmasi", color = if (isDarkMode) DarkTextLight else Color.Black) },
+                text = { Text("Hapus semua notifikasi yang sudah dibaca?", color = if (isDarkMode) DarkTextLight else Color.Black) },
                 confirmButton = {
                     Button(
                         onClick = {
@@ -220,7 +232,7 @@ fun NotificationListScreen(
                             }
                         },
                         colors = ButtonDefaults.buttonColors(
-                            containerColor = Color(0xFF1E88E5)
+                            containerColor = if (isDarkMode) DarkPrimaryBlue else Color(0xFF1E88E5)
                         )
                     ) {
                         Text("Hapus")
@@ -232,15 +244,16 @@ fun NotificationListScreen(
                     ) {
                         Text("Batal")
                     }
-                }
+                },
+                containerColor = if (isDarkMode) DarkCardBackground else Color.White
             )
         }
 
         if (showMarkAllReadDialog) {
             AlertDialog(
                 onDismissRequest = { showMarkAllReadDialog = false },
-                title = { Text("Konfirmasi") },
-                text = { Text("Tandai semua notifikasi sebagai sudah dibaca?") },
+                title = { Text("Konfirmasi", color = if (isDarkMode) DarkTextLight else Color.Black) },
+                text = { Text("Tandai semua notifikasi sebagai sudah dibaca?", color = if (isDarkMode) DarkTextLight else Color.Black) },
                 confirmButton = {
                     Button(
                         onClick = {
@@ -250,7 +263,7 @@ fun NotificationListScreen(
                             }
                         },
                         colors = ButtonDefaults.buttonColors(
-                            containerColor = Color(0xFF1E88E5)
+                            containerColor = if (isDarkMode) DarkPrimaryBlue else Color(0xFF1E88E5)
                         )
                     ) {
                         Text("Tandai Semua")
@@ -262,7 +275,8 @@ fun NotificationListScreen(
                     ) {
                         Text("Batal")
                     }
-                }
+                },
+                containerColor = if (isDarkMode) DarkCardBackground else Color.White
             )
         }
     }
@@ -276,7 +290,8 @@ private suspend fun markAllNotificationsAsRead(viewModel: NotificationViewModel,
 @Composable
 fun NotificationFilterChips(
     currentFilter: NotificationType?,
-    onFilterSelected: (NotificationType?) -> Unit
+    onFilterSelected: (NotificationType?) -> Unit,
+    isDarkMode: Boolean
 ) {
     val filters = listOf(
         null to "Semua",
@@ -308,9 +323,9 @@ fun NotificationFilterChips(
                 } else null,
                 shape = RoundedCornerShape(16.dp),
                 colors = FilterChipDefaults.filterChipColors(
-                    containerColor = Color(0x337DAFCB),
-                    labelColor = Color(0xFF333333),
-                    selectedContainerColor = Color(0xFF7DAFCB),
+                    containerColor = if (isDarkMode) DarkCardLight.copy(alpha = 0.3f) else Color(0x337DAFCB),
+                    labelColor = if (isDarkMode) DarkTextLight else Color(0xFF333333),
+                    selectedContainerColor = if (isDarkMode) DarkPrimaryBlue else Color(0xFF7DAFCB),
                     selectedLabelColor = Color.White
                 )
             )
@@ -323,7 +338,8 @@ fun NotificationItem(
     notification: Notification,
     onMarkAsRead: () -> Unit,
     onDelete: () -> Unit,
-    viewModel: NotificationViewModel = viewModel()
+    viewModel: NotificationViewModel = viewModel(),
+    isDarkMode: Boolean
 ) {
     var expanded by remember { mutableStateOf(false) }
     var isReadLocally by remember { mutableStateOf(notification.isRead) }
@@ -357,8 +373,9 @@ fun NotificationItem(
             .alpha(if (isReadLocally) 0.7f else 1f),
         shape = RoundedCornerShape(12.dp),
         colors = CardDefaults.cardColors(
-            containerColor = if (isReadLocally)
-                Color(0x1F1E88E5) else Color(0x331E88E5)
+            containerColor = if (isDarkMode)
+                (if (isReadLocally) DarkCardBackground.copy(alpha = 0.3f) else DarkCardBackground.copy(alpha = 0.7f))
+            else (if (isReadLocally) Color(0x1F1E88E5) else Color(0x331E88E5))
         )
     ) {
         Column(
@@ -393,13 +410,13 @@ fun NotificationItem(
                         text = notification.title,
                         fontWeight = if (isReadLocally) FontWeight.Normal else FontWeight.Bold,
                         fontSize = 16.sp,
-                        color = Color(0xFF333333)
+                        color = if (isDarkMode) DarkTextLight else Color(0xFF333333)
                     )
 
                     Text(
                         text = viewModel.formatTimestamp(notification.timestamp),
                         fontSize = 12.sp,
-                        color = Color(0xFF666666)
+                        color = if (isDarkMode) DarkTextGrey else Color(0xFF666666)
                     )
                 }
 
@@ -414,7 +431,7 @@ fun NotificationItem(
                         Icon(
                             imageVector = Icons.Default.Delete,
                             contentDescription = "Hapus notifikasi",
-                            tint = Color(0xFFE57373),
+                            tint = if (isDarkMode) Color(0xFFE57373).copy(alpha = 0.8f) else Color(0xFFE57373),
                             modifier = Modifier.size(18.dp)
                         )
                     }
@@ -424,7 +441,7 @@ fun NotificationItem(
                             modifier = Modifier
                                 .size(10.dp)
                                 .clip(CircleShape)
-                                .background(Color(0xFF1E88E5))
+                                .background(if (isDarkMode) DarkPrimaryBlue else Color(0xFF1E88E5))
                         )
                     }
                 }
@@ -442,7 +459,7 @@ fun NotificationItem(
                     Text(
                         text = notification.message,
                         fontSize = 14.sp,
-                        color = Color(0xFF333333),
+                        color = if (isDarkMode) DarkTextLight else Color(0xFF333333),
                         letterSpacing = 0.25.sp,
                         lineHeight = 20.sp
                     )
@@ -478,7 +495,7 @@ fun NotificationItem(
 }
 
 @Composable
-fun EmptyNotificationView() {
+fun EmptyNotificationView(isDarkMode: Boolean) {
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -489,7 +506,7 @@ fun EmptyNotificationView() {
         Icon(
             imageVector = Icons.Outlined.Notifications,
             contentDescription = null,
-            tint = Color(0xFFBDBDBD),
+            tint = if (isDarkMode) DarkIconInactive else Color(0xFFBDBDBD),
             modifier = Modifier.size(80.dp)
         )
 
@@ -498,20 +515,17 @@ fun EmptyNotificationView() {
         Text(
             text = "Tidak Ada Notifikasi",
             fontSize = 18.sp,
-            fontWeight = FontWeight.Bold,
-            color = Color(0xFF757575)
+            fontWeight = FontWeight.Medium,
+            color = if (isDarkMode) DarkTextLight else Color(0xFF757575)
         )
 
         Spacer(modifier = Modifier.height(8.dp))
 
         Text(
-            text = "Notifikasi akan muncul di sini ketika ada pengingat tugas atau jadwal",
+            text = "Notifikasi akan muncul saat ada pengingat tugas atau jadwal",
             fontSize = 14.sp,
-            color = Color(0xFF9E9E9E),
-            maxLines = 2,
-            overflow = TextOverflow.Ellipsis,
-            modifier = Modifier.padding(horizontal = 32.dp),
-            lineHeight = 20.sp
+            color = if (isDarkMode) DarkTextGrey else Color(0xFF9E9E9E),
+            overflow = TextOverflow.Ellipsis
         )
     }
 }
