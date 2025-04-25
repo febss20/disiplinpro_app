@@ -3,8 +3,12 @@ package com.example.disiplinpro.ui.schedule
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.DoorFront
+import androidx.compose.material.icons.outlined.WatchLater
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -16,8 +20,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.disiplinpro.R
 import com.example.disiplinpro.data.model.Schedule
-import com.skydoves.landscapist.ImageOptions
-import com.skydoves.landscapist.coil.CoilImage
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -70,11 +72,13 @@ fun ScheduleItem(
                         verticalAlignment = Alignment.CenterVertically,
                         modifier = Modifier.padding(start = 45.dp, top = 9.dp)
                     ) {
-                        CoilImage(
-                            imageModel = { "https://storage.googleapis.com/tagjs-prod.appspot.com/v1/T7pdvlFwTn/4kklsjaa.png" },
-                            modifier = Modifier.width(30.dp).padding(end = 8.dp),
-                            imageOptions = ImageOptions(contentScale = ContentScale.Crop)
+                        Icon(
+                            imageVector = Icons.Outlined.DoorFront,
+                            contentDescription = "Ruangan",
+                            modifier = Modifier.size(24.dp),
+                            tint = Color(0xFF333333)
                         )
+                        Spacer(modifier = Modifier.width(8.dp))
                         Text(
                             text = schedule.ruangan,
                             color = Color(0xFF333333),
@@ -85,11 +89,13 @@ fun ScheduleItem(
                         verticalAlignment = Alignment.CenterVertically,
                         modifier = Modifier.padding(start = 45.dp, top = 9.dp)
                     ) {
-                        CoilImage(
-                            imageModel = { "https://storage.googleapis.com/tagjs-prod.appspot.com/v1/T7pdvlFwTn/h4d6k6v9.png" },
-                            modifier = Modifier.width(30.dp).padding(end = 8.dp),
-                            imageOptions = ImageOptions(contentScale = ContentScale.Crop)
+                        Icon(
+                            imageVector = Icons.Outlined.WatchLater,
+                            contentDescription = "Waktu",
+                            modifier = Modifier.size(24.dp),
+                            tint = Color(0xFF333333)
                         )
+                        Spacer(modifier = Modifier.width(8.dp))
                         Text(
                             text = "${SimpleDateFormat("HH:mm", Locale.getDefault()).format(schedule.waktuMulai.toDate())} - " +
                                     "${SimpleDateFormat("HH:mm", Locale.getDefault()).format(schedule.waktuSelesai.toDate())}",

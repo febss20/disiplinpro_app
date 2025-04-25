@@ -301,15 +301,17 @@ fun NotificationFilterChips(
                         Icon(
                             imageVector = Icons.Default.Check,
                             contentDescription = null,
-                            modifier = Modifier.size(FilterChipDefaults.IconSize)
+                            modifier = Modifier.size(FilterChipDefaults.IconSize),
+                            tint = Color.White
                         )
                     }
                 } else null,
+                shape = RoundedCornerShape(16.dp),
                 colors = FilterChipDefaults.filterChipColors(
-                    containerColor = Color.White,
+                    containerColor = Color(0x337DAFCB),
                     labelColor = Color(0xFF333333),
-                    selectedContainerColor = Color(0x331E88E5),
-                    selectedLabelColor = Color(0xFF1E88E5)
+                    selectedContainerColor = Color(0xFF7DAFCB),
+                    selectedLabelColor = Color.White
                 )
             )
         }
