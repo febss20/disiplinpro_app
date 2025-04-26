@@ -125,15 +125,13 @@ fun CalendarScreen(
                         textAlign = TextAlign.Center
                     )
                 } else {
-                    selectedSchedules.forEach { schedule ->
-                        ScheduleDescription(
-                            schedules = selectedSchedules,
-                            selectedDate = selectedDate,
-                            timeFormat = timeFormat,
-                            isDarkMode = isDarkMode,
-                            onDelete = { scheduleId -> viewModel.deleteSchedule(scheduleId) }
-                        )
-                    }
+                    ScheduleDescription(
+                        schedules = selectedSchedules,
+                        selectedDate = selectedDate,
+                        timeFormat = timeFormat,
+                        isDarkMode = isDarkMode,
+                        onDelete = { scheduleId -> viewModel.deleteSchedule(scheduleId) }
+                    )
                 }
 
                 Spacer(modifier = Modifier.height(120.dp))

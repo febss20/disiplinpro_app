@@ -6,11 +6,12 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
@@ -22,7 +23,8 @@ import androidx.compose.ui.text.buildAnnotatedString
 import com.example.disiplinpro.viewmodel.auth.AuthViewModel
 import androidx.lifecycle.viewmodel.compose.viewModel
 import android.widget.Toast
-import androidx.compose.ui.platform.LocalContext
+import com.example.disiplinpro.data.preferences.ThemePreferences
+import com.example.disiplinpro.ui.theme.*
 
 @Composable
 fun EmailVerificationScreen(
@@ -32,17 +34,25 @@ fun EmailVerificationScreen(
 ) {
     val context = LocalContext.current
 
+    val themePreferences = ThemePreferences(context)
+    val isDarkMode by themePreferences.isDarkMode.collectAsState(initial = false)
+
+    val backgroundColor = if (isDarkMode) DarkBackground else Color(0xFFFAF3E0)
+    val textColor = if (isDarkMode) DarkTextLight else Color(0xFF333333)
+    val primaryColor = if (isDarkMode) DarkPrimaryBlue else Color(0xFF7DAFCB)
+    val cancelColor = if (isDarkMode) Color(0xFFFF6E40) else Color(0xFFFF5722)
+
     Column(
         modifier = Modifier
             .fillMaxWidth()
             .fillMaxHeight()
-            .background(color = Color(0xFFFFFFFF))
+            .background(color = if (isDarkMode) Color(0xFF121212) else Color(0xFFFFFFFF))
     ) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
                 .weight(1f)
-                .background(color = Color(0xFFFAF3E0))
+                .background(color = backgroundColor)
         ) {
             Row(
                 verticalAlignment = Alignment.CenterVertically,
@@ -51,14 +61,14 @@ fun EmailVerificationScreen(
             ) {
                 Text(
                     "Cek Email Anda",
-                    color = Color(0xFF333333),
+                    color = textColor,
                     fontSize = 28.sp,
                     fontWeight = FontWeight.Bold,
                     modifier = Modifier.padding(end = 140.dp)
                 )
                 Text(
                     "Batal",
-                    color = Color(0xFFFF5722),
+                    color = cancelColor,
                     fontSize = 14.sp,
                     modifier = Modifier.clickable { navController.popBackStack() }
                 )
@@ -71,7 +81,7 @@ fun EmailVerificationScreen(
                         append(email)
                     }
                 },
-                color = Color(0xFF333333),
+                color = textColor,
                 fontSize = 13.sp,
                 modifier = Modifier.padding(top = 10.dp, start = 30.dp)
             )
@@ -84,7 +94,7 @@ fun EmailVerificationScreen(
                     .fillMaxWidth()
                     .height(48.dp)
                     .clip(RoundedCornerShape(50.dp)),
-                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF7DAFCB)),
+                colors = ButtonDefaults.buttonColors(containerColor = primaryColor),
                 contentPadding = PaddingValues(vertical = 13.dp)
             ) {
                 Text(
@@ -109,13 +119,13 @@ fun EmailVerificationScreen(
                 ) {
                     Text(
                         "Belum mendapatkan email? ",
-                        color = Color(0xFF333333),
+                        color = textColor,
                         fontSize = 12.sp,
                         fontWeight = FontWeight.Bold
                     )
                     Text(
                         "Kirim ulang email",
-                        color = Color(0xFF7DAFCB),
+                        color = primaryColor,
                         fontSize = 12.sp,
                         fontWeight = FontWeight.Bold,
                         textDecoration = TextDecoration.Underline,

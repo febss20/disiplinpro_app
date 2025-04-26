@@ -33,6 +33,8 @@ import androidx.lifecycle.repeatOnLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.example.disiplinpro.R
+import com.example.disiplinpro.data.preferences.ThemePreferences
+import com.example.disiplinpro.ui.theme.*
 import com.example.disiplinpro.viewmodel.auth.AuthState
 import com.example.disiplinpro.viewmodel.auth.AuthViewModel
 import com.google.android.gms.auth.api.signin.GoogleSignIn
@@ -57,6 +59,15 @@ fun RegisterScreen(
     val lifecycleOwner = LocalLifecycleOwner.current
     val authState by authViewModel.authState.collectAsState()
     val isLoading by remember { authViewModel.isLoading }
+
+    val themePreferences = ThemePreferences(context)
+    val isDarkMode by themePreferences.isDarkMode.collectAsState(initial = false)
+
+    val backgroundColor = if (isDarkMode) DarkBackground else Color(0xFFFAF3E0)
+    val textColor = if (isDarkMode) DarkTextLight else Color(0xFF333333)
+    val secondaryTextColor = if (isDarkMode) DarkTextGrey else Color(0xFF757575)
+    val primaryColor = if (isDarkMode) DarkPrimaryBlue else Color(0xFF7DAFCB)
+    val dividerColor = if (isDarkMode) Color(0xFF444444) else Color(0xFFEEEEEE)
 
     val googleSignInClient = remember {
         try {
@@ -136,13 +147,13 @@ fun RegisterScreen(
         modifier = Modifier
             .fillMaxWidth()
             .fillMaxHeight()
-            .background(color = Color(0xFFFFFFFF))
+            .background(color = if (isDarkMode) Color(0xFF121212) else Color(0xFFFFFFFF))
     ) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
                 .weight(1f)
-                .background(color = Color(0xFFFAF3E0))
+                .background(color = backgroundColor)
                 .verticalScroll(rememberScrollState())
         ) {
             Column(
@@ -153,7 +164,7 @@ fun RegisterScreen(
             ) {
                 Text(
                     "Daftar Akun",
-                    color = Color(0xFF333333),
+                    color = textColor,
                     fontSize = 28.sp,
                     fontWeight = FontWeight.Bold
                 )
@@ -161,7 +172,7 @@ fun RegisterScreen(
 
             Text(
                 "Daftar",
-                color = Color(0xFF7DAFCB),
+                color = primaryColor,
                 fontSize = 24.sp,
                 fontWeight = FontWeight.Bold,
                 modifier = Modifier.padding(start = 31.dp)
@@ -186,7 +197,7 @@ fun RegisterScreen(
                     )
                     Text(
                         "Username",
-                        color = Color(0xFF333333),
+                        color = textColor,
                         fontSize = 15.sp
                     )
                 }
@@ -196,13 +207,16 @@ fun RegisterScreen(
                         username = it
                         if (usernameError) usernameError = false
                     },
-                    label = { Text("Username") },
+                    label = { Text("Username", color = if (isDarkMode) DarkTextGrey else Color(0xFF757575)) },
                     modifier = Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(8.dp),
                     colors = OutlinedTextFieldDefaults.colors(
-                        focusedBorderColor = if (usernameError) Color.Red else Color(0xFF7DAFCB),
-                        unfocusedBorderColor = if (usernameError) Color.Red else Color(0x807DAFCB),
-                        errorBorderColor = Color.Red
+                        focusedBorderColor = if (usernameError) Color.Red else primaryColor,
+                        unfocusedBorderColor = if (usernameError) Color.Red else primaryColor.copy(alpha = 0.5f),
+                        errorBorderColor = Color.Red,
+                        focusedTextColor = textColor,
+                        unfocusedTextColor = textColor,
+                        cursorColor = primaryColor
                     ),
                     isError = usernameError
                 )
@@ -227,7 +241,7 @@ fun RegisterScreen(
                     )
                     Text(
                         "Email Anda",
-                        color = Color(0xFF333333),
+                        color = textColor,
                         fontSize = 15.sp
                     )
                 }
@@ -237,13 +251,16 @@ fun RegisterScreen(
                         email = it
                         if (emailError) emailError = false
                     },
-                    label = { Text("Email") },
+                    label = { Text("Email", color = if (isDarkMode) DarkTextGrey else Color(0xFF757575)) },
                     modifier = Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(8.dp),
                     colors = OutlinedTextFieldDefaults.colors(
-                        focusedBorderColor = if (emailError) Color.Red else Color(0xFF7DAFCB),
-                        unfocusedBorderColor = if (emailError) Color.Red else Color(0x807DAFCB),
-                        errorBorderColor = Color.Red
+                        focusedBorderColor = if (emailError) Color.Red else primaryColor,
+                        unfocusedBorderColor = if (emailError) Color.Red else primaryColor.copy(alpha = 0.5f),
+                        errorBorderColor = Color.Red,
+                        focusedTextColor = textColor,
+                        unfocusedTextColor = textColor,
+                        cursorColor = primaryColor
                     ),
                     isError = emailError
                 )
@@ -268,7 +285,7 @@ fun RegisterScreen(
                     )
                     Text(
                         "Password",
-                        color = Color(0xFF333333),
+                        color = textColor,
                         fontSize = 15.sp
                     )
                 }
@@ -278,7 +295,7 @@ fun RegisterScreen(
                         password = it
                         if (passwordError) passwordError = false
                     },
-                    label = { Text("Password") },
+                    label = { Text("Password", color = if (isDarkMode) DarkTextGrey else Color(0xFF757575)) },
                     modifier = Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(8.dp),
                     visualTransformation = if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
@@ -287,14 +304,18 @@ fun RegisterScreen(
                             Icon(
                                 imageVector = if (passwordVisible) Icons.Default.Visibility
                                 else Icons.Default.VisibilityOff,
-                                contentDescription = if (passwordVisible) "Hide password" else "Show password"
+                                contentDescription = if (passwordVisible) "Hide password" else "Show password",
+                                tint = if (isDarkMode) DarkTextGrey else Color(0xFF757575)
                             )
                         }
                     },
                     colors = OutlinedTextFieldDefaults.colors(
-                        focusedBorderColor = if (passwordError) Color.Red else Color(0xFF7DAFCB),
-                        unfocusedBorderColor = if (passwordError) Color.Red else Color(0x807DAFCB),
-                        errorBorderColor = Color.Red
+                        focusedBorderColor = if (passwordError) Color.Red else primaryColor,
+                        unfocusedBorderColor = if (passwordError) Color.Red else primaryColor.copy(alpha = 0.5f),
+                        errorBorderColor = Color.Red,
+                        focusedTextColor = textColor,
+                        unfocusedTextColor = textColor,
+                        cursorColor = primaryColor
                     ),
                     isError = passwordError
                 )
@@ -349,7 +370,7 @@ fun RegisterScreen(
                     .padding(top = 30.dp, start = 32.dp, end = 32.dp)
                     .fillMaxWidth()
                     .height(48.dp),
-                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF7DAFCB)),
+                colors = ButtonDefaults.buttonColors(containerColor = primaryColor),
                 enabled = !isLoading
             ) {
                 if (isLoading) {
@@ -377,18 +398,18 @@ fun RegisterScreen(
                 HorizontalDivider(
                     modifier = Modifier.weight(1f),
                     thickness = 1.dp,
-                    color = Color(0xFFEEEEEE)
+                    color = dividerColor
                 )
                 Text(
                     text = "ATAU",
-                    color = Color(0xFF999999),
+                    color = if (isDarkMode) DarkTextGrey else Color(0xFF999999),
                     fontSize = 12.sp,
                     modifier = Modifier.padding(horizontal = 16.dp)
                 )
                 HorizontalDivider(
                     modifier = Modifier.weight(1f),
                     thickness = 1.dp,
-                    color = Color(0xFFEEEEEE)
+                    color = dividerColor
                 )
             }
 
@@ -421,13 +442,13 @@ fun RegisterScreen(
                 ) {
                     Text(
                         "Sudah Memiliki akun? ",
-                        color = Color(0xFF333333),
+                        color = textColor,
                         fontSize = 12.sp,
                         fontWeight = FontWeight.Bold
                     )
                     Text(
                         "Masuk",
-                        color = Color(0xFF7DAFCB),
+                        color = primaryColor,
                         fontSize = 12.sp,
                         fontWeight = FontWeight.Bold,
                         textDecoration = TextDecoration.Underline,

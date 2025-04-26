@@ -51,7 +51,6 @@ fun NotificationListScreen(
     val error by remember { viewModel.error }
     val unreadCount by viewModel.unreadCount.collectAsState()
 
-    // Dark mode support
     val context = LocalContext.current
     val themePreferences = ThemePreferences(context)
     val isDarkMode by themePreferences.isDarkMode.collectAsState(initial = false)

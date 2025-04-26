@@ -23,6 +23,8 @@ import com.example.disiplinpro.viewmodel.auth.AuthViewModel
 import com.skydoves.landscapist.ImageOptions
 import com.skydoves.landscapist.coil.CoilImage
 import androidx.compose.ui.layout.ContentScale
+import com.example.disiplinpro.data.preferences.ThemePreferences
+import com.example.disiplinpro.ui.theme.*
 
 @Composable
 fun ForgotPasswordScreen(
@@ -35,17 +37,25 @@ fun ForgotPasswordScreen(
     val isLoading by remember { authViewModel.isLoading }
     val context = LocalContext.current
 
+    val themePreferences = ThemePreferences(context)
+    val isDarkMode by themePreferences.isDarkMode.collectAsState(initial = false)
+
+    val backgroundColor = if (isDarkMode) DarkBackground else Color(0xFFFAF3E0)
+    val textColor = if (isDarkMode) DarkTextLight else Color(0xFF333333)
+    val primaryColor = if (isDarkMode) DarkPrimaryBlue else Color(0xFF7DAFCB)
+    val cancelColor = if (isDarkMode) Color(0xFFFF6E40) else Color(0xFFFF5722)
+
     Column(
         modifier = Modifier
             .fillMaxWidth()
             .fillMaxHeight()
-            .background(color = Color(0xFFFFFFFF))
+            .background(color = if (isDarkMode) Color(0xFF121212) else Color(0xFFFFFFFF))
     ) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
                 .weight(1f)
-                .background(color = Color(0xFFFAF3E0))
+                .background(color = backgroundColor)
         ) {
             Row(
                 verticalAlignment = Alignment.CenterVertically,
@@ -54,7 +64,7 @@ fun ForgotPasswordScreen(
             ) {
                 Text(
                     "Lupa Password",
-                    color = Color(0xFF333333),
+                    color = textColor,
                     fontSize = 28.sp,
                     fontWeight = FontWeight.Bold,
                     modifier = Modifier
@@ -62,7 +72,7 @@ fun ForgotPasswordScreen(
                 )
                 Text(
                     "Batal",
-                    color = Color(0xFFFF5722),
+                    color = cancelColor,
                     fontSize = 14.sp,
                     modifier = Modifier
                         .clickable { navController.popBackStack() }
@@ -71,7 +81,7 @@ fun ForgotPasswordScreen(
 
             Text(
                 "Mohon masukkan email anda untuk reset password",
-                color = Color(0xFF333333),
+                color = textColor,
                 fontSize = 13.sp,
                 modifier = Modifier.padding(start = 30.dp, bottom = 25.dp)
             )
@@ -95,7 +105,7 @@ fun ForgotPasswordScreen(
                     )
                     Text(
                         "Email Anda",
-                        color = Color(0xFF333333),
+                        color = textColor,
                         fontSize = 15.sp
                     )
                 }
@@ -108,13 +118,16 @@ fun ForgotPasswordScreen(
                             errorMessage = ""
                         }
                     },
-                    label = { Text("Email") },
+                    label = { Text("Email", color = if (isDarkMode) DarkTextGrey else Color(0xFF757575)) },
                     modifier = Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(8.dp),
                     colors = OutlinedTextFieldDefaults.colors(
-                        focusedBorderColor = if (emailError) Color.Red else Color(0xFF7DAFCB),
-                        unfocusedBorderColor = if (emailError) Color.Red else Color(0x807DAFCB),
-                        errorBorderColor = Color.Red
+                        focusedBorderColor = if (emailError) Color.Red else primaryColor,
+                        unfocusedBorderColor = if (emailError) Color.Red else primaryColor.copy(alpha = 0.5f),
+                        errorBorderColor = Color.Red,
+                        focusedTextColor = textColor,
+                        unfocusedTextColor = textColor,
+                        cursorColor = primaryColor
                     ),
                     isError = emailError
                 )
@@ -169,7 +182,7 @@ fun ForgotPasswordScreen(
                     .fillMaxWidth()
                     .height(48.dp)
                     .clip(RoundedCornerShape(50.dp)),
-                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF7DAFCB)),
+                colors = ButtonDefaults.buttonColors(containerColor = primaryColor),
                 contentPadding = PaddingValues(vertical = 13.dp),
                 enabled = !isLoading
             ) {
