@@ -57,7 +57,6 @@ fun NotificationScreen(navController: NavController) {
     val context = LocalContext.current
     val timeOptions = listOf("10 Menit sebelum", "30 Menit sebelum", "1 Jam sebelum", "1 Hari sebelum")
 
-    // Cek dark mode
     val themePreferences = ThemePreferences(context)
     val isDarkMode by themePreferences.isDarkMode.collectAsState(initial = false)
 
@@ -252,6 +251,7 @@ fun NotificationScreen(navController: NavController) {
                             Spacer(modifier = Modifier.width(8.dp))
                             Text(
                                 "Tersimpan",
+                                color = Color(0xFFFFFFFF),
                                 fontSize = 18.sp,
                                 fontWeight = FontWeight.Bold
                             )
@@ -259,6 +259,7 @@ fun NotificationScreen(navController: NavController) {
                     } else {
                         Text(
                             "Simpan Pengaturan",
+                            color = Color(0xFFFFFFFF),
                             fontSize = 18.sp,
                             fontWeight = FontWeight.Bold
                         )

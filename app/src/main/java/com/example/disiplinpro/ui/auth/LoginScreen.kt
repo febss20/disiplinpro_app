@@ -37,6 +37,8 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.repeatOnLifecycle
 import com.example.disiplinpro.R
 import com.example.disiplinpro.viewmodel.profile.SecurityPrivacyViewModel
+import com.example.disiplinpro.data.preferences.ThemePreferences
+import com.example.disiplinpro.ui.theme.*
 
 @Composable
 fun LoginScreen(
@@ -57,6 +59,15 @@ fun LoginScreen(
     val securityPrivacyViewModel: SecurityPrivacyViewModel = viewModel()
     val hasCredentials by securityPrivacyViewModel.hasCredentials.collectAsState()
     val savedCredentials by securityPrivacyViewModel.savedCredentials.collectAsState()
+
+    val themePreferences = ThemePreferences(context)
+    val isDarkMode by themePreferences.isDarkMode.collectAsState(initial = false)
+
+    val backgroundColor = if (isDarkMode) DarkBackground else Color(0xFFFAF3E0)
+    val textColor = if (isDarkMode) DarkTextLight else Color(0xFF333333)
+    val secondaryTextColor = if (isDarkMode) DarkTextGrey else Color(0xFF757575)
+    val primaryColor = if (isDarkMode) DarkPrimaryBlue else Color(0xFF7DAFCB)
+    val dividerColor = if (isDarkMode) Color(0xFF444444) else Color(0xFFEEEEEE)
 
     LaunchedEffect(Unit) {
         securityPrivacyViewModel.loadSavedCredentials()
@@ -152,13 +163,13 @@ fun LoginScreen(
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(color = Color(0xFFFFFFFF))
+            .background(color = if (isDarkMode) Color(0xFF121212) else Color(0xFFFFFFFF))
     ) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
                 .weight(1f)
-                .background(color = Color(0xFFFAF3E0))
+                .background(color = backgroundColor)
                 .verticalScroll(rememberScrollState())
         ) {
             Column(
@@ -169,7 +180,7 @@ fun LoginScreen(
             ) {
                 Text(
                     "Selamat Datang",
-                    color = Color(0xFF333333),
+                    color = textColor,
                     fontSize = 28.sp,
                     fontWeight = FontWeight.Bold
                 )
@@ -177,7 +188,7 @@ fun LoginScreen(
 
             Text(
                 "Masuk",
-                color = Color(0xFF7DAFCB),
+                color = primaryColor,
                 fontSize = 24.sp,
                 fontWeight = FontWeight.Bold,
                 modifier = Modifier.padding(start = 31.dp)
@@ -202,7 +213,7 @@ fun LoginScreen(
                     )
                     Text(
                         "Email Anda",
-                        color = Color(0xFF333333),
+                        color = textColor,
                         fontSize = 15.sp
                     )
                 }
@@ -212,13 +223,16 @@ fun LoginScreen(
                         email = it
                         if (emailError) emailError = false
                     },
-                    label = { Text("Email") },
+                    label = { Text("Email", color = if (isDarkMode) DarkTextGrey else Color(0xFF757575)) },
                     modifier = Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(8.dp),
                     colors = OutlinedTextFieldDefaults.colors(
-                        focusedBorderColor = if (emailError) Color.Red else Color(0xFF7DAFCB),
-                        unfocusedBorderColor = if (emailError) Color.Red else Color(0x807DAFCB),
-                        errorBorderColor = Color.Red
+                        focusedBorderColor = if (emailError) Color.Red else primaryColor,
+                        unfocusedBorderColor = if (emailError) Color.Red else primaryColor.copy(alpha = 0.5f),
+                        errorBorderColor = Color.Red,
+                        focusedTextColor = textColor,
+                        unfocusedTextColor = textColor,
+                        cursorColor = primaryColor
                     ),
                     isError = emailError
                 )
@@ -243,7 +257,7 @@ fun LoginScreen(
                     )
                     Text(
                         "Password",
-                        color = Color(0xFF333333),
+                        color = textColor,
                         fontSize = 15.sp
                     )
                 }
@@ -253,7 +267,7 @@ fun LoginScreen(
                         password = it
                         if (passwordError) passwordError = false
                     },
-                    label = { Text("Password") },
+                    label = { Text("Password", color = if (isDarkMode) DarkTextGrey else Color(0xFF757575)) },
                     modifier = Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(8.dp),
                     visualTransformation = if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
@@ -262,14 +276,18 @@ fun LoginScreen(
                             Icon(
                                 imageVector = if (passwordVisible) Icons.Default.Visibility
                                 else Icons.Default.VisibilityOff,
-                                contentDescription = if (passwordVisible) "Hide password" else "Show password"
+                                contentDescription = if (passwordVisible) "Hide password" else "Show password",
+                                tint = if (isDarkMode) DarkTextGrey else Color(0xFF757575)
                             )
                         }
                     },
                     colors = OutlinedTextFieldDefaults.colors(
-                        unfocusedBorderColor = if (passwordError) Color.Red else Color(0x807DAFCB),
-                        focusedBorderColor = if (passwordError) Color.Red else Color(0xFF7DAFCB),
-                        errorBorderColor = Color.Red
+                        unfocusedBorderColor = if (passwordError) Color.Red else primaryColor.copy(alpha = 0.5f),
+                        focusedBorderColor = if (passwordError) Color.Red else primaryColor,
+                        errorBorderColor = Color.Red,
+                        focusedTextColor = textColor,
+                        unfocusedTextColor = textColor,
+                        cursorColor = primaryColor
                     ),
                     isError = passwordError
                 )
@@ -353,7 +371,7 @@ fun LoginScreen(
                     .padding(top = 32.dp, start = 31.dp, end = 31.dp)
                     .fillMaxWidth()
                     .height(48.dp),
-                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF7DAFCB)),
+                colors = ButtonDefaults.buttonColors(containerColor = primaryColor),
                 enabled = !isLoading
             ) {
                 if (isLoading) {
@@ -381,18 +399,18 @@ fun LoginScreen(
                 HorizontalDivider(
                     modifier = Modifier.weight(1f),
                     thickness = 1.dp,
-                    color = Color(0xFFEEEEEE)
+                    color = dividerColor
                 )
                 Text(
                     text = "ATAU",
-                    color = Color(0xFF999999),
+                    color = if (isDarkMode) DarkTextGrey else Color(0xFF999999),
                     fontSize = 12.sp,
                     modifier = Modifier.padding(horizontal = 16.dp)
                 )
                 HorizontalDivider(
                     modifier = Modifier.weight(1f),
                     thickness = 1.dp,
-                    color = Color(0xFFEEEEEE)
+                    color = dividerColor
                 )
             }
 
@@ -425,13 +443,13 @@ fun LoginScreen(
                 ) {
                     Text(
                         "Tidak Memiliki akun? ",
-                        color = Color(0xFF333333),
+                        color = textColor,
                         fontSize = 12.sp,
                         fontWeight = FontWeight.Bold
                     )
                     Text(
                         "Daftar",
-                        color = Color(0xFF7DAFCB),
+                        color = primaryColor,
                         fontSize = 12.sp,
                         fontWeight = FontWeight.Bold,
                         textDecoration = TextDecoration.Underline,
