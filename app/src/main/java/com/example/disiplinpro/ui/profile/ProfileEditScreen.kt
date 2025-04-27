@@ -230,8 +230,8 @@ fun ProfileEditScreen(
                     // Email Field
                     OutlinedTextField(
                         value = uiState.email,
-                        onValueChange = { profileViewModel.setEmail(it) },
-                        label = { Text("Email", color = if (isDarkMode) DarkTextLight else Color.Gray) },
+                        onValueChange = { /* Email tidak bisa diubah */ },
+                        label = { Text("Email (tidak dapat diubah)", color = if (isDarkMode) DarkTextLight else Color.Gray) },
                         leadingIcon = {
                             Icon(
                                 imageVector = Icons.Default.Email,
@@ -248,7 +248,8 @@ fun ProfileEditScreen(
                             focusedTextColor = textColor,
                             unfocusedTextColor = textColor
                         ),
-                        enabled = !uiState.isLoading
+                        enabled = false,
+                        readOnly = true
                     )
 
                     Spacer(modifier = Modifier.height(16.dp))

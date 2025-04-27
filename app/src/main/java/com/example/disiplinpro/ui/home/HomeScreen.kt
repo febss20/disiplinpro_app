@@ -58,25 +58,23 @@ fun HomeScreen(
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = navBackStackEntry?.destination?.route
 
-    // Cek dark mode
     val themePreferences = ThemePreferences(context)
     val isDarkMode by themePreferences.isDarkMode.collectAsState(initial = false)
 
     LaunchedEffect(Unit) {
-        taskViewModel.fetchTasks()
+        taskViewModel.getTodayTasks()
+
+        val today = Calendar.getInstance().get(Calendar.DAY_OF_WEEK)
+        val days = listOf("Minggu", "Senin", "Selasa", "Rabu", "Kamis", "Jumat", "Sabtu")
+        val todayDay = days[today - 1]
+
+        scheduleViewModel.getSchedulesByDay(todayDay)
+
         taskViewModel.provideAppContext(context)
     }
 
-    // Filter jadwal dan tugas untuk hari ini
-    val today = Calendar.getInstance().get(Calendar.DAY_OF_WEEK)
-    val days = listOf("Minggu", "Senin", "Selasa", "Rabu", "Kamis", "Jumat", "Sabtu")
-    val todayDay = days[today - 1]
-    val todaySchedules = schedules.filter { it.hari == todayDay }
-    val todayTasks = tasks.filter {
-        val taskDate = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(it.tanggal.toDate())
-        val currentDate = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(Date())
-        taskDate == currentDate
-    }
+    val todaySchedules = schedules
+    val todayTasks = tasks
 
     val currentDate = remember { SimpleDateFormat("EEEE, d MMMM yyyy", Locale("id", "ID")).format(Date()) }
 

@@ -127,7 +127,6 @@ fun SecurityPrivacyScreen(
                 iconTint = accentBlueColor,
                 checked = showBiometricLogin,
                 onCheckedChange = {
-                    // Sidik jari belum diimplementasikan
                     Toast.makeText(context, "Fitur sidik jari tidak tersedia saat ini", Toast.LENGTH_SHORT).show()
                 },
                 enabled = false,
@@ -140,7 +139,10 @@ fun SecurityPrivacyScreen(
                 icon = Icons.Default.Shield,
                 iconTint = accentBlueColor,
                 checked = enableTwoFactorAuth,
-                onCheckedChange = { viewModel.updateTwoFactorAuth(it) },
+                onCheckedChange = {
+                    Toast.makeText(context, "Fitur sidik jari tidak tersedia saat ini", Toast.LENGTH_SHORT).show()
+                },
+                enabled = false,
                 isDarkTheme = isDarkMode
             )
 
@@ -151,12 +153,9 @@ fun SecurityPrivacyScreen(
                     .padding(vertical = 8.dp)
                     .clickable {
                         if (saveLoginInfo) {
-                            // Jika sudah aktif, tampilkan dialog kredensial
                             showCredentialsDialog = true
                         } else {
-                            // Jika belum aktif, aktifkan dulu
                             viewModel.updateSaveLoginInfo(true)
-                            // Kemudian tampilkan dialog kredensial
                             showCredentialsDialog = true
                         }
                     },

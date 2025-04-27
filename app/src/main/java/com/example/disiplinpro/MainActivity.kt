@@ -57,6 +57,8 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import com.example.disiplinpro.ui.theme.DisiplinproTheme
 import com.example.disiplinpro.viewmodel.theme.ThemeViewModel
+import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.FirebaseFirestoreSettings
 
 class MainActivity : ComponentActivity() {
     private val requestPermissionLauncher = registerForActivityResult(
@@ -81,6 +83,9 @@ class MainActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        setupFirestoreOfflineCache()
+
         requestNotificationPermission()
         requestBatteryOptimizationExemption()
         requestExactAlarmPermission()
@@ -287,6 +292,28 @@ class MainActivity : ComponentActivity() {
                 intent.data = Uri.parse("package:$packageName")
                 startActivity(intent)
             }
+        }
+    }
+
+    private fun setupFirestoreOfflineCache() {
+        val settings = FirebaseFirestoreSettings.Builder()
+            .setPersistenceEnabled(true)
+            .setCacheSizeBytes(FirebaseFirestoreSettings.CACHE_SIZE_UNLIMITED)
+            .build()
+
+        FirebaseFirestore.getInstance().firestoreSettings = settings
+
+        if (FirebaseAuth.getInstance().currentUser != null) {
+            val userId = FirebaseAuth.getInstance().currentUser!!.uid
+            val db = FirebaseFirestore.getInstance()
+
+            db.collection("users").document(userId).collection("tasks")
+                .limit(20)
+                .get()
+
+            db.collection("users").document(userId).collection("schedules")
+                .limit(20)
+                .get()
         }
     }
 }

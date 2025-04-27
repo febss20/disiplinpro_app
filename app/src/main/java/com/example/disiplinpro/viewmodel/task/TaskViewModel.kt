@@ -1,5 +1,6 @@
 package com.example.disiplinpro.viewmodel.task
 
+import android.content.ContentValues.TAG
 import android.content.Context
 import android.util.Log
 import androidx.lifecycle.ViewModel
@@ -22,6 +23,7 @@ class TaskViewModel : ViewModel() {
     private val notificationViewModel = NotificationViewModel()
 
     private val pendingReschedules = mutableMapOf<String, Task>()
+    private val _isLoading = MutableStateFlow(false)
 
     init {
         listenToTasks()
@@ -120,6 +122,32 @@ class TaskViewModel : ViewModel() {
                 pendingReschedules.remove(taskId)
                 Log.d("TaskViewModel", "Task deleted and notifications cancelled: $taskId")
             }
+        }
+    }
+
+    suspend fun getTodayTasks() {
+        _isLoading.value = true
+        try {
+            val todayTaskList = repository.getTodayTasks()
+            _tasks.value = todayTaskList
+            Log.d(TAG, "Fetched ${todayTaskList.size} tasks for today")
+        } catch (e: Exception) {
+            Log.e(TAG, "Error fetching today's tasks: ${e.message}")
+        } finally {
+            _isLoading.value = false
+        }
+    }
+
+    suspend fun getRecentTasks(limit: Int = 5) {
+        _isLoading.value = true
+        try {
+            val recentTaskList = repository.getRecentTasks(limit)
+            _tasks.value = recentTaskList
+            Log.d(TAG, "Fetched ${recentTaskList.size} recent tasks")
+        } catch (e: Exception) {
+            Log.e(TAG, "Error fetching recent tasks: ${e.message}")
+        } finally {
+            _isLoading.value = false
         }
     }
 }
