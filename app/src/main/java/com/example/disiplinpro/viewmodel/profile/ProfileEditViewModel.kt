@@ -2,7 +2,6 @@ package com.example.disiplinpro.viewmodel.profile
 
 import android.app.Application
 import android.net.Uri
-import android.util.Patterns
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.disiplinpro.data.model.User
@@ -130,11 +129,6 @@ class ProfileEditViewModel(application: Application) : AndroidViewModel(applicat
             isValid = false
         }
 
-        else if (_uiState.value.email.isBlank() || !Patterns.EMAIL_ADDRESS.matcher(_uiState.value.email).matches()) {
-            errorMessage = "Email tidak valid"
-            isValid = false
-        }
-
         else if (_uiState.value.newPassword.isNotEmpty()) {
             if (_uiState.value.currentPassword.isEmpty()) {
                 errorMessage = "Password saat ini diperlukan untuk mengubah password"
@@ -186,20 +180,12 @@ class ProfileEditViewModel(application: Application) : AndroidViewModel(applicat
                 }
 
                 if (currentUser.email != _uiState.value.email) {
-                    if (_uiState.value.currentPassword.isNotEmpty()) {
-                        val credential = EmailAuthProvider.getCredential(currentUser.email!!, _uiState.value.currentPassword)
-                        currentUser.reauthenticate(credential).await()
-                        currentUser.updateEmail(_uiState.value.email).await()
-                    } else {
-                        throw Exception("Password saat ini diperlukan untuk mengubah email")
-                    }
+                    throw Exception("Perubahan email tidak diizinkan pada aplikasi ini. Silakan gunakan email yang sama.")
                 }
 
                 if (_uiState.value.newPassword.isNotEmpty() && _uiState.value.currentPassword.isNotEmpty()) {
-                    if (currentUser.email != _uiState.value.email) {
-                        val credential = EmailAuthProvider.getCredential(currentUser.email!!, _uiState.value.currentPassword)
-                        currentUser.reauthenticate(credential).await()
-                    }
+                    val credential = EmailAuthProvider.getCredential(currentUser.email!!, _uiState.value.currentPassword)
+                    currentUser.reauthenticate(credential).await()
                     currentUser.updatePassword(_uiState.value.newPassword).await()
                 }
 

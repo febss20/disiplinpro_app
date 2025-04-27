@@ -342,7 +342,7 @@ private fun NotificationSectionCard(
                     onCheckedChange = onToggleChange,
                     colors = SwitchDefaults.colors(
                         checkedThumbColor = if (isDarkMode) Color.White else Color.White,
-                        checkedTrackColor = if (isDarkMode) DarkPrimaryBlue else iconTint,
+                        checkedTrackColor = iconTint,
                         uncheckedThumbColor = if (isDarkMode) DarkTextLight.copy(alpha = 0.5f) else Color.LightGray,
                         uncheckedTrackColor = if (isDarkMode) DarkCardBackground.copy(alpha = 0.5f) else Color(0xFFDDDDDD)
                     )
@@ -379,12 +379,12 @@ private fun NotificationSectionCard(
                             Text(
                                 text = timeBefore,
                                 fontSize = 16.sp,
-                                color = if (isDarkMode) DarkPrimaryBlue else iconTint
+                                color = iconTint
                             )
                             Icon(
                                 imageVector = Icons.Default.ArrowDropDown,
                                 contentDescription = "Pilih Waktu",
-                                tint = if (isDarkMode) DarkPrimaryBlue else iconTint,
+                                tint = iconTint,
                                 modifier = Modifier.size(24.dp)
                             )
                         }

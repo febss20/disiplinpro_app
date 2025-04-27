@@ -6,12 +6,15 @@ import com.example.disiplinpro.data.model.Schedule
 import com.example.disiplinpro.data.model.User
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.Query
+import com.google.firebase.firestore.QuerySnapshot
 import kotlinx.coroutines.tasks.await
 
 private const val TAG = "FirestoreRepository"
 private const val USERS_COLLECTION = "users"
 private const val TASKS_COLLECTION = "tasks"
 private const val SCHEDULES_COLLECTION = "schedules"
+private const val PAGE_SIZE = 10
 
 class FirestoreRepository {
     private val db = FirebaseFirestore.getInstance()
@@ -236,6 +239,76 @@ class FirestoreRepository {
         } catch (e: Exception) {
             Log.e(TAG, "Error deleting schedule: ${e.message}")
             false
+        }
+    }
+
+    suspend fun getRecentTasks(limit: Int = 5): List<Task> {
+        return if (userId != null) {
+            try {
+                getTasksCollectionRef()
+                    .orderBy("tanggal", Query.Direction.DESCENDING)
+                    .limit(limit.toLong())
+                    .get()
+                    .await()
+                    .documents
+                    .mapNotNull { it.toObject(Task::class.java) }
+            } catch (e: Exception) {
+                Log.e(TAG, "Error fetching recent tasks: ${e.message}")
+                emptyList()
+            }
+        } else {
+            Log.w(TAG, "Cannot fetch recent tasks: User not logged in")
+            emptyList()
+        }
+    }
+
+    suspend fun getTodayTasks(): List<Task> {
+        return if (userId != null) {
+            try {
+                val calendar = java.util.Calendar.getInstance()
+                calendar.set(java.util.Calendar.HOUR_OF_DAY, 0)
+                calendar.set(java.util.Calendar.MINUTE, 0)
+                calendar.set(java.util.Calendar.SECOND, 0)
+                val startOfDay = com.google.firebase.Timestamp(calendar.time)
+
+                calendar.set(java.util.Calendar.HOUR_OF_DAY, 23)
+                calendar.set(java.util.Calendar.MINUTE, 59)
+                calendar.set(java.util.Calendar.SECOND, 59)
+                val endOfDay = com.google.firebase.Timestamp(calendar.time)
+
+                getTasksCollectionRef()
+                    .whereGreaterThanOrEqualTo("tanggal", startOfDay)
+                    .whereLessThanOrEqualTo("tanggal", endOfDay)
+                    .get()
+                    .await()
+                    .documents
+                    .mapNotNull { it.toObject(Task::class.java) }
+            } catch (e: Exception) {
+                Log.e(TAG, "Error fetching today's tasks: ${e.message}")
+                emptyList()
+            }
+        } else {
+            Log.w(TAG, "Cannot fetch today's tasks: User not logged in")
+            emptyList()
+        }
+    }
+
+    suspend fun getSchedulesByDay(day: String): List<Schedule> {
+        return if (userId != null) {
+            try {
+                getSchedulesCollectionRef()
+                    .whereEqualTo("hari", day)
+                    .get()
+                    .await()
+                    .documents
+                    .mapNotNull { it.toObject(Schedule::class.java) }
+            } catch (e: Exception) {
+                Log.e(TAG, "Error fetching schedules for day $day: ${e.message}")
+                emptyList()
+            }
+        } else {
+            Log.w(TAG, "Cannot fetch schedules: User not logged in")
+            emptyList()
         }
     }
 }

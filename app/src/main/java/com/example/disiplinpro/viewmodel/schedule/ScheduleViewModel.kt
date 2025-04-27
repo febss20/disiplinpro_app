@@ -18,6 +18,7 @@ class ScheduleViewModel : ViewModel() {
     private val _schedules = MutableStateFlow<List<Schedule>>(emptyList())
     val schedules: StateFlow<List<Schedule>> = _schedules
     private val notificationViewModel = NotificationViewModel()
+    private val _isLoading = MutableStateFlow(false)
 
     init {
         listenToSchedules()
@@ -62,6 +63,19 @@ class ScheduleViewModel : ViewModel() {
                 Log.d("ScheduleViewModel", "Schedule deleted: $scheduleId")
                 WorkManager.getInstance().cancelUniqueWork("${NotificationWorker.WORK_NAME_PREFIX}$scheduleId")
             }
+        }
+    }
+
+    suspend fun getSchedulesByDay(day: String) {
+        _isLoading.value = true
+        try {
+            val daySchedules = repository.getSchedulesByDay(day)
+            _schedules.value = daySchedules
+            Log.d("ScheduleViewModel", "Fetched ${daySchedules.size} schedules for day: $day")
+        } catch (e: Exception) {
+            Log.e("ScheduleViewModel", "Error fetching schedules for day $day: ${e.message}")
+        } finally {
+            _isLoading.value = false
         }
     }
 }
