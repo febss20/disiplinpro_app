@@ -6,11 +6,11 @@ plugins {
 }
 
 android {
-    namespace = "com.example.disiplinpro"
+    namespace = "com.dsp.disiplinpro"
     compileSdk = 35
 
     defaultConfig {
-        applicationId = "com.example.disiplinpro"
+        applicationId = "com.dsp.disiplinpro"
         minSdk = 24
         targetSdk = 35
         versionCode = 1
