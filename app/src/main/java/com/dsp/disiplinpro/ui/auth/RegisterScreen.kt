@@ -4,10 +4,13 @@ import android.util.Log
 import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
@@ -18,6 +21,7 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLifecycleOwner
@@ -28,6 +32,7 @@ import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.painterResource
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.repeatOnLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -388,47 +393,6 @@ fun RegisterScreen(
                 }
             }
 
-            // OR Divider
-            Row(
-                modifier = Modifier
-                    .padding(horizontal = 31.dp, vertical = 16.dp)
-                    .fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                HorizontalDivider(
-                    modifier = Modifier.weight(1f),
-                    thickness = 1.dp,
-                    color = dividerColor
-                )
-                Text(
-                    text = "ATAU",
-                    color = if (isDarkMode) DarkTextGrey else Color(0xFF999999),
-                    fontSize = 12.sp,
-                    modifier = Modifier.padding(horizontal = 16.dp)
-                )
-                HorizontalDivider(
-                    modifier = Modifier.weight(1f),
-                    thickness = 1.dp,
-                    color = dividerColor
-                )
-            }
-
-            GoogleSignInButton(
-                onClick = {
-                    val signInIntent = googleSignInClient.signInIntent
-
-                    signInIntent.putExtra("prompt", "select_account")
-                    signInIntent.putExtra("account_chooser_enabled", true)
-                    signInIntent.putExtra("always_show_account_picker", true)
-
-                    googleSignInLauncher.launch(signInIntent)
-                },
-                modifier = Modifier
-                    .padding(horizontal = 30.dp)
-                    .fillMaxWidth(),
-                enabled = !isLoading
-            )
-
             // Login Link
             Column(
                 horizontalAlignment = Alignment.End,
@@ -455,6 +419,60 @@ fun RegisterScreen(
                         modifier = Modifier.clickable {
                             navController.navigate("login")
                         }
+                    )
+                }
+            }
+
+            // OR Divider
+            Row(
+                modifier = Modifier
+                    .padding(horizontal = 31.dp, vertical = 16.dp)
+                    .fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                HorizontalDivider(
+                    modifier = Modifier.weight(1f),
+                    thickness = 1.dp,
+                    color = dividerColor
+                )
+                Text(
+                    text = "ATAU",
+                    color = if (isDarkMode) DarkTextGrey else Color(0xFF999999),
+                    fontSize = 12.sp,
+                    modifier = Modifier.padding(horizontal = 16.dp)
+                )
+                HorizontalDivider(
+                    modifier = Modifier.weight(1f),
+                    thickness = 1.dp,
+                    color = dividerColor
+                )
+            }
+
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = 8.dp, bottom = 16.dp),
+                contentAlignment = Alignment.Center
+            ) {
+                Box(
+                    modifier = Modifier
+                        .size(60.dp)
+                        .clip(CircleShape)
+                        .border(1.dp, Color(0xFFDDDDDD), CircleShape)
+                        .background(Color.White)
+                        .clickable(enabled = !isLoading) {
+                            val signInIntent = googleSignInClient.signInIntent
+                            signInIntent.putExtra("prompt", "select_account")
+                            signInIntent.putExtra("account_chooser_enabled", true)
+                            signInIntent.putExtra("always_show_account_picker", true)
+                            googleSignInLauncher.launch(signInIntent)
+                        },
+                    contentAlignment = Alignment.Center
+                ) {
+                    Image(
+                        painter = painterResource(id = R.drawable.ic_google),
+                        contentDescription = "Google Sign In",
+                        modifier = Modifier.size(30.dp)
                     )
                 }
             }

@@ -15,10 +15,10 @@
       </SelectionState>
       <SelectionState runConfigName="disiplinpro.app">
         <option name="selectionMode" value="DROPDOWN" />
-        <DropdownSelection timestamp="2025-04-28T11:11:53.722610300Z">
+        <DropdownSelection timestamp="2025-04-28T23:17:55.786603200Z">
           <Target type="DEFAULT_BOOT">
             <handle>
-              <DeviceId pluginId="PhysicalDevice" identifier="serial=RRCX4022VXH" />
+              <DeviceId pluginId="LocalEmulator" identifier="path=C:\Users\asus\.android\avd\Pixel_8_Pro.avd" />
             </handle>
           </Target>
         </DropdownSelection>

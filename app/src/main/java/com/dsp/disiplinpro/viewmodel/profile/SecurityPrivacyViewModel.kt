@@ -25,6 +25,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.asStateFlow
 import com.dsp.disiplinpro.data.security.TwoFactorAuthManager
+import com.dsp.disiplinpro.data.security.BiometricPromptManager
 
 class SecurityPrivacyViewModel(application: Application) : AndroidViewModel(application) {
 
@@ -33,8 +34,13 @@ class SecurityPrivacyViewModel(application: Application) : AndroidViewModel(appl
     private val preferences = SecurityPrivacyPreferences(application.applicationContext)
     private val credentialManager = CredentialManager(application.applicationContext)
     private val twoFactorManager = TwoFactorAuthManager(application.applicationContext)
+    private val biometricManager = BiometricPromptManager(application.applicationContext)
 
     val biometricLoginEnabled: StateFlow<Boolean> = preferences.biometricLoginFlow
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), false)
+
+    private val _biometricAvailable = MutableStateFlow(false)
+    val biometricAvailable: StateFlow<Boolean> = _biometricAvailable
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), false)
 
     private val _twoFactorEnabled = MutableStateFlow(false)
@@ -65,6 +71,12 @@ class SecurityPrivacyViewModel(application: Application) : AndroidViewModel(appl
     init {
         loadSavedCredentials()
         refreshTwoFactorStatus()
+        checkBiometricAvailability()
+    }
+
+    private fun checkBiometricAvailability() {
+        _biometricAvailable.value = biometricManager.canAuthenticate()
+        Log.d("SecurityPrivacyViewModel", "Biometric available: ${_biometricAvailable.value}")
     }
 
     /**
@@ -134,13 +146,62 @@ class SecurityPrivacyViewModel(application: Application) : AndroidViewModel(appl
 
     fun updateBiometricLogin(enabled: Boolean) {
         viewModelScope.launch {
+            if (enabled && !_hasCredentials.value) {
+                Toast.makeText(
+                    getApplication(),
+                    "Anda harus menyimpan kredensial terlebih dahulu untuk mengaktifkan login sidik jari",
+                    Toast.LENGTH_LONG
+                ).show()
+                return@launch
+            }
+
             preferences.updateBiometricLogin(enabled)
+
+            if (enabled) {
+                Toast.makeText(
+                    getApplication(),
+                    "Login sidik jari berhasil diaktifkan",
+                    Toast.LENGTH_SHORT
+                ).show()
+            } else {
+                Toast.makeText(
+                    getApplication(),
+                    "Login sidik jari dinonaktifkan",
+                    Toast.LENGTH_SHORT
+                ).show()
+            }
         }
     }
 
+    /**
+     * Memperbarui dan menyinkronkan status 2FA antara
+     * TwoFactorAuthManager (implementasi teknis) dan SecurityPrivacyPreferences (preferensi pengguna)
+     * untuk memastikan konsistensi.
+     */
+    fun refreshTwoFactorStatus() {
+        viewModelScope.launch {
+            val is2FAEnabled = twoFactorManager.is2FAEnabled()
+
+            _twoFactorEnabled.value = is2FAEnabled
+
+            val currentPreference = preferences.twoFactorAuthFlow.first()
+            if (currentPreference != is2FAEnabled) {
+                Log.d("SecurityPrivacyViewModel", "Menyinkronkan status 2FA: dari $currentPreference ke $is2FAEnabled")
+                preferences.updateTwoFactorAuth(is2FAEnabled)
+            }
+
+            Log.d("SecurityPrivacyViewModel", "2FA status refreshed: $is2FAEnabled")
+        }
+    }
+
+    /**
+     * Update status 2FA berdasarkan permintaan pengguna.
+     * Ini harus digunakan saat pengguna mengubah status 2FA melalui UI.
+     */
     fun updateTwoFactorAuth(enabled: Boolean) {
         viewModelScope.launch {
             preferences.updateTwoFactorAuth(enabled)
+
             _twoFactorEnabled.value = enabled
 
             if (enabled) {
@@ -206,18 +267,9 @@ class SecurityPrivacyViewModel(application: Application) : AndroidViewModel(appl
             error.value = null
 
             try {
-                val cacheDir = getApplication<Application>().cacheDir
-                if (deleteDir(cacheDir)) {
-                    Log.d("SecurityPrivacyViewModel", "Cache cleared successfully")
-                } else {
-                    Log.w("SecurityPrivacyViewModel", "Failed to clear some cache files")
-                }
+                val context = getApplication<Application>().applicationContext
 
-                FirebaseFirestore.getInstance().clearPersistence()
-
-                viewModelScope.launch {
-                    preferences.clearCacheAndHistory()
-                }
+                preferences.clearCacheAndHistory(context)
 
                 operationSuccess.value = true
                 Toast.makeText(
@@ -346,15 +398,6 @@ class SecurityPrivacyViewModel(application: Application) : AndroidViewModel(appl
             } finally {
                 isLoading.value = false
             }
-        }
-    }
-
-    fun refreshTwoFactorStatus() {
-        viewModelScope.launch {
-            val is2FAEnabled = twoFactorManager.is2FAEnabled()
-            _twoFactorEnabled.value = is2FAEnabled
-            preferences.updateTwoFactorAuth(is2FAEnabled)
-            Log.d("SecurityPrivacyViewModel", "2FA status refreshed: $is2FAEnabled")
         }
     }
 }

@@ -60,7 +60,7 @@ fun ForgotPasswordScreen(
             Row(
                 verticalAlignment = Alignment.CenterVertically,
                 modifier = Modifier
-                    .padding(top = 65.dp, bottom = 25.dp, start = 30.dp)
+                    .padding(top = 40.dp, bottom = 25.dp, start = 30.dp)
             ) {
                 Text(
                     "Lupa Password",
@@ -97,7 +97,7 @@ fun ForgotPasswordScreen(
                     modifier = Modifier.padding(top = 7.dp)
                 ) {
                     CoilImage(
-                        imageModel = { "https://storage.googleapis.com/tagjs-prod.appspot.com/v1/T7pdvlFwTn/s1dpsztl.png" },
+                        imageModel = { "https://storage.googleapis.com/tagjs-prod.appspot.com/v1/T7pdvlFwTn/kz2ez595_expires_30_days.png" },
                         imageOptions = ImageOptions(contentScale = ContentScale.Crop),
                         modifier = Modifier
                             .width(20.dp)
@@ -178,7 +178,7 @@ fun ForgotPasswordScreen(
                     }
                 },
                 modifier = Modifier
-                    .padding(top = 50.dp, start = 32.dp, end = 32.dp)
+                    .padding(top = 50.dp, start = 31.dp, end = 31.dp)
                     .fillMaxWidth()
                     .height(48.dp)
                     .clip(RoundedCornerShape(50.dp)),
@@ -195,7 +195,7 @@ fun ForgotPasswordScreen(
                     Text(
                         "Reset Password",
                         color = Color(0xFFFFFFFF),
-                        fontSize = 20.sp,
+                        fontSize = 16.sp,
                         fontWeight = FontWeight.Bold,
                     )
                 }

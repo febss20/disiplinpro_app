@@ -1,6 +1,5 @@
 package com.dsp.disiplinpro.ui.components
 
-import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
@@ -27,17 +26,6 @@ fun BottomNavigationBar(
     currentRoute: String?,
     modifier: Modifier = Modifier
 ) {
-    if (currentRoute != null && currentRoute != "home") {
-        BackHandler {
-            navController.navigate("home") {
-                popUpTo("home") {
-                    inclusive = false
-                }
-            }
-        }
-    }
-
-    // Cek apakah dark mode aktif
     val context = LocalContext.current
     val themePreferences = ThemePreferences(context)
     val isDarkMode by themePreferences.isDarkMode.collectAsState(initial = false)
@@ -52,10 +40,6 @@ fun BottomNavigationBar(
         shadowElevation = 8.dp,
         color = if (isDarkMode) DarkCardBackground else Color(0xFFFFF8E1)
     ) {
-        NavigationBar(
-            modifier = Modifier.fillMaxSize(),
-            containerColor = Color.Transparent
-        ) {
             Row (
                 verticalAlignment = Alignment.CenterVertically,
                 modifier = Modifier
@@ -76,11 +60,8 @@ fun BottomNavigationBar(
                     onClick = {
                         if (currentRoute != "home") {
                             navController.navigate("home") {
-                                popUpTo(navController.graph.startDestinationId) {
-                                    saveState = true
-                                }
+                                popUpTo("home") { inclusive = false }
                                 launchSingleTop = true
-                                restoreState = true
                             }
                         }
                     },
@@ -106,11 +87,8 @@ fun BottomNavigationBar(
                     onClick = {
                         if (currentRoute != "kalender") {
                             navController.navigate("kalender") {
-                                popUpTo(navController.graph.startDestinationId) {
-                                    saveState = true
-                                }
+                                popUpTo("home") { inclusive = false }
                                 launchSingleTop = true
-                                restoreState = true
                             }
                         }
                     },
@@ -136,11 +114,8 @@ fun BottomNavigationBar(
                     onClick = {
                         if (currentRoute != "notifikasi") {
                             navController.navigate("notifikasi") {
-                                popUpTo(navController.graph.startDestinationId) {
-                                    saveState = true
-                                }
+                                popUpTo("home") { inclusive = false }
                                 launchSingleTop = true
-                                restoreState = true
                             }
                         }
                     },
@@ -166,11 +141,8 @@ fun BottomNavigationBar(
                     onClick = {
                         if (currentRoute != "akun") {
                             navController.navigate("akun") {
-                                popUpTo(navController.graph.startDestinationId) {
-                                    saveState = true
-                                }
+                                popUpTo("home") { inclusive = false }
                                 launchSingleTop = true
-                                restoreState = true
                             }
                         }
                     },
@@ -182,6 +154,5 @@ fun BottomNavigationBar(
                     )
                 )
             }
-        }
     }
 }
