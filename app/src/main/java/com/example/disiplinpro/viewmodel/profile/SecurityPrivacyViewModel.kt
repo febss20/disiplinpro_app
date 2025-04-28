@@ -24,6 +24,7 @@ import com.example.disiplinpro.data.preferences.CredentialManager
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.asStateFlow
+import com.example.disiplinpro.data.security.TwoFactorAuthManager
 
 class SecurityPrivacyViewModel(application: Application) : AndroidViewModel(application) {
 
@@ -31,11 +32,13 @@ class SecurityPrivacyViewModel(application: Application) : AndroidViewModel(appl
     private val firestore = FirebaseFirestore.getInstance()
     private val preferences = SecurityPrivacyPreferences(application.applicationContext)
     private val credentialManager = CredentialManager(application.applicationContext)
+    private val twoFactorManager = TwoFactorAuthManager(application.applicationContext)
 
     val biometricLoginEnabled: StateFlow<Boolean> = preferences.biometricLoginFlow
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), false)
 
-    val twoFactorAuthEnabled: StateFlow<Boolean> = preferences.twoFactorAuthFlow
+    private val _twoFactorEnabled = MutableStateFlow(false)
+    val twoFactorAuthEnabled: StateFlow<Boolean> = _twoFactorEnabled
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), false)
 
     val saveLoginInfoFlow: StateFlow<Boolean> = preferences.saveLoginInfoFlow
@@ -61,6 +64,7 @@ class SecurityPrivacyViewModel(application: Application) : AndroidViewModel(appl
 
     init {
         loadSavedCredentials()
+        refreshTwoFactorStatus()
     }
 
     /**
@@ -137,12 +141,8 @@ class SecurityPrivacyViewModel(application: Application) : AndroidViewModel(appl
     fun updateTwoFactorAuth(enabled: Boolean) {
         viewModelScope.launch {
             preferences.updateTwoFactorAuth(enabled)
+            _twoFactorEnabled.value = enabled
 
-            // In a real app, you would enable/disable two-factor authentication in Firebase
-            // This would typically involve setting up Firebase Phone Authentication
-            // or integrating with a service like Google Authenticator
-
-            // For demonstration purposes, we'll just show a toast if the feature is enabled
             if (enabled) {
                 Toast.makeText(
                     getApplication(),
@@ -346,6 +346,15 @@ class SecurityPrivacyViewModel(application: Application) : AndroidViewModel(appl
             } finally {
                 isLoading.value = false
             }
+        }
+    }
+
+    fun refreshTwoFactorStatus() {
+        viewModelScope.launch {
+            val is2FAEnabled = twoFactorManager.is2FAEnabled()
+            _twoFactorEnabled.value = is2FAEnabled
+            preferences.updateTwoFactorAuth(is2FAEnabled)
+            Log.d("SecurityPrivacyViewModel", "2FA status refreshed: $is2FAEnabled")
         }
     }
 }
