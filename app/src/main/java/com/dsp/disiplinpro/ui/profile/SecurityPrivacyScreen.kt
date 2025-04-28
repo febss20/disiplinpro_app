@@ -43,6 +43,7 @@ fun SecurityPrivacyScreen(
     }
 
     val showBiometricLogin by viewModel.biometricLoginEnabled.collectAsState()
+    val biometricAvailable by viewModel.biometricAvailable.collectAsState()
     val enableTwoFactorAuth by viewModel.twoFactorAuthEnabled.collectAsState()
     val saveLoginInfo by viewModel.saveLoginInfoFlow.collectAsState()
     val shareActivityData by viewModel.shareActivityDataEnabled.collectAsState()
@@ -129,14 +130,15 @@ fun SecurityPrivacyScreen(
 
             SecuritySettingItem(
                 title = "Login dengan Sidik Jari",
-                description = "Gunakan sidik jari untuk masuk ke aplikasi",
+                description = if (biometricAvailable)
+                    "Gunakan sidik jari untuk masuk ke aplikasi"
+                else
+                    "Perangkat Anda tidak mendukung fitur sidik jari atau belum ada sidik jari terdaftar",
                 icon = Icons.Default.Fingerprint,
                 iconTint = accentBlueColor,
                 checked = showBiometricLogin,
-                onCheckedChange = {
-                    Toast.makeText(context, "Fitur sidik jari tidak tersedia saat ini", Toast.LENGTH_SHORT).show()
-                },
-                enabled = false,
+                onCheckedChange = { viewModel.updateBiometricLogin(it) },
+                enabled = biometricAvailable && hasCredentials,
                 isDarkTheme = isDarkMode
             )
 
@@ -148,10 +150,8 @@ fun SecurityPrivacyScreen(
                 checked = enableTwoFactorAuth,
                 onCheckedChange = {
                     if (it) {
-                        // Arahkan ke halaman setup 2FA
                         navController.navigate("two_factor_setup")
                     } else {
-                        // Tampilkan dialog konfirmasi nonaktif 2FA
                         showDisable2FADialog = true
                     }
                 },
@@ -159,7 +159,6 @@ fun SecurityPrivacyScreen(
                 isDarkTheme = isDarkMode
             )
 
-            // Save Login Info (dengan dialog kredensial)
             Card(
                 modifier = Modifier
                     .fillMaxWidth()

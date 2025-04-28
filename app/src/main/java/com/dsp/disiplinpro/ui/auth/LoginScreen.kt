@@ -6,6 +6,7 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -26,11 +27,14 @@ import com.skydoves.landscapist.ImageOptions
 import com.skydoves.landscapist.coil.CoilImage
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Fingerprint
 import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalLifecycleOwner
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.lifecycle.Lifecycle
@@ -69,7 +73,12 @@ fun LoginScreen(
     val primaryColor = if (isDarkMode) DarkPrimaryBlue else Color(0xFF7DAFCB)
     val dividerColor = if (isDarkMode) Color(0xFF444444) else Color(0xFFEEEEEE)
 
+    val biometricAvailable by authViewModel.biometricAvailable.collectAsState(initial = false)
+    val biometricLoginEnabled by securityPrivacyViewModel.biometricLoginEnabled.collectAsState()
+    val biometricEnabled = biometricAvailable && biometricLoginEnabled && hasCredentials
+
     LaunchedEffect(Unit) {
+        authViewModel.initialize(context)
         securityPrivacyViewModel.loadSavedCredentials()
     }
 
@@ -397,47 +406,6 @@ fun LoginScreen(
                 }
             }
 
-            // OR Divider
-            Row(
-                modifier = Modifier
-                    .padding(horizontal = 31.dp, vertical = 16.dp)
-                    .fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                HorizontalDivider(
-                    modifier = Modifier.weight(1f),
-                    thickness = 1.dp,
-                    color = dividerColor
-                )
-                Text(
-                    text = "ATAU",
-                    color = if (isDarkMode) DarkTextGrey else Color(0xFF999999),
-                    fontSize = 12.sp,
-                    modifier = Modifier.padding(horizontal = 16.dp)
-                )
-                HorizontalDivider(
-                    modifier = Modifier.weight(1f),
-                    thickness = 1.dp,
-                    color = dividerColor
-                )
-            }
-
-            GoogleSignInButton(
-                onClick = {
-                    val signInIntent = googleSignInClient.signInIntent
-
-                    signInIntent.putExtra("prompt", "select_account")
-                    signInIntent.putExtra("account_chooser_enabled", true)
-                    signInIntent.putExtra("always_show_account_picker", true)
-
-                    googleSignInLauncher.launch(signInIntent)
-                },
-                text = "Masuk dengan Google",
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 30.dp)
-            )
-
             // Register Link
             Column(
                 horizontalAlignment = Alignment.End,
@@ -465,6 +433,92 @@ fun LoginScreen(
                             navController.navigate("register")
                         }
                     )
+                }
+            }
+
+            // OR Divider
+            Row(
+                modifier = Modifier
+                    .padding(horizontal = 31.dp, vertical = 16.dp)
+                    .fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                HorizontalDivider(
+                    modifier = Modifier.weight(1f),
+                    thickness = 1.dp,
+                    color = dividerColor
+                )
+                Text(
+                    text = "ATAU",
+                    color = if (isDarkMode) DarkTextGrey else Color(0xFF999999),
+                    fontSize = 12.sp,
+                    modifier = Modifier.padding(horizontal = 16.dp)
+                )
+                HorizontalDivider(
+                    modifier = Modifier.weight(1f),
+                    thickness = 1.dp,
+                    color = dividerColor
+                )
+            }
+
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 31.dp, vertical = 8.dp),
+                horizontalArrangement = Arrangement.Center,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Box(
+                    modifier = Modifier
+                        .size(60.dp)
+                        .clip(CircleShape)
+                        .border(1.dp, Color(0xFFDDDDDD), CircleShape)
+                        .background(Color.White)
+                        .clickable {
+                            val signInIntent = googleSignInClient.signInIntent
+                            signInIntent.putExtra("prompt", "select_account")
+                            signInIntent.putExtra("account_chooser_enabled", true)
+                            signInIntent.putExtra("always_show_account_picker", true)
+                            googleSignInLauncher.launch(signInIntent)
+                        },
+                    contentAlignment = Alignment.Center
+                ) {
+                    Image(
+                        painter = painterResource(id = R.drawable.ic_google),
+                        contentDescription = "Google Sign In",
+                        modifier = Modifier.size(30.dp)
+                    )
+                }
+
+                Spacer(modifier = Modifier.width(24.dp))
+
+                // Biometric Login Button
+                if (biometricEnabled) {
+                    Box(
+                        modifier = Modifier
+                            .size(60.dp)
+                            .clip(CircleShape)
+                            .border(1.dp, primaryColor, CircleShape)
+                            .background(if (isDarkMode) Color(0xFF2C2C2C) else Color.White)
+                            .clickable {
+                                authViewModel.authenticateWithBiometric(
+                                    activity = context as androidx.fragment.app.FragmentActivity,
+                                    onSuccess = {
+                                    },
+                                    onError = { errorMessage ->
+                                        Toast.makeText(context, errorMessage, Toast.LENGTH_SHORT).show()
+                                    }
+                                )
+                            },
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Fingerprint,
+                            contentDescription = "Fingerprint login",
+                            tint = primaryColor,
+                            modifier = Modifier.size(36.dp)
+                        )
+                    }
                 }
             }
         }

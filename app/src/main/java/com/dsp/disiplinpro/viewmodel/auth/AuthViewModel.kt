@@ -4,6 +4,7 @@ import android.content.Context
 import android.util.Log
 import androidx.activity.result.ActivityResult
 import androidx.compose.runtime.mutableStateOf
+import androidx.fragment.app.FragmentActivity
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.dsp.disiplinpro.data.model.User
@@ -22,6 +23,9 @@ import kotlinx.coroutines.launch
 import com.dsp.disiplinpro.util.ValidationUtils
 import com.dsp.disiplinpro.util.SecureErrorHandler
 import com.dsp.disiplinpro.data.security.TwoFactorAuthManager
+import com.dsp.disiplinpro.data.security.AppSecurityPolicy
+import com.dsp.disiplinpro.data.security.BiometricPromptManager
+import com.dsp.disiplinpro.data.preferences.CredentialManager
 
 private const val TAG = "AuthViewModel"
 
@@ -50,6 +54,12 @@ class AuthViewModel : ViewModel() {
     val userEmail: StateFlow<String> = _userEmail.asStateFlow()
 
     private var twoFactorManager: TwoFactorAuthManager? = null
+    private var securityPolicy: AppSecurityPolicy? = null
+    private var biometricManager: BiometricPromptManager? = null
+    private var credentialManager: CredentialManager? = null
+
+    private val _biometricAvailable = MutableStateFlow(false)
+    val biometricAvailable: StateFlow<Boolean> = _biometricAvailable.asStateFlow()
 
     init {
         auth.currentUser?.let {
@@ -60,7 +70,14 @@ class AuthViewModel : ViewModel() {
     fun initialize(context: Context) {
         securityPreferences = SecurityPrivacyPreferences(context)
         twoFactorManager = TwoFactorAuthManager(context)
+        securityPolicy = AppSecurityPolicy(context)
+        securityPolicy?.initialize()
+        biometricManager = BiometricPromptManager(context)
+        credentialManager = CredentialManager(context)
+
+        _biometricAvailable.value = biometricManager?.canAuthenticate() == true
         loadSavedLoginInfo(context)
+        checkBiometricSettings(context)
     }
 
     private fun loadSavedLoginInfo(context: Context) {
@@ -127,6 +144,12 @@ class AuthViewModel : ViewModel() {
     }
 
     fun loginUser(context: Context, email: String, password: String, onResult: (Boolean, Boolean) -> Unit) {
+        if (securityPolicy?.isAccountLocked() == true) {
+            _authState.value = AuthState.Error("Terlalu banyak percobaan gagal. Coba lagi nanti.")
+            onResult(false, false)
+            return
+        }
+
         val emailValidation = ValidationUtils.validateEmail(email)
         if (!emailValidation.first) {
             _authState.value = AuthState.Error(emailValidation.second ?: "Email tidak valid")
@@ -147,6 +170,8 @@ class AuthViewModel : ViewModel() {
                 isLoading.value = false
                 if (task.isSuccessful) {
                     Log.d(TAG, "Login sukses")
+                    Log.d(TAG, "Sesi aktif selama 7 hari")
+                    securityPolicy?.resetLoginAttempts()
                     saveClearLoginInfo(context, email)
                     _userEmail.value = email
 
@@ -163,10 +188,17 @@ class AuthViewModel : ViewModel() {
 
                     onResult(true, requires2FA)
                 } else {
-                    val errorMsg = SecureErrorHandler.handleException(
-                        task.exception ?: Exception("Login failed"),
-                        TAG
-                    )
+                    val isLocked = securityPolicy?.recordFailedLoginAttempt() ?: false
+
+                    val errorMsg = if (isLocked) {
+                        "Terlalu banyak percobaan gagal. Akun dikunci sementara."
+                    } else {
+                        SecureErrorHandler.handleException(
+                            task.exception ?: Exception("Login failed"),
+                            TAG
+                        )
+                    }
+
                     Log.e(TAG, "Login gagal: $errorMsg")
                     _authState.value = AuthState.Error(errorMsg)
                     onResult(false, false)
@@ -321,6 +353,96 @@ class AuthViewModel : ViewModel() {
                 onResult(false)
             } finally {
                 isLoading.value = false
+            }
+        }
+    }
+
+    private fun checkBiometricSettings(context: Context) {
+        viewModelScope.launch {
+            try {
+                val prefs = SecurityPrivacyPreferences(context)
+                val isBiometricEnabled = prefs.biometricLoginFlow.first()
+                val hasCredentials = credentialManager?.hasCredentials() ?: false
+
+                Log.d(TAG, "Biometric login enabled: $isBiometricEnabled, Has credentials: $hasCredentials")
+            } catch (e: Exception) {
+                Log.e(TAG, "Error checking biometric settings: ${e.message}")
+            }
+        }
+    }
+
+    fun authenticateWithBiometric(
+        activity: FragmentActivity,
+        onSuccess: () -> Unit,
+        onError: (String) -> Unit
+    ) {
+        val context = activity.applicationContext
+        val bioManager = biometricManager ?: BiometricPromptManager(context)
+        val credManager = credentialManager ?: CredentialManager(context)
+
+        viewModelScope.launch {
+            val prefs = SecurityPrivacyPreferences(context)
+            val isBiometricEnabled = prefs.biometricLoginFlow.first()
+
+            if (!isBiometricEnabled) {
+                onError("Login sidik jari tidak diaktifkan")
+                return@launch
+            }
+
+            if (!credManager.hasCredentials()) {
+                onError("Tidak ada kredensial tersimpan")
+                return@launch
+            }
+
+            bioManager.authenticate(
+                activity = activity,
+                title = "Login dengan Sidik Jari",
+                subtitle = "Verifikasi identitas Anda",
+                description = "Gunakan sidik jari yang terdaftar untuk masuk ke akun",
+                negativeButtonText = "Batal",
+                onSuccess = {
+                    loginWithSavedCredentials(context) { success, requires2FA ->
+                        if (success) {
+                            if (!requires2FA) {
+                                onSuccess()
+                            }
+                        } else {
+                            onError("Login gagal, silakan coba dengan email dan password")
+                        }
+                    }
+                },
+                onError = { _, message ->
+                    onError("Error: $message")
+                },
+                onFailed = {
+                    onError("Autentikasi gagal, silakan coba lagi atau gunakan email dan password")
+                }
+            )
+        }
+    }
+
+    private fun loginWithSavedCredentials(context: Context, onResult: (Boolean, Boolean) -> Unit) {
+        viewModelScope.launch {
+            try {
+                val credManager = credentialManager ?: CredentialManager(context)
+                if (!credManager.hasCredentials()) {
+                    onResult(false, false)
+                    return@launch
+                }
+
+                val email = credManager.getSavedEmail() ?: ""
+                val password = credManager.getSavedPassword() ?: ""
+
+                if (email.isEmpty() || password.isEmpty()) {
+                    onResult(false, false)
+                    return@launch
+                }
+
+                Log.d(TAG, "Login menggunakan kredensial tersimpan")
+                loginUser(context, email, password, onResult)
+            } catch (e: Exception) {
+                Log.e(TAG, "Error selama login dengan kredensial tersimpan: ${e.message}")
+                onResult(false, false)
             }
         }
     }
