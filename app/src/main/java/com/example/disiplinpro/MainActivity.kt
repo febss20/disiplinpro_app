@@ -55,10 +55,14 @@ import androidx.work.OneTimeWorkRequestBuilder
 import com.example.disiplinpro.worker.NotificationHealthCheckWorker
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.disiplinpro.ui.theme.DisiplinproTheme
 import com.example.disiplinpro.viewmodel.theme.ThemeViewModel
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.FirebaseFirestoreSettings
+import com.example.disiplinpro.ui.auth.TwoFactorSetupScreen
+import com.example.disiplinpro.ui.auth.TwoFactorVerificationScreen
+import com.example.disiplinpro.viewmodel.auth.TwoFactorAuthViewModel
 
 class MainActivity : ComponentActivity() {
     private val requestPermissionLauncher = registerForActivityResult(
@@ -146,6 +150,14 @@ class MainActivity : ComponentActivity() {
                     composable("email_verification/{email}") { backStackEntry ->
                         val email = backStackEntry.arguments?.getString("email") ?: ""
                         EmailVerificationScreen(navController, email, authViewModel)
+                    }
+                    composable("two_factor_setup") {
+                        TwoFactorSetupScreen(navController)
+                    }
+                    composable("two_factor_verification/{email}") { backStackEntry ->
+                        val email = backStackEntry.arguments?.getString("email") ?: ""
+                        val twoFactorViewModel = viewModel<TwoFactorAuthViewModel>()
+                        TwoFactorVerificationScreen(navController, authViewModel, email, twoFactorViewModel)
                     }
                     composable("add_jadwal") { AddScheduleScreen(navController) }
                     composable("edit_jadwal/{scheduleId}") { backStackEntry ->
