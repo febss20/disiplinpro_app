@@ -11,7 +11,6 @@ import android.os.PowerManager
 import android.provider.Settings
 import android.util.Log
 import android.widget.Toast
-import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.runtime.LaunchedEffect
@@ -55,16 +54,17 @@ import androidx.work.OneTimeWorkRequestBuilder
 import com.dsp.disiplinpro.worker.NotificationHealthCheckWorker
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.fragment.app.FragmentActivity
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.dsp.disiplinpro.ui.theme.DisiplinproTheme
 import com.dsp.disiplinpro.viewmodel.theme.ThemeViewModel
-import com.google.firebase.firestore.FirebaseFirestore
-import com.google.firebase.firestore.FirebaseFirestoreSettings
 import com.dsp.disiplinpro.ui.auth.TwoFactorSetupScreen
 import com.dsp.disiplinpro.ui.auth.TwoFactorVerificationScreen
 import com.dsp.disiplinpro.viewmodel.auth.TwoFactorAuthViewModel
+import com.dsp.disiplinpro.data.security.AppSecurityPolicy
+import com.google.firebase.firestore.BuildConfig
 
-class MainActivity : ComponentActivity() {
+class MainActivity : FragmentActivity() {
     private val requestPermissionLauncher = registerForActivityResult(
         ActivityResultContracts.RequestPermission()
     ) { isGranted ->
@@ -84,11 +84,12 @@ class MainActivity : ComponentActivity() {
     private var notificationType: String? = null
     private var notificationId: String? = null
     private val themeViewModel = ThemeViewModel()
+    private lateinit var securityPolicy: AppSecurityPolicy
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        setupFirestoreOfflineCache()
+        initializeSecurityPolicy()
 
         requestNotificationPermission()
         requestBatteryOptimizationExemption()
@@ -100,6 +101,8 @@ class MainActivity : ComponentActivity() {
         CoroutineScope(Dispatchers.IO).launch {
             checkAndRestoreScheduledNotifications()
         }
+
+        demonstrateSecureHttpClient()
     }
 
     override fun onNewIntent(intent: Intent) {
@@ -307,25 +310,59 @@ class MainActivity : ComponentActivity() {
         }
     }
 
-    private fun setupFirestoreOfflineCache() {
-        val settings = FirebaseFirestoreSettings.Builder()
-            .setPersistenceEnabled(true)
-            .setCacheSizeBytes(FirebaseFirestoreSettings.CACHE_SIZE_UNLIMITED)
-            .build()
+    private fun initializeSecurityPolicy() {
+        securityPolicy = AppSecurityPolicy(this)
+        securityPolicy.initialize()
 
-        FirebaseFirestore.getInstance().firestoreSettings = settings
+        checkDeviceSecurity()
+    }
 
-        if (FirebaseAuth.getInstance().currentUser != null) {
-            val userId = FirebaseAuth.getInstance().currentUser!!.uid
-            val db = FirebaseFirestore.getInstance()
+    private fun checkDeviceSecurity() {
+        if (securityPolicy.isDeviceRooted()) {
+            Log.w("MainActivity", "Perangkat terdeteksi dalam kondisi root!")
+        }
 
-            db.collection("users").document(userId).collection("tasks")
-                .limit(20)
-                .get()
+        if (securityPolicy.isRunningOnEmulator() && !BuildConfig.DEBUG) {
+            Log.w("MainActivity", "Aplikasi berjalan di emulator dalam mode rilis!")
+        }
 
-            db.collection("users").document(userId).collection("schedules")
-                .limit(20)
-                .get()
+        if (securityPolicy.isBeingDebugged() && !BuildConfig.DEBUG) {
+            Log.w("MainActivity", "Aplikasi sedang di-debug dalam mode rilis!")
+        }
+    }
+
+    override fun onResume() {
+        super.onResume()
+
+        if (FirebaseAuth.getInstance().currentUser != null && !securityPolicy.isSessionValid()) {
+            Log.d("MainActivity", "Sesi telah kedaluwarsa (durasi sesi: 7 hari), mengarahkan ke login")
+            Toast.makeText(
+                this,
+                "Sesi login Anda telah berakhir. Silakan login kembali.",
+                Toast.LENGTH_LONG
+            ).show()
+            FirebaseAuth.getInstance().signOut()
+            val intent = Intent(this, MainActivity::class.java)
+            intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+            startActivity(intent)
+            return
+        }
+
+        securityPolicy.extendSession()
+    }
+
+    override fun onUserInteraction() {
+        super.onUserInteraction()
+        securityPolicy.extendSession()
+    }
+
+    private fun demonstrateSecureHttpClient() {
+        try {
+            val client = DisiplinProApplication.secureHttpClient
+            Log.d("MainActivity", "Secure HTTP Client ready: ${client != null}")
+
+        } catch (e: Exception) {
+            Log.e("MainActivity", "Error accessing secure HTTP client: ${e.message}")
         }
     }
 }

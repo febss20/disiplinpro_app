@@ -15,7 +15,7 @@
       </SelectionState>
       <SelectionState runConfigName="disiplinpro.app">
         <option name="selectionMode" value="DROPDOWN" />
-        <DropdownSelection timestamp="2025-04-27T11:04:29.595326100Z">
+        <DropdownSelection timestamp="2025-04-28T11:11:53.722610300Z">
           <Target type="DEFAULT_BOOT">
             <handle>
               <DeviceId pluginId="PhysicalDevice" identifier="serial=RRCX4022VXH" />

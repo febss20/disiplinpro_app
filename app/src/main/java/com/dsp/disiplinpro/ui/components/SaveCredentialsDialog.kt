@@ -10,6 +10,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
@@ -17,6 +18,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
+import com.dsp.disiplinpro.data.preferences.ThemePreferences
 
 /**
  * Dialog untuk mengelola dan menyimpan kredensial login (email dan password)
@@ -30,6 +32,14 @@ fun SaveCredentialsDialog(
     onSave: (email: String, password: String) -> Unit,
     onDelete: () -> Unit
 ) {
+    val context = LocalContext.current
+
+    val themePreferences = ThemePreferences(context)
+    val isDarkMode by themePreferences.isDarkMode.collectAsState(initial = false)
+
+    val cardBackgroundColor = if (isDarkMode) Color(0xFF2C2C2C) else Color(0x332196F3)
+    val primaryTextColor = if (isDarkMode) Color.White else Color(0xFF333333)
+
     if (!show) return
 
     var email by remember { mutableStateOf(savedEmail) }
@@ -48,7 +58,7 @@ fun SaveCredentialsDialog(
                 .fillMaxWidth()
                 .padding(16.dp),
             shape = RoundedCornerShape(16.dp),
-            colors = CardDefaults.cardColors(containerColor = Color.White)
+            colors = CardDefaults.cardColors(cardBackgroundColor)
         ) {
             Column(
                 modifier = Modifier
@@ -60,7 +70,7 @@ fun SaveCredentialsDialog(
                     text = "Kelola Informasi Login",
                     fontSize = 18.sp,
                     fontWeight = FontWeight.Bold,
-                    color = Color(0xFF333333),
+                    color = primaryTextColor,
                     modifier = Modifier.padding(bottom = 16.dp)
                 )
 
@@ -107,7 +117,6 @@ fun SaveCredentialsDialog(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    // Delete button
                     OutlinedButton(
                         onClick = {
                             onDelete()
@@ -121,7 +130,6 @@ fun SaveCredentialsDialog(
                         Text("Hapus")
                     }
 
-                    // Save button
                     Button(
                         onClick = {
                             if (email.isNotEmpty() && password.isNotEmpty()) {
@@ -138,7 +146,6 @@ fun SaveCredentialsDialog(
                     }
                 }
 
-                // Cancel button
                 TextButton(
                     onClick = onDismiss,
                     modifier = Modifier.fillMaxWidth()

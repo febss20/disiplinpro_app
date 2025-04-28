@@ -13,8 +13,8 @@ android {
         applicationId = "com.dsp.disiplinpro"
         minSdk = 24
         targetSdk = 35
-        versionCode = 1
-        versionName = "1.0"
+        versionCode = 2
+        versionName = "1.1"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
@@ -87,6 +87,8 @@ dependencies {
     implementation("com.amazonaws:aws-android-sdk-cognito:2.20.0")
     implementation("com.amazonaws:aws-android-sdk-cognitoidentityprovider:2.20.0")
     implementation("commons-codec:commons-codec:1.15")
+    implementation("androidx.security:security-crypto:1.1.0-alpha06")
+    implementation("com.squareup.okhttp3:okhttp:4.12.0")
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
