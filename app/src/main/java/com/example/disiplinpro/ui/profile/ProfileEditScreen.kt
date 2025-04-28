@@ -271,7 +271,7 @@ fun ProfileEditScreen(
                                 Icon(
                                     imageVector = if (uiState.showCurrentPassword) Icons.Default.VisibilityOff else Icons.Default.Visibility,
                                     contentDescription = if (uiState.showCurrentPassword) "Hide Password" else "Show Password",
-                                    tint = primaryBlueColor
+                                    tint = if (isDarkMode) DarkTextGrey else Color(0xFF757575)
                                 )
                             }
                         },
@@ -307,7 +307,7 @@ fun ProfileEditScreen(
                                 Icon(
                                     imageVector = if (uiState.showNewPassword) Icons.Default.VisibilityOff else Icons.Default.Visibility,
                                     contentDescription = if (uiState.showNewPassword) "Hide Password" else "Show Password",
-                                    tint = primaryBlueColor
+                                    tint = if (isDarkMode) DarkTextGrey else Color(0xFF757575)
                                 )
                             }
                         },

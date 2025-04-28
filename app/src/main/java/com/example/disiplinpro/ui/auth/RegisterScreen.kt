@@ -189,7 +189,7 @@ fun RegisterScreen(
                     modifier = Modifier.padding(top = 7.dp, start = 1.dp)
                 ) {
                     CoilImage(
-                        imageModel = { "https://storage.googleapis.com/tagjs-prod.appspot.com/v1/T7pdvlFwTn/b9zfh4hg.png" },
+                        imageModel = { "https://storage.googleapis.com/tagjs-prod.appspot.com/v1/T7pdvlFwTn/a637tpg7_expires_30_days.png" },
                         imageOptions = ImageOptions(contentScale = ContentScale.Crop),
                         modifier = Modifier
                             .width(20.dp)
@@ -233,7 +233,7 @@ fun RegisterScreen(
                     modifier = Modifier.padding(top = 7.dp, start = 1.dp)
                 ) {
                     CoilImage(
-                        imageModel = { "https://storage.googleapis.com/tagjs-prod.appspot.com/v1/T7pdvlFwTn/85i547zq.png" },
+                        imageModel = { "https://storage.googleapis.com/tagjs-prod.appspot.com/v1/T7pdvlFwTn/kz2ez595_expires_30_days.png" },
                         imageOptions = ImageOptions(contentScale = ContentScale.Crop),
                         modifier = Modifier
                             .width(20.dp)
@@ -277,7 +277,7 @@ fun RegisterScreen(
                     modifier = Modifier.padding(top = 7.dp, start = 1.dp)
                 ) {
                     CoilImage(
-                        imageModel = { "https://storage.googleapis.com/tagjs-prod.appspot.com/v1/T7pdvlFwTn/qtynllng.png" },
+                        imageModel = { "https://storage.googleapis.com/tagjs-prod.appspot.com/v1/T7pdvlFwTn/kx84zlxo_expires_30_days.png" },
                         imageOptions = ImageOptions(contentScale = ContentScale.Crop),
                         modifier = Modifier
                             .width(20.dp)

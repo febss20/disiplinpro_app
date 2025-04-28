@@ -19,6 +19,9 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
+import com.example.disiplinpro.util.ValidationUtils
+import com.example.disiplinpro.util.SecureErrorHandler
+import com.example.disiplinpro.data.security.TwoFactorAuthManager
 
 private const val TAG = "AuthViewModel"
 
@@ -32,13 +35,21 @@ class AuthViewModel : ViewModel() {
     private val _savedEmail = MutableStateFlow<String>("")
     val savedEmail: StateFlow<String> = _savedEmail.asStateFlow()
 
-    private val _authState = MutableStateFlow<AuthState>(AuthState.Initial)
+    val _authState = MutableStateFlow<AuthState>(AuthState.Initial)
     val authState: StateFlow<AuthState> = _authState.asStateFlow()
 
     private val _currentUser = MutableStateFlow<User?>(null)
     val currentUser: StateFlow<User?> = _currentUser.asStateFlow()
 
     val isLoading = mutableStateOf(false)
+
+    private val _requires2FA = MutableStateFlow(false)
+    val requires2FA: StateFlow<Boolean> = _requires2FA.asStateFlow()
+
+    private val _userEmail = MutableStateFlow("")
+    val userEmail: StateFlow<String> = _userEmail.asStateFlow()
+
+    private var twoFactorManager: TwoFactorAuthManager? = null
 
     init {
         auth.currentUser?.let {
@@ -48,6 +59,7 @@ class AuthViewModel : ViewModel() {
 
     fun initialize(context: Context) {
         securityPreferences = SecurityPrivacyPreferences(context)
+        twoFactorManager = TwoFactorAuthManager(context)
         loadSavedLoginInfo(context)
     }
 
@@ -114,7 +126,21 @@ class AuthViewModel : ViewModel() {
         }
     }
 
-    fun loginUser(context: Context, email: String, password: String, onResult: (Boolean) -> Unit) {
+    fun loginUser(context: Context, email: String, password: String, onResult: (Boolean, Boolean) -> Unit) {
+        val emailValidation = ValidationUtils.validateEmail(email)
+        if (!emailValidation.first) {
+            _authState.value = AuthState.Error(emailValidation.second ?: "Email tidak valid")
+            onResult(false, false)
+            return
+        }
+
+        val passwordValidation = ValidationUtils.validatePassword(password)
+        if (!passwordValidation.first) {
+            _authState.value = AuthState.Error(passwordValidation.second ?: "Password tidak valid")
+            onResult(false, false)
+            return
+        }
+
         isLoading.value = true
         auth.signInWithEmailAndPassword(email, password)
             .addOnCompleteListener { task ->
@@ -122,22 +148,60 @@ class AuthViewModel : ViewModel() {
                 if (task.isSuccessful) {
                     Log.d(TAG, "Login sukses")
                     saveClearLoginInfo(context, email)
-                    refreshCurrentUser()
-                    _authState.value = AuthState.Authenticated
-                    onResult(true)
+                    _userEmail.value = email
+
+                    val twoFAManager = twoFactorManager ?: TwoFactorAuthManager(context)
+                    val requires2FA = twoFAManager.is2FAEnabled()
+                    _requires2FA.value = requires2FA
+
+                    if (!requires2FA) {
+                        refreshCurrentUser()
+                        _authState.value = AuthState.Authenticated
+                    } else {
+                        _authState.value = AuthState.RequiresTwoFactor
+                    }
+
+                    onResult(true, requires2FA)
                 } else {
-                    Log.e(TAG, "Login gagal: ${task.exception?.message}")
-                    _authState.value = AuthState.Error(task.exception?.message ?: "Unknown error")
-                    onResult(false)
+                    val errorMsg = SecureErrorHandler.handleException(
+                        task.exception ?: Exception("Login failed"),
+                        TAG
+                    )
+                    Log.e(TAG, "Login gagal: $errorMsg")
+                    _authState.value = AuthState.Error(errorMsg)
+                    onResult(false, false)
                 }
             }
     }
 
     fun registerUser(username: String, email: String, password: String, onResult: (Boolean) -> Unit) {
+        val usernameValidation = ValidationUtils.validateUsername(username)
+        if (!usernameValidation.first) {
+            _authState.value = AuthState.Error(usernameValidation.second ?: "Username tidak valid")
+            onResult(false)
+            return
+        }
+
+        val emailValidation = ValidationUtils.validateEmail(email)
+        if (!emailValidation.first) {
+            _authState.value = AuthState.Error(emailValidation.second ?: "Email tidak valid")
+            onResult(false)
+            return
+        }
+
+        val passwordValidation = ValidationUtils.validatePassword(password)
+        if (!passwordValidation.first) {
+            _authState.value = AuthState.Error(passwordValidation.second ?: "Password tidak valid")
+            onResult(false)
+            return
+        }
+
+        val sanitizedUsername = ValidationUtils.sanitizeInput(username)
+
         viewModelScope.launch {
             isLoading.value = true
             try {
-                val success = authRepository.registerUser(username, email, password)
+                val success = authRepository.registerUser(sanitizedUsername, email, password)
                 if (success) {
                     Log.d(TAG, "Registrasi sukses untuk $email")
                     refreshCurrentUser()
@@ -145,12 +209,13 @@ class AuthViewModel : ViewModel() {
                     onResult(true)
                 } else {
                     Log.e(TAG, "Registrasi gagal")
-                    _authState.value = AuthState.Error("Registration failed")
+                    _authState.value = AuthState.Error("Registrasi gagal")
                     onResult(false)
                 }
             } catch (e: Exception) {
-                Log.e(TAG, "Registrasi error: ${e.message}")
-                _authState.value = AuthState.Error(e.message ?: "Unknown error")
+                val errorMsg = SecureErrorHandler.handleException(e, TAG)
+                Log.e(TAG, "Registrasi error: $errorMsg")
+                _authState.value = AuthState.Error(errorMsg)
                 onResult(false)
             } finally {
                 isLoading.value = false
@@ -265,5 +330,6 @@ sealed class AuthState {
     object Initial : AuthState()
     object Authenticated : AuthState()
     object Unauthenticated : AuthState()
+    object RequiresTwoFactor : AuthState()
     data class Error(val message: String) : AuthState()
 }

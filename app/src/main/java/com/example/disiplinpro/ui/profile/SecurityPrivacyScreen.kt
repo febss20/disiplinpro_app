@@ -24,6 +24,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
+import com.example.disiplinpro.data.security.TwoFactorAuthManager
 import com.example.disiplinpro.ui.components.SaveCredentialsDialog
 import com.example.disiplinpro.viewmodel.profile.SecurityPrivacyViewModel
 import com.example.disiplinpro.viewmodel.theme.ThemeViewModel
@@ -36,6 +37,11 @@ fun SecurityPrivacyScreen(
     themeViewModel: ThemeViewModel
 ) {
     val context = LocalContext.current
+
+    LaunchedEffect(Unit) {
+        viewModel.refreshTwoFactorStatus()
+    }
+
     val showBiometricLogin by viewModel.biometricLoginEnabled.collectAsState()
     val enableTwoFactorAuth by viewModel.twoFactorAuthEnabled.collectAsState()
     val saveLoginInfo by viewModel.saveLoginInfoFlow.collectAsState()
@@ -48,6 +54,7 @@ fun SecurityPrivacyScreen(
     var showDeleteAccountDialog by remember { mutableStateOf(false) }
     var showCredentialsDialog by remember { mutableStateOf(false) }
     var deleteAccountPassword by remember { mutableStateOf("") }
+    var showDisable2FADialog by remember { mutableStateOf(false) }
 
     val isLoading by viewModel.isLoading
     val error by viewModel.error
@@ -140,9 +147,15 @@ fun SecurityPrivacyScreen(
                 iconTint = accentBlueColor,
                 checked = enableTwoFactorAuth,
                 onCheckedChange = {
-                    Toast.makeText(context, "Fitur sidik jari tidak tersedia saat ini", Toast.LENGTH_SHORT).show()
+                    if (it) {
+                        // Arahkan ke halaman setup 2FA
+                        navController.navigate("two_factor_setup")
+                    } else {
+                        // Tampilkan dialog konfirmasi nonaktif 2FA
+                        showDisable2FADialog = true
+                    }
                 },
-                enabled = false,
+                enabled = true,
                 isDarkTheme = isDarkMode
             )
 
@@ -390,6 +403,38 @@ fun SecurityPrivacyScreen(
             },
             onDelete = {
                 viewModel.deleteCredentials()
+            }
+        )
+    }
+
+    if (showDisable2FADialog) {
+        AlertDialog(
+            onDismissRequest = { showDisable2FADialog = false },
+            title = { Text("Nonaktifkan 2FA?") },
+            text = { Text("Menonaktifkan autentikasi dua faktor akan mengurangi keamanan akun Anda.") },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        val twoFactorManager = TwoFactorAuthManager(context)
+                        twoFactorManager.disable2FA { success ->
+                            if (success) {
+                                viewModel.updateTwoFactorAuth(false)
+                                Toast.makeText(context, "Autentikasi dua faktor dinonaktifkan", Toast.LENGTH_SHORT).show()
+                            } else {
+                                Toast.makeText(context, "Gagal menonaktifkan autentikasi dua faktor", Toast.LENGTH_SHORT).show()
+                            }
+                            showDisable2FADialog = false
+                        }
+                    },
+                    colors = ButtonDefaults.buttonColors(containerColor = accentRedColor)
+                ) {
+                    Text("Nonaktifkan")
+                }
+            },
+            dismissButton = {
+                OutlinedButton(onClick = { showDisable2FADialog = false }) {
+                    Text("Batal")
+                }
             }
         )
     }

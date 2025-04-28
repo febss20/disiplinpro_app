@@ -73,7 +73,6 @@ fun LoginScreen(
         securityPrivacyViewModel.loadSavedCredentials()
     }
 
-    // Isi otomatis email yang tersimpan
     LaunchedEffect(hasCredentials, savedCredentials) {
         if (hasCredentials) {
             if (email.isEmpty() && savedCredentials.first.isNotEmpty()) {
@@ -129,6 +128,11 @@ fun LoginScreen(
                     is AuthState.Authenticated -> {
                         navController.navigate("home") {
                             popUpTo("login") { inclusive = true }
+                        }
+                    }
+                    is AuthState.RequiresTwoFactor -> {
+                        val userEmail = authViewModel.userEmail.value
+                        navController.navigate("two_factor_verification/$userEmail") {
                         }
                     }
                     is AuthState.Error -> {
@@ -205,7 +209,7 @@ fun LoginScreen(
                     modifier = Modifier.padding(top = 7.dp, start = 1.dp)
                 ) {
                     CoilImage(
-                        imageModel = { "https://storage.googleapis.com/tagjs-prod.appspot.com/v1/T7pdvlFwTn/fvx7ynkw.png" },
+                        imageModel = { "https://storage.googleapis.com/tagjs-prod.appspot.com/v1/T7pdvlFwTn/kz2ez595_expires_30_days.png" },
                         imageOptions = ImageOptions(contentScale = ContentScale.Crop),
                         modifier = Modifier
                             .width(20.dp)
@@ -249,7 +253,7 @@ fun LoginScreen(
                     modifier = Modifier.padding(top = 6.dp, start = 1.dp)
                 ) {
                     CoilImage(
-                        imageModel = { "https://storage.googleapis.com/tagjs-prod.appspot.com/v1/T7pdvlFwTn/0635yr0i.png" },
+                        imageModel = { "https://storage.googleapis.com/tagjs-prod.appspot.com/v1/T7pdvlFwTn/kx84zlxo_expires_30_days.png" },
                         imageOptions = ImageOptions(contentScale = ContentScale.Crop),
                         modifier = Modifier
                             .width(20.dp)
@@ -359,11 +363,15 @@ fun LoginScreen(
                     }
 
                     Log.d("LoginScreen", "Attempting login with email: $email")
-                    authViewModel.loginUser(context, email, password) { success ->
-                        Log.d("LoginScreen", "Login result: $success")
-                        loginFailed = !success
-                        if (!success) {
-                            passwordError = true
+                    authViewModel.loginUser(context, email, password) { success, needs2FA ->
+                        Log.d("LoginScreen", "Login result: $success, needs 2FA: $needs2FA")
+                        if (success && needs2FA) {
+                            loginFailed = false
+                        } else {
+                            loginFailed = !success
+                            if (!success) {
+                                passwordError = true
+                            }
                         }
                     }
                 },
