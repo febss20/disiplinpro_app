@@ -2,5 +2,26 @@
 <project version="4">
   <component name="AppInsightsSettings">
     <option name="selectedTabId" value="Firebase Crashlytics" />
+    <option name="tabSettings">
+      <map>
+        <entry key="Firebase Crashlytics">
+          <value>
+            <InsightsFilterSettings>
+              <option name="connection">
+                <ConnectionSetting>
+                  <option name="appId" value="com.dsp.disiplinpro" />
+                  <option name="mobileSdkAppId" value="1:758839730145:android:ecf46b2b3fba4b001a3ca0" />
+                  <option name="projectId" value="disiplinpro-1c2ea" />
+                  <option name="projectNumber" value="758839730145" />
+                </ConnectionSetting>
+              </option>
+              <option name="signal" value="SIGNAL_UNSPECIFIED" />
+              <option name="timeIntervalDays" value="ONE_DAY" />
+              <option name="visibilityType" value="ALL" />
+            </InsightsFilterSettings>
+          </value>
+        </entry>
+      </map>
+    </option>
   </component>
 </project>
