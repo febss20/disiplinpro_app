@@ -21,6 +21,7 @@ import com.dsp.disiplinpro.data.preferences.ThemePreferences
 import com.dsp.disiplinpro.ui.components.AdvancedCalendarView
 import com.dsp.disiplinpro.ui.components.BottomNavigationBar
 import com.dsp.disiplinpro.ui.components.ScheduleDescription
+import com.dsp.disiplinpro.ui.components.StandardHeader
 import com.dsp.disiplinpro.ui.theme.DarkBackground
 import com.dsp.disiplinpro.ui.theme.DarkPrimaryBlue
 import com.dsp.disiplinpro.ui.theme.DarkTextLight
@@ -75,16 +76,7 @@ fun CalendarScreen(
             .fillMaxSize()
             .background(if (isDarkMode) DarkBackground else Color(0xFFFAF3E0))
     ) {
-        Text(
-            "Kalender",
-            color = if (isDarkMode) DarkPrimaryBlue else Color(0xFF7DAFCB),
-            fontSize = 24.sp,
-            fontWeight = FontWeight.Bold,
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(top = 40.dp),
-            textAlign = TextAlign.Center
-        )
+        StandardHeader(title = "Kalender")
 
         Column(
             modifier = Modifier

@@ -2,9 +2,6 @@ package com.dsp.disiplinpro.data.model
 
 import java.util.Date
 
-/**
- * Model data untuk notifikasi
- */
 data class Notification(
     val id: String,
     val title: String,
@@ -16,18 +13,12 @@ data class Notification(
     val isRead: Boolean = false
 )
 
-/**
- * Jenis notifikasi yang didukung aplikasi
- */
 enum class NotificationType {
     TASK,
     SCHEDULE,
     SYSTEM
 }
 
-/**
- * Status tambahan untuk notifikasi
- */
 enum class NotificationStatus {
     UPCOMING,
     ACTIVE,

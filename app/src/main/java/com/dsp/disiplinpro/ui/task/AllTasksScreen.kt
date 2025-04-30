@@ -174,12 +174,12 @@ fun AllTasksScreen(
                             imageVector = Icons.Outlined.Assignment,
                             contentDescription = "Empty Tasks",
                             modifier = Modifier.size(120.dp),
-                            tint = accentColor
+                            tint = Color(0xFFF39C12)
                         )
                         Spacer(modifier = Modifier.height(16.dp))
                         Text(
                             text = "Belum ada tugas",
-                            color = accentColor,
+                            color = Color(0xFFF39C12),
                             fontSize = 20.sp,
                             fontWeight = FontWeight.Bold
                         )

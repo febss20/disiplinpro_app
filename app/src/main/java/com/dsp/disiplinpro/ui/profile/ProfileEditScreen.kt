@@ -101,19 +101,15 @@ fun ProfileEditScreen(
         }
     }
 
-    Scaffold(
-        snackbarHost = { SnackbarHost(hostState = snackbarHostState) }
-    ) { paddingValues ->
         Box(
             modifier = Modifier
                 .fillMaxSize()
                 .background(backgroundColor)
-                .padding(paddingValues)
         ) {
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(top = 16.dp, start = 16.dp, end = 16.dp),
+                    .padding(top = 50.dp, start = 16.dp, end = 16.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 IconButton(onClick = { navController.popBackStack() }) {
@@ -136,7 +132,7 @@ fun ProfileEditScreen(
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(horizontal = 24.dp)
-                    .padding(top = 80.dp, bottom = 24.dp)
+                    .padding(top = 120.dp, bottom = 24.dp)
                     .verticalScroll(scrollState),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
@@ -348,5 +344,5 @@ fun ProfileEditScreen(
                 }
             }
         }
-    }
+
 }

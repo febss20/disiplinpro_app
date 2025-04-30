@@ -67,7 +67,7 @@ fun FAQScreen(
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(top = 16.dp, start = 16.dp, end = 16.dp),
+                .padding(top = 50.dp, start = 16.dp, end = 16.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
             IconButton(onClick = { navController.popBackStack() }) {
@@ -99,7 +99,7 @@ fun FAQScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(horizontal = 24.dp)
-                .padding(top = 80.dp, bottom = 24.dp)
+                .padding(top = 120.dp, bottom = 24.dp)
         ) {
             OutlinedTextField(
                 value = searchQuery,

@@ -63,6 +63,12 @@ import com.dsp.disiplinpro.ui.auth.TwoFactorVerificationScreen
 import com.dsp.disiplinpro.viewmodel.auth.TwoFactorAuthViewModel
 import com.dsp.disiplinpro.data.security.AppSecurityPolicy
 import com.google.firebase.firestore.BuildConfig
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.core.view.WindowCompat
+import com.google.accompanist.systemuicontroller.rememberSystemUiController
 
 class MainActivity : FragmentActivity() {
     private val requestPermissionLauncher = registerForActivityResult(
@@ -88,6 +94,12 @@ class MainActivity : FragmentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        WindowCompat.setDecorFitsSystemWindows(window, false)
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            window.setDecorFitsSystemWindows(false)
+        }
 
         initializeSecurityPolicy()
 
@@ -125,6 +137,21 @@ class MainActivity : FragmentActivity() {
             val navController = rememberNavController()
             val authViewModel = AuthViewModel()
             val isDarkMode by themeViewModel.isDarkMode.collectAsState()
+            val systemUiController = rememberSystemUiController()
+
+            LaunchedEffect(isDarkMode) {
+                systemUiController.setStatusBarColor(
+                    color = Color.Transparent,
+                    darkIcons = !isDarkMode
+                )
+                systemUiController.setNavigationBarColor(
+                    color = Color.Transparent,
+                    darkIcons = !isDarkMode
+                )
+                systemUiController.systemBarsDarkContentEnabled = !isDarkMode
+                systemUiController.isStatusBarVisible = true
+                systemUiController.isNavigationBarVisible = true
+            }
 
             LaunchedEffect(Unit) {
                 authViewModel.initialize(this@MainActivity)
@@ -137,50 +164,80 @@ class MainActivity : FragmentActivity() {
             }
 
             DisiplinproTheme(darkTheme = isDarkMode) {
-                HandleNotificationNavigation(navController)
+                Box(modifier = Modifier
+                    .fillMaxSize()){
 
-                NavHost(navController = navController, startDestination = startDestination) {
-                    composable("onboarding") { OnboardingScreen(navController) }
-                    composable("login") { LoginScreen(navController) }
-                    composable("register") { RegisterScreen(navController) }
-                    composable("home") { HomeScreen(navController) }
-                    composable("forgot_password") {
-                        ForgotPasswordScreen(
-                            navController,
-                            authViewModel
-                        )
+
+                    HandleNotificationNavigation(navController)
+
+                    NavHost(navController = navController, startDestination = startDestination) {
+                        composable("onboarding") { OnboardingScreen(navController) }
+                        composable("login") { LoginScreen(navController) }
+                        composable("register") { RegisterScreen(navController) }
+                        composable("home") { HomeScreen(navController) }
+                        composable("forgot_password") {
+                            ForgotPasswordScreen(
+                                navController,
+                                authViewModel
+                            )
+                        }
+                        composable("email_verification/{email}") { backStackEntry ->
+                            val email = backStackEntry.arguments?.getString("email") ?: ""
+                            EmailVerificationScreen(navController, email, authViewModel)
+                        }
+                        composable("two_factor_setup") {
+                            TwoFactorSetupScreen(navController)
+                        }
+                        composable("two_factor_verification/{email}") { backStackEntry ->
+                            val email = backStackEntry.arguments?.getString("email") ?: ""
+                            val twoFactorViewModel = viewModel<TwoFactorAuthViewModel>()
+                            TwoFactorVerificationScreen(
+                                navController,
+                                authViewModel,
+                                email,
+                                twoFactorViewModel
+                            )
+                        }
+                        composable("add_jadwal") { AddScheduleScreen(navController) }
+                        composable("edit_jadwal/{scheduleId}") { backStackEntry ->
+                            val scheduleId = backStackEntry.arguments?.getString("scheduleId") ?: ""
+                            EditScheduleScreen(navController, scheduleId)
+                        }
+                        composable("list_jadwal") { AllSchedulesScreen(navController) }
+                        composable("add_tugas") { AddTaskScreen(navController) }
+                        composable("edit_tugas/{taskId}") { backStackEntry ->
+                            val taskId = backStackEntry.arguments?.getString("taskId") ?: ""
+                            EditTaskScreen(navController, taskId)
+                        }
+                        composable("list_tugas") { AllTasksScreen(navController) }
+                        composable("kalender") { CalendarScreen(navController) }
+                        composable("notifikasi") { NotificationScreen(navController) }
+                        composable("akun") {
+                            ProfileScreen(
+                                navController,
+                                themeViewModel = themeViewModel
+                            )
+                        }
+                        composable("edit_akun") {
+                            ProfileEditScreen(
+                                navController,
+                                themeViewModel = themeViewModel
+                            )
+                        }
+                        composable("keamanan_privasi") {
+                            SecurityPrivacyScreen(
+                                navController,
+                                themeViewModel = themeViewModel
+                            )
+                        }
+                        composable("faq") {
+                            FAQScreen(
+                                navController,
+                                themeViewModel = themeViewModel
+                            )
+                        }
+                        composable("notification_list") { NotificationListScreen(navController) }
                     }
-                    composable("email_verification/{email}") { backStackEntry ->
-                        val email = backStackEntry.arguments?.getString("email") ?: ""
-                        EmailVerificationScreen(navController, email, authViewModel)
-                    }
-                    composable("two_factor_setup") {
-                        TwoFactorSetupScreen(navController)
-                    }
-                    composable("two_factor_verification/{email}") { backStackEntry ->
-                        val email = backStackEntry.arguments?.getString("email") ?: ""
-                        val twoFactorViewModel = viewModel<TwoFactorAuthViewModel>()
-                        TwoFactorVerificationScreen(navController, authViewModel, email, twoFactorViewModel)
-                    }
-                    composable("add_jadwal") { AddScheduleScreen(navController) }
-                    composable("edit_jadwal/{scheduleId}") { backStackEntry ->
-                        val scheduleId = backStackEntry.arguments?.getString("scheduleId") ?: ""
-                        EditScheduleScreen(navController, scheduleId)
-                    }
-                    composable("list_jadwal") { AllSchedulesScreen(navController) }
-                    composable("add_tugas") { AddTaskScreen(navController) }
-                    composable("edit_tugas/{taskId}") { backStackEntry ->
-                        val taskId = backStackEntry.arguments?.getString("taskId") ?: ""
-                        EditTaskScreen(navController, taskId)
-                    }
-                    composable("list_tugas") { AllTasksScreen(navController) }
-                    composable("kalender") { CalendarScreen(navController) }
-                    composable("notifikasi") { NotificationScreen(navController) }
-                    composable("akun") { ProfileScreen(navController, themeViewModel = themeViewModel) }
-                    composable("edit_akun") { ProfileEditScreen(navController, themeViewModel = themeViewModel) }
-                    composable("keamanan_privasi") { SecurityPrivacyScreen(navController, themeViewModel = themeViewModel) }
-                    composable("faq") { FAQScreen(navController, themeViewModel = themeViewModel) }
-                    composable("notification_list") { NotificationListScreen(navController) }
                 }
             }
         }

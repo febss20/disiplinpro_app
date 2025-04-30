@@ -73,7 +73,7 @@ fun EditTaskScreen(
         Row(
             verticalAlignment = Alignment.CenterVertically,
             modifier = Modifier
-                .padding(top = 40.dp, bottom = 12.dp, start = 31.dp, end = 31.dp)
+                .padding(top = 50.dp, bottom = 12.dp, start = 31.dp, end = 31.dp)
         ) {
             Text(
                 "Edit Tugas",

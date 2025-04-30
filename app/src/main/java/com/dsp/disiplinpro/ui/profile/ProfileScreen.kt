@@ -67,7 +67,7 @@ fun ProfileScreen(
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(top = 40.dp, start = 20.dp, end = 20.dp),
+                .padding(top = 50.dp, start = 20.dp, end = 20.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
             Text(
@@ -87,7 +87,7 @@ fun ProfileScreen(
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(horizontal = 20.dp, vertical = 24.dp)
+                .padding(horizontal = 20.dp, vertical = 25.dp)
         ) {
             Spacer(modifier = Modifier.height(70.dp))
 
