@@ -24,12 +24,10 @@ class CredentialManager(private val context: Context) {
         private const val KEY_ALIAS = "DisiplinProCredentialKey"
         private const val IV_SEPARATOR = "]"
 
-        // Nama SharedPreferences untuk informasi login yang terenkripsi
         private const val CREDENTIAL_PREFS = "secure_credential_prefs"
         private const val EMAIL_KEY = "encrypted_email"
         private const val PASSWORD_KEY = "encrypted_password"
 
-        // Flag untuk menunjukkan apakah kredensial tersimpan
         private const val HAS_SAVED_CREDENTIALS = "has_saved_credentials"
     }
 
@@ -145,7 +143,6 @@ class CredentialManager(private val context: Context) {
             val iv = cipher.iv
             val encryptedBytes = cipher.doFinal(text.toByteArray(Charset.defaultCharset()))
 
-            // Simpan IV bersama dengan teks terenkripsi untuk digunakan saat dekripsi
             val ivAndEncryptedText = Base64.encodeToString(iv, Base64.DEFAULT) +
                     IV_SEPARATOR +
                     Base64.encodeToString(encryptedBytes, Base64.DEFAULT)

@@ -58,19 +58,29 @@ fun HomeScreen(
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = navBackStackEntry?.destination?.route
 
+    val totalTaskCount = remember { mutableStateOf(0) }
+    val totalScheduleCount = remember { mutableStateOf(0) }
+
     val themePreferences = ThemePreferences(context)
     val isDarkMode by themePreferences.isDarkMode.collectAsState(initial = false)
 
     LaunchedEffect(Unit) {
         taskViewModel.getTodayTasks()
+        taskViewModel.fetchTasks()
 
         val today = Calendar.getInstance().get(Calendar.DAY_OF_WEEK)
         val days = listOf("Minggu", "Senin", "Selasa", "Rabu", "Kamis", "Jumat", "Sabtu")
         val todayDay = days[today - 1]
 
         scheduleViewModel.getSchedulesByDay(todayDay)
+        scheduleViewModel.fetchSchedules()
 
         taskViewModel.provideAppContext(context)
+    }
+
+    LaunchedEffect(tasks, schedules) {
+        totalTaskCount.value = taskViewModel.getAllTasks().size
+        totalScheduleCount.value = scheduleViewModel.getAllSchedules().size
     }
 
     val todaySchedules = schedules
@@ -89,7 +99,7 @@ fun HomeScreen(
                 .padding(bottom = 8.dp)
         ) {
             item { UserProfileSection(user?.username, user?.fotoProfil, currentDate, navController, isDarkMode) }
-            item { CategorySection(tasks.size, schedules.size, navController, isDarkMode) }
+            item { CategorySection(totalTaskCount.value, totalScheduleCount.value, navController, isDarkMode) }
             item { SectionHeader("Jadwal Hari Ini", Icons.Outlined.WatchLater, Color(0xFF7DAFCB), isDarkMode) { navController.navigate("add_jadwal") } }
             item {
                 if (todaySchedules.isNotEmpty()) ScheduleItem(todaySchedules)
@@ -136,7 +146,9 @@ private fun UserProfileSection(
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
             Row(
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = 20.dp),
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {

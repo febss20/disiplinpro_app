@@ -19,6 +19,7 @@ class ScheduleViewModel : ViewModel() {
     val schedules: StateFlow<List<Schedule>> = _schedules
     private val notificationViewModel = NotificationViewModel()
     private val _isLoading = MutableStateFlow(false)
+    private val _allSchedules = MutableStateFlow<List<Schedule>>(emptyList())
 
     init {
         listenToSchedules()
@@ -34,6 +35,29 @@ class ScheduleViewModel : ViewModel() {
                 Log.e("ScheduleViewModel", "Error fetching schedules: ${error.message}")
             }
         )
+    }
+
+    fun fetchSchedules() {
+        viewModelScope.launch {
+            try {
+                val allSchedules = repository.getSchedules()
+                _allSchedules.value = allSchedules
+                Log.d("ScheduleViewModel", "Manually fetched all ${allSchedules.size} schedules")
+            } catch (e: Exception) {
+                Log.e("ScheduleViewModel", "Error manually fetching all schedules: ${e.message}")
+            }
+        }
+    }
+
+    suspend fun getAllSchedules(): List<Schedule> {
+        return try {
+            val allSchedules = repository.getSchedules()
+            Log.d("ScheduleViewModel", "Retrieved all ${allSchedules.size} schedules")
+            allSchedules
+        } catch (e: Exception) {
+            Log.e("ScheduleViewModel", "Error retrieving all schedules: ${e.message}")
+            emptyList()
+        }
     }
 
     fun addSchedule(context: Context, schedule: Schedule) {
