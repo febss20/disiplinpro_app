@@ -17,13 +17,14 @@ import kotlinx.coroutines.launch
 class TaskViewModel : ViewModel() {
     private val repository = FirestoreRepository()
     private val _tasks = MutableStateFlow<List<Task>>(emptyList())
+
     val tasks: StateFlow<List<Task>> = _tasks
 
     private var appContext: Context? = null
     private val notificationViewModel = NotificationViewModel()
-
     private val pendingReschedules = mutableMapOf<String, Task>()
     private val _isLoading = MutableStateFlow(false)
+    private val _allTasks = MutableStateFlow<List<Task>>(emptyList())
 
     init {
         listenToTasks()
@@ -58,11 +59,22 @@ class TaskViewModel : ViewModel() {
         viewModelScope.launch {
             try {
                 val newTasks = repository.getTasks()
-                _tasks.value = newTasks
-                Log.d("TaskViewModel", "Manually fetched ${newTasks.size} tasks")
+                _allTasks.value = newTasks
+                Log.d("TaskViewModel", "Manually fetched all ${newTasks.size} tasks")
             } catch (e: Exception) {
-                Log.e("TaskViewModel", "Error manually fetching tasks: ${e.message}")
+                Log.e("TaskViewModel", "Error manually fetching all tasks: ${e.message}")
             }
+        }
+    }
+
+    suspend fun getAllTasks(): List<Task> {
+        return try {
+            val allTasks = repository.getTasks()
+            Log.d("TaskViewModel", "Retrieved all ${allTasks.size} tasks")
+            allTasks
+        } catch (e: Exception) {
+            Log.e("TaskViewModel", "Error retrieving all tasks: ${e.message}")
+            emptyList()
         }
     }
 

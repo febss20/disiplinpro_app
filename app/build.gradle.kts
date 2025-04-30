@@ -78,6 +78,7 @@ dependencies {
     implementation("androidx.compose.runtime:runtime:1.7.8")
     implementation("androidx.work:work-runtime-ktx:2.8.1")
     implementation("com.google.accompanist:accompanist-pager:0.27.0")
+    implementation("com.google.accompanist:accompanist-systemuicontroller:0.31.1-alpha")
     implementation("androidx.datastore:datastore-preferences:1.0.0")
     implementation("androidx.test:core:1.5.0")
     implementation("androidx.compose.material:material:1.5.0")

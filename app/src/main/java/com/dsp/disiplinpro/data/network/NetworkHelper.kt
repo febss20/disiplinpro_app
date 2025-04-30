@@ -11,7 +11,7 @@ import java.io.IOException
 
 /**
  * Helper class untuk melakukan HTTP requests dengan SSL Pinning
- * Gunakan class ini untuk melakukan panggilan jaringan non-Firebase
+ * Class ini untuk melakukan panggilan jaringan non-Firebase
  */
 class NetworkHelper {
 
