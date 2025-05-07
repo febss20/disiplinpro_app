@@ -61,7 +61,7 @@ fun OnboardingScreen(navController: NavController) {
                 fontWeight = FontWeight.Bold,
                 textAlign = TextAlign.Center,
                 modifier = Modifier
-                    .padding(top = 30.dp, bottom = 12.dp, start = 2.dp, end = 2.dp)
+                    .padding(top = 50.dp, bottom = 12.dp, start = 2.dp, end = 2.dp)
             )
 
             Column(
