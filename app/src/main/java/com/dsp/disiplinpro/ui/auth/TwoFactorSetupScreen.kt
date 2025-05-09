@@ -83,7 +83,9 @@ fun TwoFactorSetupScreen(
         ) {
             Row(
                 verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = 35.dp)
             ) {
                 IconButton(onClick = { navController.popBackStack() }) {
                     Icon(
