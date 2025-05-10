@@ -6,13 +6,15 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.CalendarMonth
+import androidx.compose.material.icons.outlined.WatchLater
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
@@ -25,8 +27,6 @@ import com.dsp.disiplinpro.data.preferences.ThemePreferences
 import com.dsp.disiplinpro.ui.theme.*
 import com.dsp.disiplinpro.viewmodel.task.TaskViewModel
 import com.google.firebase.Timestamp
-import com.skydoves.landscapist.ImageOptions
-import com.skydoves.landscapist.coil.CoilImage
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -45,7 +45,6 @@ fun EditTaskScreen(
     val backgroundColor = if (isDarkMode) DarkBackground else Color(0xFFFAF3E0)
     val textColor = if (isDarkMode) DarkTextLight else Color(0xFF333333)
     val secondaryTextColor = if (isDarkMode) DarkTextGrey else Color.Gray
-    val accentColor = if (isDarkMode) DarkPrimaryBlue else Color(0xFF7DAFCB)
     val buttonColor = if (isDarkMode) DarkPrimaryBlue else Color(0xFF7DAFCB)
     val cancelColor = if (isDarkMode) Color(0xFFFF8A65) else Color(0xFFFF5722)
     val fieldBackgroundColor = if (isDarkMode) DarkCardBackground else Color(0x1A2196F3)
@@ -156,11 +155,13 @@ fun EditTaskScreen(
             verticalAlignment = Alignment.CenterVertically,
             modifier = Modifier.padding(top = 10.dp, start = 31.dp)
         ) {
-            CoilImage(
-                imageModel = { "https://storage.googleapis.com/tagjs-prod.appspot.com/v1/T7pdvlFwTn/4v0sclzk.png" },
-                imageOptions = ImageOptions(contentScale = ContentScale.Crop),
-                modifier = Modifier.width(35.dp).padding(end = 12.dp)
+            Icon(
+                imageVector = Icons.Outlined.CalendarMonth,
+                contentDescription = "Tanggal",
+                modifier = Modifier.size(24.dp),
+                tint = Color(0xFF7DAFCB)
             )
+            Spacer(modifier = Modifier.width(8.dp))
             Text("Tanggal Deadline", color = textColor, fontSize = 18.sp)
         }
         Box(
@@ -186,11 +187,13 @@ fun EditTaskScreen(
             verticalAlignment = Alignment.CenterVertically,
             modifier = Modifier.padding(top = 16.dp, start = 31.dp)
         ) {
-            CoilImage(
-                imageModel = { "https://storage.googleapis.com/tagjs-prod.appspot.com/v1/T7pdvlFwTn/640pibqq.png" },
-                imageOptions = ImageOptions(contentScale = ContentScale.Crop),
-                modifier = Modifier.width(35.dp).padding(end = 12.dp)
+            Icon(
+                imageVector = Icons.Outlined.WatchLater,
+                contentDescription = "Waktu",
+                modifier = Modifier.size(24.dp),
+                tint = Color(0xFFFF8A65)
             )
+            Spacer(modifier = Modifier.width(8.dp))
             Text("Waktu Deadline", color = textColor, fontSize = 18.sp)
         }
         Box(

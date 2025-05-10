@@ -6,6 +6,9 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.DoorFront
+import androidx.compose.material.icons.outlined.WatchLater
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.*
@@ -51,6 +54,7 @@ fun EditScheduleScreen(
     val cancelColor = if (isDarkMode) Color(0xFFFF8A65) else Color(0xFFFF5722)
     val fieldBackgroundColor = if (isDarkMode) DarkCardBackground else Color(0x1A2196F3)
     val fieldBorderColor = if (isDarkMode) Color(0xFF2C2C2C) else Color(0xFFFFFFFF)
+    val iconTint = if (isDarkMode) DarkTextLight else Color(0xFF333333)
 
     val schedules by viewModel.schedules.collectAsState(initial = emptyList())
     val schedule = schedules.find { it.id == scheduleId } ?: return
@@ -193,11 +197,13 @@ fun EditScheduleScreen(
             verticalAlignment = Alignment.CenterVertically,
             modifier = Modifier.padding(top = 8.dp, start = 31.dp)
         ) {
-            CoilImage(
-                imageModel = { "https://storage.googleapis.com/tagjs-prod.appspot.com/v1/T7pdvlFwTn/5wgv1t8r.png" },
-                imageOptions = ImageOptions(contentScale = ContentScale.Crop),
-                modifier = Modifier.width(35.dp).padding(end = 13.dp)
+            Icon(
+                imageVector = Icons.Outlined.DoorFront,
+                contentDescription = "Ruangan",
+                modifier = Modifier.size(24.dp),
+                tint = iconTint
             )
+            Spacer(modifier = Modifier.width(8.dp))
             Text("Ruangan", color = textColor, fontSize = 18.sp)
         }
         BasicTextField(
@@ -223,11 +229,13 @@ fun EditScheduleScreen(
             verticalAlignment = Alignment.CenterVertically,
             modifier = Modifier.padding(top = 16.dp, start = 31.dp)
         ) {
-            CoilImage(
-                imageModel = { "https://storage.googleapis.com/tagjs-prod.appspot.com/v1/T7pdvlFwTn/640pibqq.png" },
-                imageOptions = ImageOptions(contentScale = ContentScale.Crop),
-                modifier = Modifier.width(35.dp).padding(end = 12.dp)
+            Icon(
+                imageVector = Icons.Outlined.WatchLater,
+                contentDescription = "Waktu",
+                modifier = Modifier.size(24.dp),
+                tint = Color(0xFFFF8A65)
             )
+            Spacer(modifier = Modifier.width(8.dp))
             Text("Waktu", color = textColor, fontSize = 18.sp)
         }
         Row(

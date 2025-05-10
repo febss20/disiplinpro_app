@@ -87,7 +87,7 @@ fun ProfileEditScreen(
                 message = "Profil berhasil diperbarui!",
                 duration = SnackbarDuration.Short
             )
-            kotlinx.coroutines.delay(1500)
+            kotlinx.coroutines.delay(2500)
             navController.popBackStack()
         }
     }
@@ -101,248 +101,253 @@ fun ProfileEditScreen(
         }
     }
 
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(backgroundColor)
-        ) {
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(top = 50.dp, start = 16.dp, end = 16.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                IconButton(onClick = { navController.popBackStack() }) {
-                    Icon(
-                        imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                        contentDescription = "Back",
-                        tint = textColor
-                    )
-                }
-                Text(
-                    "Edit Akun",
-                    color = textColor,
-                    fontSize = 24.sp,
-                    fontWeight = FontWeight.Bold,
-                    modifier = Modifier.padding(start = 8.dp)
-                )
-            }
-
-            Column(
+    Scaffold(
+        snackbarHost = { SnackbarHost(snackbarHostState) },
+        content = { paddingValues ->
+            Box(
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(horizontal = 24.dp)
-                    .padding(top = 120.dp, bottom = 24.dp)
-                    .verticalScroll(scrollState),
-                horizontalAlignment = Alignment.CenterHorizontally
+                    .background(backgroundColor)
+                    .padding(paddingValues)
             ) {
-                if (uiState.isLoading && selectedImageUri == null) {
-                    CircularProgressIndicator(
-                        color = primaryBlueColor,
-                        modifier = Modifier.padding(top = 16.dp)
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(top = 20.dp, start = 16.dp, end = 16.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    IconButton(onClick = { navController.popBackStack() }) {
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                            contentDescription = "Back",
+                            tint = textColor
+                        )
+                    }
+                    Text(
+                        "Edit Akun",
+                        color = textColor,
+                        fontSize = 24.sp,
+                        fontWeight = FontWeight.Bold,
+                        modifier = Modifier.padding(start = 8.dp)
                     )
-                } else {
-                    Box(
-                        modifier = Modifier
-                            .size(120.dp)
-                            .clip(CircleShape)
-                            .background(iconBackgroundColor)
-                            .clickable {
-                                if (!uiState.isLoading) {
-                                    imagePicker.pickImage()
+                }
+
+                Column(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(horizontal = 24.dp)
+                        .padding(top = 100.dp, bottom = 24.dp)
+                        .verticalScroll(scrollState),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    if (uiState.isLoading && selectedImageUri == null) {
+                        CircularProgressIndicator(
+                            color = primaryBlueColor,
+                            modifier = Modifier.padding(top = 16.dp)
+                        )
+                    } else {
+                        Box(
+                            modifier = Modifier
+                                .size(120.dp)
+                                .clip(CircleShape)
+                                .background(iconBackgroundColor)
+                                .clickable {
+                                    if (!uiState.isLoading) {
+                                        imagePicker.pickImage()
+                                    }
                                 }
-                            }
-                            .border(2.dp, borderColor, CircleShape),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        if (selectedImageUri != null) {
-                            Box {
+                                .border(2.dp, borderColor, CircleShape),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            if (selectedImageUri != null) {
+                                Box {
+                                    AsyncImage(
+                                        model = selectedImageUri,
+                                        contentDescription = "Selected Profile Photo",
+                                        modifier = Modifier.fillMaxSize(),
+                                        contentScale = ContentScale.Crop
+                                    )
+
+                                    if (uiState.isLoading) {
+                                        Box(
+                                            modifier = Modifier
+                                                .fillMaxSize()
+                                                .background(Color.Black.copy(alpha = 0.5f)),
+                                            contentAlignment = Alignment.Center
+                                        ) {
+                                            CircularProgressIndicator(
+                                                color = Color.White,
+                                                modifier = Modifier.size(40.dp)
+                                            )
+                                        }
+                                    }
+                                }
+                            } else if (!uiState.profilePhotoUrl.isNullOrEmpty()) {
                                 AsyncImage(
-                                    model = selectedImageUri,
-                                    contentDescription = "Selected Profile Photo",
+                                    model = uiState.profilePhotoUrl,
+                                    contentDescription = "Profile Photo",
                                     modifier = Modifier.fillMaxSize(),
                                     contentScale = ContentScale.Crop
                                 )
-
-                                if (uiState.isLoading) {
-                                    Box(
-                                        modifier = Modifier
-                                            .fillMaxSize()
-                                            .background(Color.Black.copy(alpha = 0.5f)),
-                                        contentAlignment = Alignment.Center
-                                    ) {
-                                        CircularProgressIndicator(
-                                            color = Color.White,
-                                            modifier = Modifier.size(40.dp)
-                                        )
-                                    }
-                                }
+                            } else {
+                                Icon(
+                                    imageVector = Icons.Default.Person,
+                                    contentDescription = "Profile",
+                                    tint = primaryBlueColor,
+                                    modifier = Modifier.size(60.dp)
+                                )
                             }
-                        } else if (!uiState.profilePhotoUrl.isNullOrEmpty()) {
-                            AsyncImage(
-                                model = uiState.profilePhotoUrl,
-                                contentDescription = "Profile Photo",
-                                modifier = Modifier.fillMaxSize(),
-                                contentScale = ContentScale.Crop
-                            )
-                        } else {
-                            Icon(
-                                imageVector = Icons.Default.Person,
-                                contentDescription = "Profile",
-                                tint = primaryBlueColor,
-                                modifier = Modifier.size(60.dp)
-                            )
                         }
-                    }
 
-                    Spacer(modifier = Modifier.height(32.dp))
+                        Spacer(modifier = Modifier.height(32.dp))
 
-                    // Username Field
-                    OutlinedTextField(
-                        value = uiState.username,
-                        onValueChange = { profileViewModel.setUsername(it) },
-                        label = { Text("Username", color = if (isDarkMode) DarkTextLight else Color.Gray) },
-                        leadingIcon = {
-                            Icon(
-                                imageVector = Icons.Default.Person,
-                                contentDescription = "Username",
-                                tint = primaryBlueColor
-                            )
-                        },
-                        modifier = Modifier.fillMaxWidth(),
-                        shape = RoundedCornerShape(8.dp),
-                        colors = OutlinedTextFieldDefaults.colors(
-                            focusedBorderColor = outlinedBorderFocused,
-                            unfocusedBorderColor = outlinedBorderUnfocused,
-                            cursorColor = primaryBlueColor,
-                            focusedTextColor = textColor,
-                            unfocusedTextColor = textColor
-                        ),
-                        enabled = !uiState.isLoading
-                    )
-
-                    Spacer(modifier = Modifier.height(16.dp))
-
-                    // Email Field
-                    OutlinedTextField(
-                        value = uiState.email,
-                        onValueChange = { /* Email tidak bisa diubah */ },
-                        label = { Text("Email (tidak dapat diubah)", color = if (isDarkMode) DarkTextLight else Color.Gray) },
-                        leadingIcon = {
-                            Icon(
-                                imageVector = Icons.Default.Email,
-                                contentDescription = "Email",
-                                tint = primaryBlueColor
-                            )
-                        },
-                        modifier = Modifier.fillMaxWidth(),
-                        shape = RoundedCornerShape(8.dp),
-                        colors = OutlinedTextFieldDefaults.colors(
-                            focusedBorderColor = outlinedBorderFocused,
-                            unfocusedBorderColor = outlinedBorderUnfocused,
-                            cursorColor = primaryBlueColor,
-                            focusedTextColor = textColor,
-                            unfocusedTextColor = textColor
-                        ),
-                        enabled = false,
-                        readOnly = true
-                    )
-
-                    Spacer(modifier = Modifier.height(16.dp))
-
-                    // Current Password Field
-                    OutlinedTextField(
-                        value = uiState.currentPassword,
-                        onValueChange = { profileViewModel.setCurrentPassword(it) },
-                        label = { Text("Password Saat Ini", color = if (isDarkMode) DarkTextLight else Color.Gray) },
-                        leadingIcon = {
-                            Icon(
-                                imageVector = Icons.Default.Lock,
-                                contentDescription = "Current Password",
-                                tint = primaryBlueColor
-                            )
-                        },
-                        trailingIcon = {
-                            IconButton(onClick = { profileViewModel.toggleCurrentPasswordVisibility() }) {
+                        // Username Field
+                        OutlinedTextField(
+                            value = uiState.username,
+                            onValueChange = { profileViewModel.setUsername(it) },
+                            label = { Text("Username", color = if (isDarkMode) DarkTextLight else Color.Gray) },
+                            leadingIcon = {
                                 Icon(
-                                    imageVector = if (uiState.showCurrentPassword) Icons.Default.VisibilityOff else Icons.Default.Visibility,
-                                    contentDescription = if (uiState.showCurrentPassword) "Hide Password" else "Show Password",
-                                    tint = if (isDarkMode) DarkTextGrey else Color(0xFF757575)
+                                    imageVector = Icons.Default.Person,
+                                    contentDescription = "Username",
+                                    tint = primaryBlueColor
                                 )
-                            }
-                        },
-                        visualTransformation = if (uiState.showCurrentPassword) VisualTransformation.None else PasswordVisualTransformation(),
-                        modifier = Modifier.fillMaxWidth(),
-                        shape = RoundedCornerShape(8.dp),
-                        colors = OutlinedTextFieldDefaults.colors(
-                            focusedBorderColor = outlinedBorderFocused,
-                            unfocusedBorderColor = outlinedBorderUnfocused,
-                            cursorColor = primaryBlueColor,
-                            focusedTextColor = textColor,
-                            unfocusedTextColor = textColor
-                        ),
-                        enabled = !uiState.isLoading
-                    )
+                            },
+                            modifier = Modifier.fillMaxWidth(),
+                            shape = RoundedCornerShape(8.dp),
+                            colors = OutlinedTextFieldDefaults.colors(
+                                focusedBorderColor = outlinedBorderFocused,
+                                unfocusedBorderColor = outlinedBorderUnfocused,
+                                cursorColor = primaryBlueColor,
+                                focusedTextColor = textColor,
+                                unfocusedTextColor = textColor
+                            ),
+                            enabled = !uiState.isLoading
+                        )
 
-                    Spacer(modifier = Modifier.height(16.dp))
+                        Spacer(modifier = Modifier.height(16.dp))
 
-                    // New Password Field
-                    OutlinedTextField(
-                        value = uiState.newPassword,
-                        onValueChange = { profileViewModel.setNewPassword(it) },
-                        label = { Text("Password Baru", color = if (isDarkMode) DarkTextLight else Color.Gray) },
-                        leadingIcon = {
-                            Icon(
-                                imageVector = Icons.Default.LockReset,
-                                contentDescription = "New Password",
-                                tint = primaryBlueColor
-                            )
-                        },
-                        trailingIcon = {
-                            IconButton(onClick = { profileViewModel.toggleNewPasswordVisibility() }) {
+                        // Email Field
+                        OutlinedTextField(
+                            value = uiState.email,
+                            onValueChange = { /* Email tidak bisa diubah */ },
+                            label = { Text("Email (tidak dapat diubah)", color = if (isDarkMode) DarkTextLight else Color.Gray) },
+                            leadingIcon = {
                                 Icon(
-                                    imageVector = if (uiState.showNewPassword) Icons.Default.VisibilityOff else Icons.Default.Visibility,
-                                    contentDescription = if (uiState.showNewPassword) "Hide Password" else "Show Password",
-                                    tint = if (isDarkMode) DarkTextGrey else Color(0xFF757575)
+                                    imageVector = Icons.Default.Email,
+                                    contentDescription = "Email",
+                                    tint = primaryBlueColor
                                 )
+                            },
+                            modifier = Modifier.fillMaxWidth(),
+                            shape = RoundedCornerShape(8.dp),
+                            colors = OutlinedTextFieldDefaults.colors(
+                                focusedBorderColor = outlinedBorderFocused,
+                                unfocusedBorderColor = outlinedBorderUnfocused,
+                                cursorColor = primaryBlueColor,
+                                focusedTextColor = textColor,
+                                unfocusedTextColor = textColor
+                            ),
+                            enabled = false,
+                            readOnly = true
+                        )
+
+                        Spacer(modifier = Modifier.height(16.dp))
+
+                        // Current Password Field
+                        OutlinedTextField(
+                            value = uiState.currentPassword,
+                            onValueChange = { profileViewModel.setCurrentPassword(it) },
+                            label = { Text("Password Saat Ini", color = if (isDarkMode) DarkTextLight else Color.Gray) },
+                            leadingIcon = {
+                                Icon(
+                                    imageVector = Icons.Default.Lock,
+                                    contentDescription = "Current Password",
+                                    tint = primaryBlueColor
+                                )
+                            },
+                            trailingIcon = {
+                                IconButton(onClick = { profileViewModel.toggleCurrentPasswordVisibility() }) {
+                                    Icon(
+                                        imageVector = if (uiState.showCurrentPassword) Icons.Default.VisibilityOff else Icons.Default.Visibility,
+                                        contentDescription = if (uiState.showCurrentPassword) "Hide Password" else "Show Password",
+                                        tint = if (isDarkMode) DarkTextGrey else Color(0xFF757575)
+                                    )
+                                }
+                            },
+                            visualTransformation = if (uiState.showCurrentPassword) VisualTransformation.None else PasswordVisualTransformation(),
+                            modifier = Modifier.fillMaxWidth(),
+                            shape = RoundedCornerShape(8.dp),
+                            colors = OutlinedTextFieldDefaults.colors(
+                                focusedBorderColor = outlinedBorderFocused,
+                                unfocusedBorderColor = outlinedBorderUnfocused,
+                                cursorColor = primaryBlueColor,
+                                focusedTextColor = textColor,
+                                unfocusedTextColor = textColor
+                            ),
+                            enabled = !uiState.isLoading
+                        )
+
+                        Spacer(modifier = Modifier.height(16.dp))
+
+                        // New Password Field
+                        OutlinedTextField(
+                            value = uiState.newPassword,
+                            onValueChange = { profileViewModel.setNewPassword(it) },
+                            label = { Text("Password Baru", color = if (isDarkMode) DarkTextLight else Color.Gray) },
+                            leadingIcon = {
+                                Icon(
+                                    imageVector = Icons.Default.LockReset,
+                                    contentDescription = "New Password",
+                                    tint = primaryBlueColor
+                                )
+                            },
+                            trailingIcon = {
+                                IconButton(onClick = { profileViewModel.toggleNewPasswordVisibility() }) {
+                                    Icon(
+                                        imageVector = if (uiState.showNewPassword) Icons.Default.VisibilityOff else Icons.Default.Visibility,
+                                        contentDescription = if (uiState.showNewPassword) "Hide Password" else "Show Password",
+                                        tint = if (isDarkMode) DarkTextGrey else Color(0xFF757575)
+                                    )
+                                }
+                            },
+                            visualTransformation = if (uiState.showNewPassword) VisualTransformation.None else PasswordVisualTransformation(),
+                            modifier = Modifier.fillMaxWidth(),
+                            shape = RoundedCornerShape(8.dp),
+                            colors = OutlinedTextFieldDefaults.colors(
+                                focusedBorderColor = outlinedBorderFocused,
+                                unfocusedBorderColor = outlinedBorderUnfocused,
+                                cursorColor = primaryBlueColor,
+                                focusedTextColor = textColor,
+                                unfocusedTextColor = textColor
+                            ),
+                            enabled = !uiState.isLoading
+                        )
+
+                        Spacer(modifier = Modifier.height(32.dp))
+
+                        // Save Button
+                        Button(
+                            onClick = { profileViewModel.updateProfile() },
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(50.dp),
+                            colors = ButtonDefaults.buttonColors(containerColor = primaryBlueColor),
+                            shape = RoundedCornerShape(8.dp),
+                            enabled = !uiState.isLoading
+                        ) {
+                            if (uiState.isLoading) {
+                                CircularProgressIndicator(
+                                    color = Color.White,
+                                    modifier = Modifier.size(24.dp)
+                                )
+                            } else {
+                                Text("Simpan Perubahan", color = Color.White, fontSize = 16.sp)
                             }
-                        },
-                        visualTransformation = if (uiState.showNewPassword) VisualTransformation.None else PasswordVisualTransformation(),
-                        modifier = Modifier.fillMaxWidth(),
-                        shape = RoundedCornerShape(8.dp),
-                        colors = OutlinedTextFieldDefaults.colors(
-                            focusedBorderColor = outlinedBorderFocused,
-                            unfocusedBorderColor = outlinedBorderUnfocused,
-                            cursorColor = primaryBlueColor,
-                            focusedTextColor = textColor,
-                            unfocusedTextColor = textColor
-                        ),
-                        enabled = !uiState.isLoading
-                    )
-
-                    Spacer(modifier = Modifier.height(32.dp))
-
-                    // Save Button
-                    Button(
-                        onClick = { profileViewModel.updateProfile() },
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(50.dp),
-                        colors = ButtonDefaults.buttonColors(containerColor = primaryBlueColor),
-                        shape = RoundedCornerShape(8.dp),
-                        enabled = !uiState.isLoading
-                    ) {
-                        if (uiState.isLoading) {
-                            CircularProgressIndicator(
-                                color = Color.White,
-                                modifier = Modifier.size(24.dp)
-                            )
-                        } else {
-                            Text("Simpan Perubahan", color = Color.White, fontSize = 16.sp)
                         }
                     }
                 }
             }
         }
-
+    )
 }
