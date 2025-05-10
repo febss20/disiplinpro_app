@@ -27,8 +27,6 @@ import com.dsp.disiplinpro.data.preferences.ThemePreferences
 import com.dsp.disiplinpro.ui.theme.*
 import com.dsp.disiplinpro.viewmodel.task.TaskViewModel
 import com.google.firebase.Timestamp
-import com.skydoves.landscapist.ImageOptions
-import com.skydoves.landscapist.coil.CoilImage
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -46,12 +44,10 @@ fun AddTaskScreen(
     val backgroundColor = if (isDarkMode) DarkBackground else Color(0xFFFAF3E0)
     val textColor = if (isDarkMode) DarkTextLight else Color(0xFF333333)
     val secondaryTextColor = if (isDarkMode) DarkTextGrey else Color.Gray
-    val accentColor = if (isDarkMode) DarkPrimaryBlue else Color(0xFF7DAFCB)
     val buttonColor = if (isDarkMode) DarkPrimaryBlue else Color(0xFF7DAFCB)
     val cancelColor = if (isDarkMode) Color(0xFFFF8A65) else Color(0xFFFF5722)
     val fieldBackgroundColor = if (isDarkMode) DarkCardBackground else Color(0x1A2196F3)
     val fieldBorderColor = if (isDarkMode) Color(0xFF2C2C2C) else Color(0xFFFFFFFF)
-    val iconTint = if (isDarkMode) DarkTextLight else Color(0xFF333333)
 
     var judulTugas by remember { mutableStateOf("") }
     var matkul by remember { mutableStateOf("") }
@@ -156,9 +152,9 @@ fun AddTaskScreen(
         ) {
             Icon(
                 imageVector = Icons.Outlined.CalendarMonth,
-                contentDescription = "Waktu",
+                contentDescription = "Tanggal",
                 modifier = Modifier.size(24.dp),
-                tint = iconTint
+                tint = Color(0xFF7DAFCB)
             )
             Spacer(modifier = Modifier.width(8.dp))
             Text("Tanggal Deadline", color = textColor, fontSize = 18.sp)
