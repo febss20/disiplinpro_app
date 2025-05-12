@@ -37,7 +37,7 @@ fun SaveCredentialsDialog(
     val themePreferences = ThemePreferences(context)
     val isDarkMode by themePreferences.isDarkMode.collectAsState(initial = false)
 
-    val cardBackgroundColor = if (isDarkMode) Color(0xFF2C2C2C) else Color(0x332196F3)
+    val cardBackgroundColor = if (isDarkMode) Color(0xFF2C2C2C) else Color(0xFFFFFFFF)
     val primaryTextColor = if (isDarkMode) Color.White else Color(0xFF333333)
 
     if (!show) return
