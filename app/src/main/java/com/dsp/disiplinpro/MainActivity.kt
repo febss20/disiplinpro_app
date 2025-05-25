@@ -1,7 +1,6 @@
 package com.dsp.disiplinpro
 
 import android.Manifest
-import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.net.Uri
@@ -69,6 +68,18 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.core.view.WindowCompat
 import com.google.accompanist.systemuicontroller.rememberSystemUiController
+import androidx.compose.animation.AnimatedContentTransitionScope
+import androidx.compose.animation.core.EaseInOut
+import androidx.compose.animation.core.spring
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.foundation.background
+import androidx.navigation.NavBackStackEntry
+import androidx.navigation.NavGraphBuilder
+import androidx.compose.runtime.Composable
+import com.dsp.disiplinpro.ui.theme.Spring
+import com.dsp.disiplinpro.ui.components.getBackgroundColorForCurrentTheme
 
 class MainActivity : FragmentActivity() {
     private val requestPermissionLauncher = registerForActivityResult(
@@ -138,6 +149,7 @@ class MainActivity : FragmentActivity() {
             val authViewModel = AuthViewModel()
             val isDarkMode by themeViewModel.isDarkMode.collectAsState()
             val systemUiController = rememberSystemUiController()
+            val backgroundColor = getBackgroundColorForCurrentTheme()
 
             LaunchedEffect(isDarkMode) {
                 systemUiController.setStatusBarColor(
@@ -165,30 +177,212 @@ class MainActivity : FragmentActivity() {
 
             DisiplinproTheme(darkTheme = isDarkMode) {
                 Box(modifier = Modifier
-                    .fillMaxSize()){
-
+                    .fillMaxSize()
+                    .background(backgroundColor)){
 
                     HandleNotificationNavigation(navController)
 
-                    NavHost(navController = navController, startDestination = startDestination) {
-                        composable("onboarding") { OnboardingScreen(navController) }
-                        composable("login") { LoginScreen(navController) }
-                        composable("register") { RegisterScreen(navController) }
-                        composable("home") { HomeScreen(navController) }
-                        composable("forgot_password") {
-                            ForgotPasswordScreen(
-                                navController,
-                                authViewModel
-                            )
+                    NavHost(
+                        navController = navController,
+                        startDestination = startDestination,
+                        modifier = Modifier.background(backgroundColor)
+                    ) {
+                        composable(
+                            route = "onboarding",
+                            enterTransition = {
+                                fadeIn(animationSpec = tween(700))
+                            },
+                            exitTransition = {
+                                fadeOut(animationSpec = tween(500))
+                            },
+                            popEnterTransition = {
+                                slideIntoContainer(
+                                    towards = AnimatedContentTransitionScope.SlideDirection.Right,
+                                    animationSpec = tween(300, easing = EaseInOut)
+                                ) + fadeIn(animationSpec = tween(300))
+                            },
+                            popExitTransition = {
+                                slideOutOfContainer(
+                                    towards = AnimatedContentTransitionScope.SlideDirection.Right,
+                                    animationSpec = tween(300, easing = EaseInOut)
+                                ) + fadeOut(animationSpec = tween(300))
+                            }
+                        ) { OnboardingScreen(navController) }
+                        composable(
+                            route = "login",
+                            enterTransition = {
+                                slideIntoContainer(
+                                    towards = AnimatedContentTransitionScope.SlideDirection.Left,
+                                    animationSpec = tween(300, easing = EaseInOut)
+                                ) + fadeIn(
+                                    initialAlpha = 0.3f,
+                                    animationSpec = tween(300)
+                                )
+                            },
+                            exitTransition = {
+                                slideOutOfContainer(
+                                    towards = AnimatedContentTransitionScope.SlideDirection.Left,
+                                    animationSpec = tween(300, easing = EaseInOut)
+                                ) + fadeOut(animationSpec = tween(300))
+                            },
+                            popEnterTransition = {
+                                slideIntoContainer(
+                                    towards = AnimatedContentTransitionScope.SlideDirection.Right,
+                                    animationSpec = tween(300, easing = EaseInOut)
+                                ) + fadeIn(
+                                    initialAlpha = 0.3f,
+                                    animationSpec = tween(300)
+                                )
+                            },
+                            popExitTransition = {
+                                slideOutOfContainer(
+                                    towards = AnimatedContentTransitionScope.SlideDirection.Right,
+                                    animationSpec = tween(300, easing = EaseInOut)
+                                ) + fadeOut(animationSpec = tween(300))
+                            }
+                        ) {
+                            Box(modifier = Modifier.background(backgroundColor)) {
+                                LoginScreen(navController)
+                            }
                         }
-                        composable("email_verification/{email}") { backStackEntry ->
+                        composable(
+                            route = "register",
+                            enterTransition = {
+                                slideIntoContainer(
+                                    towards = AnimatedContentTransitionScope.SlideDirection.Left,
+                                    animationSpec = tween(300, easing = EaseInOut)
+                                ) + fadeIn(
+                                    initialAlpha = 0.3f,
+                                    animationSpec = tween(300)
+                                )
+                            },
+                            exitTransition = {
+                                slideOutOfContainer(
+                                    towards = AnimatedContentTransitionScope.SlideDirection.Left,
+                                    animationSpec = tween(300, easing = EaseInOut)
+                                ) + fadeOut(animationSpec = tween(300))
+                            },
+                            popEnterTransition = {
+                                slideIntoContainer(
+                                    towards = AnimatedContentTransitionScope.SlideDirection.Right,
+                                    animationSpec = tween(300, easing = EaseInOut)
+                                ) + fadeIn(
+                                    initialAlpha = 0.3f,
+                                    animationSpec = tween(300)
+                                )
+                            },
+                            popExitTransition = {
+                                slideOutOfContainer(
+                                    towards = AnimatedContentTransitionScope.SlideDirection.Right,
+                                    animationSpec = tween(300, easing = EaseInOut)
+                                ) + fadeOut(animationSpec = tween(300))
+                            }
+                        ) {
+                            Box(modifier = Modifier.background(backgroundColor)) {
+                                RegisterScreen(navController)
+                            }
+                        }
+                        composable(
+                            route = "home",
+                            enterTransition = {
+                                slideIntoContainer(
+                                    towards = AnimatedContentTransitionScope.SlideDirection.Up,
+                                    animationSpec = spring(
+                                        dampingRatio = Spring.DampingRatioMediumBouncy,
+                                        stiffness = Spring.StiffnessLow
+                                    )
+                                ) + fadeIn(
+                                    initialAlpha = 0.3f,
+                                    animationSpec = tween(300)
+                                )
+                            },
+                            exitTransition = {
+                                slideOutOfContainer(
+                                    towards = AnimatedContentTransitionScope.SlideDirection.Left,
+                                    animationSpec = tween(300, easing = EaseInOut)
+                                ) + fadeOut(animationSpec = tween(300))
+                            },
+                            popEnterTransition = {
+                                slideIntoContainer(
+                                    towards = AnimatedContentTransitionScope.SlideDirection.Right,
+                                    animationSpec = tween(300, easing = EaseInOut)
+                                ) + fadeIn(
+                                    initialAlpha = 0.3f,
+                                    animationSpec = tween(300)
+                                )
+                            },
+                            popExitTransition = {
+                                slideOutOfContainer(
+                                    towards = AnimatedContentTransitionScope.SlideDirection.Down,
+                                    animationSpec = spring(
+                                        dampingRatio = Spring.DampingRatioMediumBouncy,
+                                        stiffness = Spring.StiffnessLow
+                                    )
+                                ) + fadeOut(animationSpec = tween(300))
+                            }
+                        ) {
+                            Box(modifier = Modifier.background(backgroundColor)) {
+                                HomeScreen(navController)
+                            }
+                        }
+
+                        fun NavGraphBuilder.composableWithAnimations(
+                            route: String,
+                            content: @Composable (NavBackStackEntry) -> Unit
+                        ) {
+                            composable(
+                                route = route,
+                                enterTransition = {
+                                    slideIntoContainer(
+                                        towards = AnimatedContentTransitionScope.SlideDirection.Left,
+                                        animationSpec = tween(300, easing = EaseInOut)
+                                    ) + fadeIn(
+                                        initialAlpha = 0.3f,
+                                        animationSpec = tween(300)
+                                    )
+                                },
+                                exitTransition = {
+                                    slideOutOfContainer(
+                                        towards = AnimatedContentTransitionScope.SlideDirection.Left,
+                                        animationSpec = tween(300, easing = EaseInOut)
+                                    ) + fadeOut(animationSpec = tween(300))
+                                },
+                                popEnterTransition = {
+                                    slideIntoContainer(
+                                        towards = AnimatedContentTransitionScope.SlideDirection.Right,
+                                        animationSpec = tween(300, easing = EaseInOut)
+                                    ) + fadeIn(
+                                        initialAlpha = 0.3f,
+                                        animationSpec = tween(300)
+                                    )
+                                },
+                                popExitTransition = {
+                                    slideOutOfContainer(
+                                        towards = AnimatedContentTransitionScope.SlideDirection.Right,
+                                        animationSpec = tween(300, easing = EaseInOut)
+                                    ) + fadeOut(animationSpec = tween(300))
+                                }
+                            ) {
+                                Box(modifier = Modifier.background(backgroundColor)) {
+                                    content(it)
+                                }
+                            }
+                        }
+
+                        composableWithAnimations("forgot_password") {
+                            ForgotPasswordScreen(navController, authViewModel)
+                        }
+
+                        composableWithAnimations("email_verification/{email}") { backStackEntry ->
                             val email = backStackEntry.arguments?.getString("email") ?: ""
                             EmailVerificationScreen(navController, email, authViewModel)
                         }
-                        composable("two_factor_setup") {
+
+                        composableWithAnimations("two_factor_setup") {
                             TwoFactorSetupScreen(navController)
                         }
-                        composable("two_factor_verification/{email}") { backStackEntry ->
+
+                        composableWithAnimations("two_factor_verification/{email}") { backStackEntry ->
                             val email = backStackEntry.arguments?.getString("email") ?: ""
                             val twoFactorViewModel = viewModel<TwoFactorAuthViewModel>()
                             TwoFactorVerificationScreen(
@@ -198,52 +392,79 @@ class MainActivity : FragmentActivity() {
                                 twoFactorViewModel
                             )
                         }
-                        composable("add_jadwal") { AddScheduleScreen(navController) }
-                        composable("edit_jadwal/{scheduleId}") { backStackEntry ->
+
+                        composableWithAnimations("add_jadwal") {
+                            AddScheduleScreen(navController)
+                        }
+
+                        composableWithAnimations("edit_jadwal/{scheduleId}") { backStackEntry ->
                             val scheduleId = backStackEntry.arguments?.getString("scheduleId") ?: ""
                             EditScheduleScreen(navController, scheduleId)
                         }
-                        composable("list_jadwal") { AllSchedulesScreen(navController) }
-                        composable("add_tugas") { AddTaskScreen(navController) }
-                        composable("edit_tugas/{taskId}") { backStackEntry ->
+
+                        composableWithAnimations("list_jadwal") {
+                            AllSchedulesScreen(navController)
+                        }
+
+                        composableWithAnimations("add_tugas") {
+                            AddTaskScreen(navController)
+                        }
+
+                        composableWithAnimations("edit_tugas/{taskId}") { backStackEntry ->
                             val taskId = backStackEntry.arguments?.getString("taskId") ?: ""
                             EditTaskScreen(navController, taskId)
                         }
-                        composable("list_tugas") { AllTasksScreen(navController) }
-                        composable("kalender") { CalendarScreen(navController) }
-                        composable("notifikasi") { NotificationScreen(navController) }
-                        composable("akun") {
+
+                        composableWithAnimations("list_tugas") {
+                            AllTasksScreen(navController)
+                        }
+
+                        composableWithAnimations("kalender") {
+                            CalendarScreen(navController)
+                        }
+
+                        composableWithAnimations("notifikasi") {
+                            NotificationScreen(navController)
+                        }
+
+                        composableWithAnimations("akun") {
                             ProfileScreen(
                                 navController,
                                 themeViewModel = themeViewModel
                             )
                         }
-                        composable("edit_akun") {
+
+                        composableWithAnimations("edit_akun") {
                             ProfileEditScreen(
                                 navController,
                                 themeViewModel = themeViewModel
                             )
                         }
-                        composable("keamanan_privasi") {
+
+                        composableWithAnimations("keamanan_privasi") {
                             SecurityPrivacyScreen(
                                 navController,
                                 themeViewModel = themeViewModel
                             )
                         }
-                        composable("faq") {
+
+                        composableWithAnimations("faq") {
                             FAQScreen(
                                 navController,
                                 themeViewModel = themeViewModel
                             )
                         }
-                        composable("notification_list") { NotificationListScreen(navController) }
+
+                        composableWithAnimations("notification_list") {
+                            NotificationListScreen(navController)
+                        }
                     }
                 }
             }
         }
     }
 
-    @androidx.compose.runtime.Composable
+    @Composable
     private fun HandleNotificationNavigation(navController: NavHostController) {
         val type = remember { notificationType }
         val id = remember { notificationId }
@@ -254,15 +475,15 @@ class MainActivity : FragmentActivity() {
                     NotificationWorker.TYPE_TASK -> {
                         Log.d("MainActivity", "Navigating to all task screen")
                         navController.navigate("list_tugas") {
-
                             popUpTo("home") { inclusive = false }
+                            launchSingleTop = true
                         }
                     }
                     NotificationWorker.TYPE_SCHEDULE -> {
                         Log.d("MainActivity", "Navigating to schedule all screen")
                         navController.navigate("list_jadwal") {
-
                             popUpTo("home") { inclusive = false }
+                            launchSingleTop = true
                         }
                     }
                 }
@@ -322,9 +543,9 @@ class MainActivity : FragmentActivity() {
 
     private fun requestExactAlarmPermission() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-            val alarmManager = getSystemService(Context.ALARM_SERVICE) as android.app.AlarmManager
+            val alarmManager = getSystemService(ALARM_SERVICE) as android.app.AlarmManager
             if (!alarmManager.canScheduleExactAlarms()) {
-                val intent = Intent(android.provider.Settings.ACTION_REQUEST_SCHEDULE_EXACT_ALARM)
+                val intent = Intent(Settings.ACTION_REQUEST_SCHEDULE_EXACT_ALARM)
                 intent.data = Uri.parse("package:$packageName")
                 requestAlarmPermissionLauncher.launch(intent)
             }
@@ -358,7 +579,7 @@ class MainActivity : FragmentActivity() {
     private fun requestBatteryOptimizationExemption() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             val packageName = packageName
-            val pm = getSystemService(Context.POWER_SERVICE) as PowerManager
+            val pm = getSystemService(POWER_SERVICE) as PowerManager
             if (!pm.isIgnoringBatteryOptimizations(packageName)) {
                 val intent = Intent(Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS)
                 intent.data = Uri.parse("package:$packageName")
