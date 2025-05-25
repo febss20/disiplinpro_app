@@ -31,3 +31,6 @@ val DarkCardBackground = Color(0xFF252525)
 val DarkCardLight = Color(0xFF2C2C2C)
 val DarkDivider = Color(0xFF353535)
 val DarkHighlight = Color(0xFF2A2A2A)
+
+// Tambahkan konstanta warna background untuk tema gelap dan terang
+val LightBackground = Color(0xFFFAF3E0)

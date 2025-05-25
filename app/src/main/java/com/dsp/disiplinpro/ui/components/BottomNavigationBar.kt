@@ -19,6 +19,45 @@ import com.dsp.disiplinpro.ui.theme.DarkCardBackground
 import com.dsp.disiplinpro.ui.theme.DarkIconInactive
 import com.dsp.disiplinpro.ui.theme.DarkPrimaryBlue
 import com.dsp.disiplinpro.R
+import androidx.compose.animation.core.*
+import androidx.compose.runtime.*
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.ui.graphics.graphicsLayer
+import kotlinx.coroutines.launch
+import com.dsp.disiplinpro.ui.theme.Spring
+import android.content.Context
+import com.dsp.disiplinpro.ui.theme.DarkBackground
+import com.dsp.disiplinpro.ui.theme.LightBackground
+import androidx.datastore.preferences.core.booleanPreferencesKey
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.runBlocking
+import com.dsp.disiplinpro.data.preferences.dataStore
+
+/**
+ * Fungsi Composable untuk mendapatkan warna background berdasarkan tema
+ */
+@Composable
+fun getBackgroundColorForCurrentTheme(): Color {
+    val context = LocalContext.current
+    val themePreferences = ThemePreferences(context)
+    val isDarkMode by themePreferences.isDarkMode.collectAsState(initial = false)
+    return if (isDarkMode) DarkBackground else LightBackground
+}
+
+/**
+ * Fungsi non-Composable untuk mendapatkan status tema gelap
+ * Perhatian: Menggunakan runBlocking untuk flow, gunakan hanya di luar Composable
+ */
+fun isDarkModeEnabled(context: Context): Boolean {
+    val IS_DARK_MODE = booleanPreferencesKey("is_dark_mode")
+    return runBlocking {
+        context.dataStore.data.map { preferences ->
+            preferences[IS_DARK_MODE] ?: false
+        }.first()
+    }
+}
 
 @Composable
 fun BottomNavigationBar(
@@ -40,119 +79,205 @@ fun BottomNavigationBar(
         shadowElevation = 8.dp,
         color = if (isDarkMode) DarkCardBackground else Color(0xFFFFF8E1)
     ) {
-            Row (
-                verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier
-                    .fillMaxWidth()
-            ){
-                NavigationBarItem(
-                    icon = {
-                        Icon(
-                            painter = painterResource(R.drawable.vector),
-                            contentDescription = "Home",
-                            modifier = Modifier
-                                .size(22.dp)
-                                .scale(1.2f)
-                        )
-                    },
-                    label = { Text("Home") },
-                    selected = currentRoute == "home",
-                    onClick = {
-                        if (currentRoute != "home") {
-                            navController.navigate("home") {
-                                popUpTo("home") { inclusive = false }
-                                launchSingleTop = true
-                            }
-                        }
-                    },
-                    colors = NavigationBarItemDefaults.colors(
-                        indicatorColor = Color.Transparent,
-                        selectedIconColor = if (isDarkMode) DarkPrimaryBlue else Color(0xFF2196F3),
-                        unselectedIconColor = if (isDarkMode) DarkIconInactive else Color(0xFF333333),
-                        selectedTextColor = if (isDarkMode) DarkPrimaryBlue else Color(0xFF7DAFCB)
+        Row (
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier
+                .fillMaxWidth()
+        ){
+            val weight = 1f // Setiap item akan mendapatkan bobot yang sama
+
+            // Home
+            SimpleAnimatedNavItem(
+                icon = { color ->
+                    Icon(
+                        painter = painterResource(R.drawable.vector),
+                        contentDescription = "Home",
+                        modifier = Modifier
+                            .size(22.dp)
+                            .scale(1.2f),
+                        tint = color
                     )
-                )
-                NavigationBarItem(
-                    icon = {
-                        Icon(
-                            painter = painterResource(R.drawable.kalender),
-                            contentDescription = "Kalender",
-                            modifier = Modifier
-                                .size(22.dp)
-                                .scale(1f)
-                        )
-                    },
-                    label = { Text("Kalender") },
-                    selected = currentRoute == "kalender",
-                    onClick = {
-                        if (currentRoute != "kalender") {
-                            navController.navigate("kalender") {
-                                popUpTo("home") { inclusive = false }
-                                launchSingleTop = true
-                            }
+                },
+                label = "Home",
+                selected = currentRoute == "home",
+                onClick = {
+                    if (currentRoute != "home") {
+                        navController.navigate("home") {
+                            popUpTo("home") { inclusive = false }
+                            launchSingleTop = true
                         }
-                    },
-                    colors = NavigationBarItemDefaults.colors(
-                        indicatorColor = Color.Transparent,
-                        selectedIconColor = if (isDarkMode) DarkPrimaryBlue else Color(0xFF2196F3),
-                        unselectedIconColor = if (isDarkMode) DarkIconInactive else Color(0xFF333333),
-                        selectedTextColor = if (isDarkMode) DarkPrimaryBlue else Color(0xFF7DAFCB)
+                    }
+                },
+                selectedColor = if (isDarkMode) DarkPrimaryBlue else Color(0xFF2196F3),
+                unselectedColor = if (isDarkMode) DarkIconInactive else Color(0xFF333333),
+                modifier = Modifier.weight(weight)
+            )
+
+            // Kalender
+            SimpleAnimatedNavItem(
+                icon = { color ->
+                    Icon(
+                        painter = painterResource(R.drawable.kalender),
+                        contentDescription = "Kalender",
+                        modifier = Modifier
+                            .size(22.dp)
+                            .scale(1f),
+                        tint = color
                     )
-                )
-                NavigationBarItem(
-                    icon = {
-                        Icon(
-                            painter = painterResource(R.drawable.notif),
-                            contentDescription = "Notifikasi",
-                            modifier = Modifier
-                                .size(22.dp)
-                                .scale(1.4f)
-                        )
-                    },
-                    label = { Text("Notifikasi") },
-                    selected = currentRoute == "notifikasi",
-                    onClick = {
-                        if (currentRoute != "notifikasi") {
-                            navController.navigate("notifikasi") {
-                                popUpTo("home") { inclusive = false }
-                                launchSingleTop = true
-                            }
+                },
+                label = "Kalender",
+                selected = currentRoute == "kalender",
+                onClick = {
+                    if (currentRoute != "kalender") {
+                        navController.navigate("kalender") {
+                            popUpTo("home") { inclusive = false }
+                            launchSingleTop = true
                         }
-                    },
-                    colors = NavigationBarItemDefaults.colors(
-                        indicatorColor = Color.Transparent,
-                        selectedIconColor = if (isDarkMode) DarkPrimaryBlue else Color(0xFF2196F3),
-                        unselectedIconColor = if (isDarkMode) DarkIconInactive else Color(0xFF333333),
-                        selectedTextColor = if (isDarkMode) DarkPrimaryBlue else Color(0xFF7DAFCB)
+                    }
+                },
+                selectedColor = if (isDarkMode) DarkPrimaryBlue else Color(0xFF2196F3),
+                unselectedColor = if (isDarkMode) DarkIconInactive else Color(0xFF333333),
+                modifier = Modifier.weight(weight)
+            )
+
+            // Notifikasi
+            SimpleAnimatedNavItem(
+                icon = { color ->
+                    Icon(
+                        painter = painterResource(R.drawable.notif),
+                        contentDescription = "Notifikasi",
+                        modifier = Modifier
+                            .size(22.dp)
+                            .scale(1.4f),
+                        tint = color
                     )
-                )
-                NavigationBarItem(
-                    icon = {
-                        Icon(
-                            painter = painterResource(R.drawable.akun),
-                            contentDescription = "Akun",
-                            modifier = Modifier
-                                .size(22.dp)
-                                .scale(1f)
-                        )
-                    },
-                    label = { Text("Akun") },
-                    selected = currentRoute == "akun",
-                    onClick = {
-                        if (currentRoute != "akun") {
-                            navController.navigate("akun") {
-                                popUpTo("home") { inclusive = false }
-                                launchSingleTop = true
-                            }
+                },
+                label = "Notifikasi",
+                selected = currentRoute == "notifikasi",
+                onClick = {
+                    if (currentRoute != "notifikasi") {
+                        navController.navigate("notifikasi") {
+                            popUpTo("home") { inclusive = false }
+                            launchSingleTop = true
                         }
-                    },
-                    colors = NavigationBarItemDefaults.colors(
-                        indicatorColor = Color.Transparent,
-                        selectedIconColor = if (isDarkMode) DarkPrimaryBlue else Color(0xFF2196F3),
-                        unselectedIconColor = if (isDarkMode) DarkIconInactive else Color(0xFF333333),
-                        selectedTextColor = if (isDarkMode) DarkPrimaryBlue else Color(0xFF7DAFCB)
+                    }
+                },
+                selectedColor = if (isDarkMode) DarkPrimaryBlue else Color(0xFF2196F3),
+                unselectedColor = if (isDarkMode) DarkIconInactive else Color(0xFF333333),
+                modifier = Modifier.weight(weight)
+            )
+
+            // Akun
+            SimpleAnimatedNavItem(
+                icon = { color ->
+                    Icon(
+                        painter = painterResource(R.drawable.akun),
+                        contentDescription = "Akun",
+                        modifier = Modifier
+                            .size(22.dp)
+                            .scale(1f),
+                        tint = color
                     )
+                },
+                label = "Akun",
+                selected = currentRoute == "akun",
+                onClick = {
+                    if (currentRoute != "akun") {
+                        navController.navigate("akun") {
+                            popUpTo("home") { inclusive = false }
+                            launchSingleTop = true
+                        }
+                    }
+                },
+                selectedColor = if (isDarkMode) DarkPrimaryBlue else Color(0xFF2196F3),
+                unselectedColor = if (isDarkMode) DarkIconInactive else Color(0xFF333333),
+                modifier = Modifier.weight(weight)
+            )
+        }
+    }
+}
+
+@Composable
+fun SimpleAnimatedNavItem(
+    icon: @Composable (Color) -> Unit,
+    label: String,
+    selected: Boolean,
+    onClick: () -> Unit,
+    selectedColor: Color,
+    unselectedColor: Color,
+    modifier: Modifier = Modifier
+) {
+    // Scale animation untuk efek tap
+    val scale = remember { Animatable(1f) }
+    val scope = rememberCoroutineScope()
+
+    LaunchedEffect(selected) {
+        if (selected) {
+            // Animasi ketika item dipilih
+            scale.animateTo(
+                targetValue = 1.2f,
+                animationSpec = spring(
+                    dampingRatio = Spring.DampingRatioMediumBouncy,
+                    stiffness = Spring.StiffnessMedium
                 )
+            )
+            scale.animateTo(
+                targetValue = 1f,
+                animationSpec = spring(
+                    dampingRatio = Spring.DampingRatioMediumBouncy,
+                    stiffness = Spring.StiffnessMedium
+                )
+            )
+        }
+    }
+
+    // Determine the color to use
+    val iconColor = if (selected) selectedColor else unselectedColor
+
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center,
+        modifier = modifier
+            .fillMaxHeight()
+            .clickable(
+                interactionSource = remember { MutableInteractionSource() },
+                indication = null
+            ) {
+                scope.launch {
+                    scale.animateTo(
+                        targetValue = 0.9f,
+                        animationSpec = tween(
+                            durationMillis = 50,
+                            easing = FastOutSlowInEasing
+                        )
+                    )
+                    scale.animateTo(
+                        targetValue = 1f,
+                        animationSpec = tween(
+                            durationMillis = 100,
+                            easing = FastOutSlowInEasing
+                        )
+                    )
+                }
+                onClick()
             }
+    ) {
+        Box(
+            modifier = Modifier.graphicsLayer {
+                scaleX = scale.value
+                scaleY = scale.value
+            }
+        ) {
+            // Pass the color to the icon composable
+            icon(iconColor)
+        }
+
+        Spacer(modifier = Modifier.height(4.dp))
+
+        Text(
+            text = label,
+            style = MaterialTheme.typography.labelSmall,
+            color = iconColor
+        )
     }
 }
