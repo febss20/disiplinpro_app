@@ -30,9 +30,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
-import androidx.navigation.compose.currentBackStackEntryAsState
 import com.dsp.disiplinpro.data.preferences.ThemePreferences
-import com.dsp.disiplinpro.ui.components.BottomNavigationBar
 import com.dsp.disiplinpro.ui.theme.DarkBackground
 import com.dsp.disiplinpro.ui.theme.DarkCardBackground
 import com.dsp.disiplinpro.ui.theme.DarkPrimaryBlue
@@ -50,8 +48,6 @@ private const val PREF_TASK_TIME = "taskTimeBefore"
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalAnimationApi::class)
 @Composable
 fun NotificationScreen(navController: NavController) {
-    val navBackStackEntry by navController.currentBackStackEntryAsState()
-    val currentRoute = navBackStackEntry?.destination?.route
     val context = LocalContext.current
     val timeOptions = listOf("10 Menit sebelum", "30 Menit sebelum", "1 Jam sebelum", "1 Hari sebelum")
 
@@ -265,14 +261,6 @@ fun NotificationScreen(navController: NavController) {
                 }
             }
         }
-
-        BottomNavigationBar(
-            navController = navController,
-            currentRoute = currentRoute,
-            modifier = Modifier
-                .align(Alignment.BottomCenter)
-                .padding(bottom = 20.dp)
-        )
     }
 }
 

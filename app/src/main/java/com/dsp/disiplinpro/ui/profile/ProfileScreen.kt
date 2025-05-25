@@ -28,10 +28,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
-import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.work.WorkManager
 import coil.compose.AsyncImage
-import com.dsp.disiplinpro.ui.components.BottomNavigationBar
 import com.dsp.disiplinpro.ui.components.DarkModeToggle
 import com.dsp.disiplinpro.ui.theme.DarkBackground
 import com.dsp.disiplinpro.ui.theme.DarkCardBackground
@@ -51,12 +49,8 @@ fun ProfileScreen(
     themeViewModel: ThemeViewModel
 ) {
     val user by homeViewModel.user.collectAsState()
-    val navBackStackEntry by navController.currentBackStackEntryAsState()
-    val currentRoute = navBackStackEntry?.destination?.route
     val currentDate = SimpleDateFormat("dd MMMM yyyy", Locale.getDefault()).format(Date())
     val context = LocalContext.current
-
-    // Observe dark mode status
     val isDarkMode by themeViewModel.isDarkMode.collectAsState()
 
     Box(
@@ -195,17 +189,6 @@ fun ProfileScreen(
             }
 
             Spacer(modifier = Modifier.height(96.dp))
-        }
-
-        // Bottom Navigation Bar
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(100.dp)
-                .background(if (isDarkMode) DarkBackground else Color(0xFFFAF3E0))
-                .align(Alignment.BottomCenter)
-        ) {
-            BottomNavigationBar(navController = navController, currentRoute = currentRoute)
         }
     }
 }

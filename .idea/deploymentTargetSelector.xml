@@ -15,7 +15,7 @@
       </SelectionState>
       <SelectionState runConfigName="disiplinpro.app">
         <option name="selectionMode" value="DROPDOWN" />
-        <DropdownSelection timestamp="2025-05-25T01:03:47.529459Z">
+        <DropdownSelection timestamp="2025-05-25T01:59:15.989517800Z">
           <Target type="DEFAULT_BOOT">
             <handle>
               <DeviceId pluginId="LocalEmulator" identifier="path=C:\Users\asus\.android\avd\Pixel_8_Pro.avd" />

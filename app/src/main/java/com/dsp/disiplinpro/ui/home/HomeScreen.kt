@@ -27,9 +27,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
-import androidx.navigation.compose.currentBackStackEntryAsState
 import coil.compose.AsyncImage
-import com.dsp.disiplinpro.ui.components.BottomNavigationBar
 import com.dsp.disiplinpro.ui.schedule.ScheduleItem
 import com.dsp.disiplinpro.ui.task.TaskItem
 import com.dsp.disiplinpro.viewmodel.home.HomeViewModel
@@ -55,8 +53,6 @@ fun HomeScreen(
     val user by viewModel.user.collectAsState()
     val tasks by taskViewModel.tasks.collectAsState()
     val schedules by scheduleViewModel.schedules.collectAsState()
-    val navBackStackEntry by navController.currentBackStackEntryAsState()
-    val currentRoute = navBackStackEntry?.destination?.route
 
     val totalTaskCount = remember { mutableStateOf(0) }
     val totalScheduleCount = remember { mutableStateOf(0) }
@@ -110,21 +106,7 @@ fun HomeScreen(
                 if (todayTasks.isNotEmpty()) TaskItem(todayTasks, taskViewModel)
                 else EmptyItemMessage("Tidak ada tugas hari ini", isDarkMode)
             }
-            item { Spacer(modifier = Modifier.height(120.dp)) }
-        }
-
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(100.dp)
-                .background(if (isDarkMode) DarkBackground else Color(0xFFFAF3E0))
-                .align(Alignment.BottomCenter)
-        ) {
-            BottomNavigationBar(
-                navController = navController,
-                currentRoute = currentRoute,
-                modifier = Modifier.padding(bottom = 20.dp)
-            )
+            item { Spacer(modifier = Modifier.height(80.dp)) }
         }
     }
 }
