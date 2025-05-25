@@ -67,7 +67,7 @@ fun DarkModeToggle(
         Box(
             modifier = Modifier
                 .padding(start = thumbPosition.value)
-                .size(22.dp)
+                .size(26.dp)
                 .clip(CircleShape)
                 .background(thumbTint),
             contentAlignment = Alignment.Center

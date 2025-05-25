@@ -31,6 +31,8 @@ import com.google.accompanist.systemuicontroller.rememberSystemUiController
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import com.dsp.disiplinpro.util.NavigationBarUtils
+import androidx.compose.ui.platform.LocalContext
 
 class MainActivity : FragmentActivity() {
     private val themeViewModel = ThemeViewModel()
@@ -97,8 +99,12 @@ class MainActivity : FragmentActivity() {
             val isDarkMode by themeViewModel.isDarkMode.collectAsState()
             val systemUiController = rememberSystemUiController()
             val backgroundColor = getBackgroundColorForCurrentTheme()
+            val context = LocalContext.current
             val navBackStackEntry by navController.currentBackStackEntryAsState()
             val currentRoute = navBackStackEntry?.destination?.route
+
+            val isGestureNavigation = NavigationBarUtils.isGestureNavigation(context)
+            val bottomPadding = if (isGestureNavigation) 25.dp else 55.dp
 
             systemUiController.setStatusBarColor(
                 color = Color.Transparent,
@@ -141,7 +147,7 @@ class MainActivity : FragmentActivity() {
                             currentRoute = currentRoute,
                             modifier = Modifier
                                 .align(androidx.compose.ui.Alignment.BottomCenter)
-                                .padding(bottom = 55.dp)
+                                .padding(bottom = bottomPadding)
                         )
                     }
                 }
