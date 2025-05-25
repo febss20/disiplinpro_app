@@ -16,14 +16,11 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
-import androidx.navigation.compose.currentBackStackEntryAsState
 import com.dsp.disiplinpro.data.preferences.ThemePreferences
 import com.dsp.disiplinpro.ui.components.AdvancedCalendarView
-import com.dsp.disiplinpro.ui.components.BottomNavigationBar
 import com.dsp.disiplinpro.ui.components.ScheduleDescription
 import com.dsp.disiplinpro.ui.components.StandardHeader
 import com.dsp.disiplinpro.ui.theme.DarkBackground
-import com.dsp.disiplinpro.ui.theme.DarkPrimaryBlue
 import com.dsp.disiplinpro.ui.theme.DarkTextLight
 import com.dsp.disiplinpro.viewmodel.schedule.ScheduleViewModel
 import com.google.firebase.auth.FirebaseAuth
@@ -41,10 +38,7 @@ fun CalendarScreen(
     var currentMonth by remember { mutableStateOf(Calendar.getInstance()) }
     val dateFormat = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
     val timeFormat = SimpleDateFormat("HH:mm", Locale.getDefault())
-    val navBackStackEntry by navController.currentBackStackEntryAsState()
-    val currentRoute = navBackStackEntry?.destination?.route
 
-    // Cek dark mode
     val context = LocalContext.current
     val themePreferences = ThemePreferences(context)
     val isDarkMode by themePreferences.isDarkMode.collectAsState(initial = false)
@@ -126,22 +120,8 @@ fun CalendarScreen(
                     )
                 }
 
-                Spacer(modifier = Modifier.height(120.dp))
+                Spacer(modifier = Modifier.height(80.dp))
             }
-        }
-
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(100.dp)
-                .background(if (isDarkMode) DarkBackground else Color(0xFFFAF3E0))
-                .align(Alignment.BottomCenter)
-        ) {
-            BottomNavigationBar(
-                navController = navController,
-                currentRoute = currentRoute,
-                modifier = Modifier.padding(bottom = 20.dp)
-            )
         }
     }
 

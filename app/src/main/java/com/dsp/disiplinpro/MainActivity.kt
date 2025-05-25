@@ -7,17 +7,21 @@ import androidx.activity.compose.setContent
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.unit.dp
 import androidx.core.view.WindowCompat
 import androidx.fragment.app.FragmentActivity
+import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.dsp.disiplinpro.navigation.DisiplinProNavHost
 import com.dsp.disiplinpro.navigation.NavigationHandler
 import com.dsp.disiplinpro.permissions.PermissionManager
 import com.dsp.disiplinpro.data.security.SecurityManager
+import com.dsp.disiplinpro.ui.components.BottomNavigationBar
 import com.dsp.disiplinpro.ui.components.getBackgroundColorForCurrentTheme
 import com.dsp.disiplinpro.ui.theme.DisiplinproTheme
 import com.dsp.disiplinpro.viewmodel.auth.AuthViewModel
@@ -93,6 +97,8 @@ class MainActivity : FragmentActivity() {
             val isDarkMode by themeViewModel.isDarkMode.collectAsState()
             val systemUiController = rememberSystemUiController()
             val backgroundColor = getBackgroundColorForCurrentTheme()
+            val navBackStackEntry by navController.currentBackStackEntryAsState()
+            val currentRoute = navBackStackEntry?.destination?.route
 
             systemUiController.setStatusBarColor(
                 color = Color.Transparent,
@@ -116,14 +122,37 @@ class MainActivity : FragmentActivity() {
                 ) {
                     navigationHandler.HandleNotificationNavigation(navController)
 
-                    DisiplinProNavHost(
-                        navController = navController,
-                        themeViewModel = themeViewModel,
-                        backgroundColor = backgroundColor,
-                        authViewModel = authViewModel
-                    )
+                    Box(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(bottom = if (shouldShowBottomBar(currentRoute)) 115.dp else 0.dp)
+                    ) {
+                        DisiplinProNavHost(
+                            navController = navController,
+                            themeViewModel = themeViewModel,
+                            backgroundColor = backgroundColor,
+                            authViewModel = authViewModel
+                        )
+                    }
+
+                    if (shouldShowBottomBar(currentRoute)) {
+                        BottomNavigationBar(
+                            navController = navController,
+                            currentRoute = currentRoute,
+                            modifier = Modifier
+                                .align(androidx.compose.ui.Alignment.BottomCenter)
+                                .padding(bottom = 45.dp)
+                        )
+                    }
                 }
             }
         }
+    }
+
+    private fun shouldShowBottomBar(currentRoute: String?): Boolean {
+        return currentRoute == "home" ||
+                currentRoute == "kalender" ||
+                currentRoute == "notifikasi" ||
+                currentRoute == "akun"
     }
 }
