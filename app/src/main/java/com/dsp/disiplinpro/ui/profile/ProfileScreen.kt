@@ -183,9 +183,17 @@ fun ProfileScreen(
                     .fillMaxWidth()
                     .height(50.dp),
                 colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFE57373)),
-                shape = RoundedCornerShape(10.dp)
+                shape = RoundedCornerShape(10.dp),
+                enabled = !authViewModel.isLoading.value
             ) {
-                Text("Logout", color = Color.White, fontSize = 18.sp, fontWeight = FontWeight.Bold)
+                if (authViewModel.isLoading.value) {
+                    CircularProgressIndicator(
+                        color = Color.White,
+                        modifier = Modifier.size(24.dp)
+                    )
+                } else {
+                    Text("Logout", color = Color.White, fontSize = 18.sp, fontWeight = FontWeight.Bold)
+                }
             }
 
             Spacer(modifier = Modifier.height(96.dp))

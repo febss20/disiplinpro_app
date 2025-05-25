@@ -84,16 +84,6 @@ class AuthRepository {
 
     suspend fun sendPasswordResetEmail(email: String): Boolean {
         return try {
-            val querySnapshot = usersCollection
-                .whereEqualTo("email", email)
-                .get()
-                .await()
-
-            if (querySnapshot.isEmpty) {
-                Log.w(TAG, "Email not found in database: $email")
-                return false
-            }
-
             auth.sendPasswordResetEmail(email).await()
             Log.d(TAG, "Password reset email sent to: $email")
             true

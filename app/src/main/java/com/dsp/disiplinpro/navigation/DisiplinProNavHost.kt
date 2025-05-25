@@ -230,6 +230,9 @@ fun DisiplinProNavHost(
                 route == "faq" -> 4
                 route == "notification_list" -> 4
 
+                route == "forgot_password" -> 4
+                route == "email_verification" -> 4
+
                 else -> -1
             }
         }

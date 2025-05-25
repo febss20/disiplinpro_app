@@ -141,7 +141,7 @@ class MainActivity : FragmentActivity() {
                             currentRoute = currentRoute,
                             modifier = Modifier
                                 .align(androidx.compose.ui.Alignment.BottomCenter)
-                                .padding(bottom = 45.dp)
+                                .padding(bottom = 55.dp)
                         )
                     }
                 }
