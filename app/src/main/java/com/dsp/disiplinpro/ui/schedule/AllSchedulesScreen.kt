@@ -19,9 +19,7 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
-import androidx.navigation.compose.currentBackStackEntryAsState
 import com.dsp.disiplinpro.data.model.Schedule
-import com.dsp.disiplinpro.ui.components.BottomNavigationBar
 import com.dsp.disiplinpro.ui.theme.*
 import com.dsp.disiplinpro.viewmodel.schedule.ScheduleViewModel
 import com.skydoves.landscapist.ImageOptions
@@ -55,8 +53,6 @@ fun AllSchedulesScreen(
 
     val schedules by viewModel.schedules.collectAsState(initial = emptyList())
     var selectedSchedule by remember { mutableStateOf<Schedule?>(null) }
-    val navBackStackEntry by navController.currentBackStackEntryAsState()
-    val currentRoute = navBackStackEntry?.destination?.route
     val scrollState = rememberScrollState()
 
     val dayOrder = listOf("senin", "selasa", "rabu", "kamis", "jumat", "sabtu", "minggu")
@@ -228,8 +224,6 @@ fun AllSchedulesScreen(
                     )
                 }
             }
-
-            BottomNavigationBar(navController = navController, currentRoute = currentRoute)
         }
     }
 }

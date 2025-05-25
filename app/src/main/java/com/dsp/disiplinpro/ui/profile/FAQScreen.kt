@@ -242,6 +242,7 @@ fun FAQScreen(
                 onClick = { viewModel.contactSupport() },
                 modifier = Modifier
                     .fillMaxWidth()
+                    .padding(bottom = 30.dp)
                     .height(50.dp),
                 colors = ButtonDefaults.buttonColors(containerColor = accentColor),
                 shape = RoundedCornerShape(8.dp)

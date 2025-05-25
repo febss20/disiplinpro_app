@@ -35,9 +35,6 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.runBlocking
 import com.dsp.disiplinpro.data.preferences.dataStore
 
-/**
- * Fungsi Composable untuk mendapatkan warna background berdasarkan tema
- */
 @Composable
 fun getBackgroundColorForCurrentTheme(): Color {
     val context = LocalContext.current
@@ -46,10 +43,6 @@ fun getBackgroundColorForCurrentTheme(): Color {
     return if (isDarkMode) DarkBackground else LightBackground
 }
 
-/**
- * Fungsi non-Composable untuk mendapatkan status tema gelap
- * Perhatian: Menggunakan runBlocking untuk flow, gunakan hanya di luar Composable
- */
 fun isDarkModeEnabled(context: Context): Boolean {
     val IS_DARK_MODE = booleanPreferencesKey("is_dark_mode")
     return runBlocking {
@@ -84,7 +77,7 @@ fun BottomNavigationBar(
             modifier = Modifier
                 .fillMaxWidth()
         ){
-            val weight = 1f // Setiap item akan mendapatkan bobot yang sama
+            val weight = 1f
 
             // Home
             SimpleAnimatedNavItem(
@@ -129,9 +122,16 @@ fun BottomNavigationBar(
                 selected = currentRoute == "kalender",
                 onClick = {
                     if (currentRoute != "kalender") {
-                        navController.navigate("kalender") {
-                            popUpTo("home") { inclusive = false }
-                            launchSingleTop = true
+                        if (currentRoute == "akun") {
+                            navController.navigate("kalender") {
+                                popUpTo("home") { inclusive = false }
+                                launchSingleTop = true
+                            }
+                        } else {
+                            navController.navigate("kalender") {
+                                popUpTo("home") { inclusive = false }
+                                launchSingleTop = true
+                            }
                         }
                     }
                 },
@@ -156,9 +156,16 @@ fun BottomNavigationBar(
                 selected = currentRoute == "notifikasi",
                 onClick = {
                     if (currentRoute != "notifikasi") {
-                        navController.navigate("notifikasi") {
-                            popUpTo("home") { inclusive = false }
-                            launchSingleTop = true
+                        if (currentRoute == "akun") {
+                            navController.navigate("notifikasi") {
+                                popUpTo("home") { inclusive = false }
+                                launchSingleTop = true
+                            }
+                        } else {
+                            navController.navigate("notifikasi") {
+                                popUpTo("home") { inclusive = false }
+                                launchSingleTop = true
+                            }
                         }
                     }
                 },
@@ -207,13 +214,11 @@ fun SimpleAnimatedNavItem(
     unselectedColor: Color,
     modifier: Modifier = Modifier
 ) {
-    // Scale animation untuk efek tap
     val scale = remember { Animatable(1f) }
     val scope = rememberCoroutineScope()
 
     LaunchedEffect(selected) {
         if (selected) {
-            // Animasi ketika item dipilih
             scale.animateTo(
                 targetValue = 1.2f,
                 animationSpec = spring(
@@ -231,7 +236,6 @@ fun SimpleAnimatedNavItem(
         }
     }
 
-    // Determine the color to use
     val iconColor = if (selected) selectedColor else unselectedColor
 
     Column(
@@ -268,7 +272,6 @@ fun SimpleAnimatedNavItem(
                 scaleY = scale.value
             }
         ) {
-            // Pass the color to the icon composable
             icon(iconColor)
         }
 

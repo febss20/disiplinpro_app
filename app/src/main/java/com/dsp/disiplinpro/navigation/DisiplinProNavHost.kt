@@ -205,6 +205,35 @@ fun DisiplinProNavHost(
             }
         }
 
+        fun getRouteIndex(route: String?): Int {
+            val mainRoutes = mapOf(
+                "home" to 0,
+                "kalender" to 1,
+                "notifikasi" to 2,
+                "akun" to 3
+            )
+
+            mainRoutes[route]?.let { return it }
+
+            return when {
+                route == "list_jadwal" -> 1
+                route == "list_tugas" -> 1
+
+                route == "add_jadwal" -> 4
+                route == "add_tugas" -> 4
+
+                route?.startsWith("edit_jadwal") == true -> 4
+                route?.startsWith("edit_tugas") == true -> 4
+
+                route == "edit_akun" -> 4
+                route == "keamanan_privasi" -> 4
+                route == "faq" -> 4
+                route == "notification_list" -> 4
+
+                else -> -1
+            }
+        }
+
         fun NavGraphBuilder.composableWithAnimations(
             route: String,
             content: @Composable (NavBackStackEntry) -> Unit
@@ -212,8 +241,17 @@ fun DisiplinProNavHost(
             composable(
                 route = route,
                 enterTransition = {
+                    val currentIndex = getRouteIndex(initialState.destination.route)
+                    val targetIndex = getRouteIndex(targetState.destination.route)
+
+                    val direction = if (targetIndex > currentIndex) {
+                        AnimatedContentTransitionScope.SlideDirection.Left
+                    } else {
+                        AnimatedContentTransitionScope.SlideDirection.Right
+                    }
+
                     slideIntoContainer(
-                        towards = AnimatedContentTransitionScope.SlideDirection.Left,
+                        towards = direction,
                         animationSpec = tween(300, easing = EaseInOut)
                     ) + fadeIn(
                         initialAlpha = 0.3f,
@@ -221,8 +259,17 @@ fun DisiplinProNavHost(
                     )
                 },
                 exitTransition = {
+                    val currentIndex = getRouteIndex(initialState.destination.route)
+                    val targetIndex = getRouteIndex(targetState.destination.route)
+
+                    val direction = if (targetIndex > currentIndex) {
+                        AnimatedContentTransitionScope.SlideDirection.Left
+                    } else {
+                        AnimatedContentTransitionScope.SlideDirection.Right
+                    }
+
                     slideOutOfContainer(
-                        towards = AnimatedContentTransitionScope.SlideDirection.Left,
+                        towards = direction,
                         animationSpec = tween(300, easing = EaseInOut)
                     ) + fadeOut(animationSpec = tween(300))
                 },

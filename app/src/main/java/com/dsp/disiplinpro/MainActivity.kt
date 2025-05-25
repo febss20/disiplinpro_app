@@ -153,6 +153,9 @@ class MainActivity : FragmentActivity() {
         return currentRoute == "home" ||
                 currentRoute == "kalender" ||
                 currentRoute == "notifikasi" ||
-                currentRoute == "akun"
+                currentRoute == "akun" ||
+                currentRoute == "list_jadwal" ||
+                currentRoute == "list_tugas"
+
     }
 }
