@@ -392,7 +392,7 @@ fun TimePickerDialog(
             TextButton(onClick = onConfirm) { Text("OK") }
         },
         dismissButton = {
-            TextButton(onClick = onDismissRequest) { Text("Cancel") }
+            TextButton(onClick = onDismissRequest) { Text("Batal") }
         },
         text = { content() }
     )

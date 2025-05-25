@@ -4,6 +4,7 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Circle
 import androidx.compose.material.icons.outlined.DoorFront
 import androidx.compose.material.icons.outlined.WatchLater
 import androidx.compose.material3.Card
@@ -74,12 +75,13 @@ fun ScheduleItem(
                         verticalAlignment = Alignment.CenterVertically,
                         modifier = Modifier.padding(top = 12.dp, start = 23.dp)
                     ) {
-                        Image(
-                            painter = painterResource(id = R.drawable.ellipse706),
-                            contentDescription = "ellipse",
-                            modifier = Modifier.width(20.dp).padding(end = 8.dp),
-                            contentScale = ContentScale.Crop
+                        Icon(
+                            imageVector = Icons.Filled.Circle,
+                            contentDescription = "Points",
+                            modifier = Modifier.size(15.dp),
+                            tint = iconTint
                         )
+                        Spacer(modifier = Modifier.width(6.dp))
                         Text(
                             text = schedule.matkul,
                             color = textColor,

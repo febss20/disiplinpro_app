@@ -7,31 +7,31 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.lazy.grid.GridCells
-import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
-import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material.icons.filled.ArrowDropDown
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.DatePicker
+import androidx.compose.material3.DatePickerDialog
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -41,7 +41,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.compose.ui.window.Dialog
 import com.dsp.disiplinpro.data.model.Schedule
 import com.dsp.disiplinpro.ui.theme.DarkCardBackground
 import com.dsp.disiplinpro.ui.theme.DarkCardLight
@@ -70,6 +69,7 @@ private data class CalendarDay(
     val hasSchedule: Boolean
 )
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AdvancedCalendarView(
     currentMonth: Calendar,
@@ -85,9 +85,7 @@ fun AdvancedCalendarView(
         derivedStateOf { schedules.map { it.hari.lowercase() }.toSet() }
     }
 
-    var showYearRangeDialog by remember { mutableStateOf(false) }
-    var showMonthSelectionDialog by remember { mutableStateOf(false) }
-    var selectedYear by remember { mutableIntStateOf(currentMonth.get(Calendar.YEAR)) }
+    var showDatePicker by remember { mutableStateOf(false) }
 
     val calendarDays by remember(currentMonth, selectedDate, scheduleDays) {
         derivedStateOf { calculateCalendarDays(currentMonth, selectedDate, scheduleDays) }
@@ -113,7 +111,7 @@ fun AdvancedCalendarView(
                 newMonth.add(Calendar.MONTH, 1)
                 onMonthChanged(newMonth)
             },
-            onMonthYearClick = { showYearRangeDialog = true },
+            onMonthYearClick = { showDatePicker = true },
             isDarkMode = isDarkMode
         )
 
@@ -122,35 +120,31 @@ fun AdvancedCalendarView(
         CalendarGrid(calendarDays, onDateSelected, isDarkMode)
     }
 
-    if (showYearRangeDialog) {
-        YearRangeSelectionDialog(
-            onDismiss = { showYearRangeDialog = false },
-            onYearRangeSelected = { year ->
-                selectedYear = year
-                showYearRangeDialog = false
-                showMonthSelectionDialog = true
-            },
-            isDarkMode = isDarkMode
+    if (showDatePicker) {
+        val datePickerState = rememberDatePickerState(
+            initialSelectedDateMillis = currentMonth.timeInMillis
         )
-    }
 
-    if (showMonthSelectionDialog) {
-        MonthSelectionDialog(
-            selectedYear = selectedYear,
-            onDismiss = { showMonthSelectionDialog = false },
-            onBackPressed = {
-                showMonthSelectionDialog = false
-                showYearRangeDialog = true
+        DatePickerDialog(
+            onDismissRequest = { showDatePicker = false },
+            confirmButton = {
+                TextButton(onClick = {
+                    datePickerState.selectedDateMillis?.let { millis ->
+                        val newDate = Calendar.getInstance().apply {
+                            timeInMillis = millis
+                        }
+                        newDate.set(Calendar.DAY_OF_MONTH, 1)
+                        onMonthChanged(newDate)
+                    }
+                    showDatePicker = false
+                }) { Text("OK") }
             },
-            onMonthSelected = { month ->
-                showMonthSelectionDialog = false
-                val newDate = currentMonth.clone() as Calendar
-                newDate.set(Calendar.YEAR, selectedYear)
-                newDate.set(Calendar.MONTH, month)
-                onMonthChanged(newDate)
-            },
-            isDarkMode = isDarkMode
-        )
+            dismissButton = {
+                TextButton(onClick = { showDatePicker = false }) { Text("Batal") }
+            }
+        ) {
+            DatePicker(state = datePickerState)
+        }
     }
 }
 
@@ -239,7 +233,10 @@ private fun CalendarGrid(
     isDarkMode: Boolean
 ) {
     calendarDays.forEach { week ->
-        Row(modifier = Modifier.fillMaxWidth()) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceEvenly
+        ) {
             week.forEach { day ->
                 if (day == null) {
                     Box(modifier = Modifier.weight(1f).height(40.dp))
@@ -247,172 +244,35 @@ private fun CalendarGrid(
                     Box(
                         modifier = Modifier
                             .weight(1f)
-                            .height(40.dp)
-                            .clip(CircleShape)
-                            .background(
-                                when {
-                                    day.isSelected -> if (isDarkMode) DarkPrimaryBlue else Color(0xFF7DAFCB)
-                                    day.hasSchedule -> if (isDarkMode) Color(0xFF1E4B6B) else Color(0xFFCCE5FF)
-                                    else -> Color.Transparent
-                                }
-                            )
-                            .clickable {
-                                onDateSelected(day.date)
-                            },
-                        contentAlignment = Alignment.Center
+                            .padding(4.dp)
                     ) {
-                        Text(
-                            text = day.date.get(Calendar.DAY_OF_MONTH).toString(),
-                            color = when {
-                                day.isSelected -> Color.White
-                                isDarkMode -> DarkTextLight
-                                else -> Color.Black
-                            },
-                            fontSize = 14.sp
-                        )
-                    }
-                }
-            }
-        }
-    }
-}
-
-@Composable
-fun YearRangeSelectionDialog(
-    onDismiss: () -> Unit,
-    onYearRangeSelected: (Int) -> Unit,
-    isDarkMode: Boolean
-) {
-    val currentYear = Calendar.getInstance().get(Calendar.YEAR)
-    val baseYear = ((currentYear - 5) / 5) * 5
-
-    val yearRanges by remember(baseYear) {
-        derivedStateOf {
-            (0 until DEFAULT_YEAR_RANGE_COUNT).map { i ->
-                val start = baseYear + (i * 5)
-                start to start + 4
-            }
-        }
-    }
-
-    Dialog(onDismissRequest = onDismiss) {
-        Card(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp),
-            shape = RoundedCornerShape(16.dp),
-            colors = CardDefaults.cardColors(
-                containerColor = if (isDarkMode) DarkCardBackground else Color.White
-            )
-        ) {
-            Column(modifier = Modifier.padding(16.dp)) {
-                Text(
-                    "Pilih Tahun",
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 18.sp,
-                    modifier = Modifier.padding(bottom = 16.dp),
-                    color = if (isDarkMode) DarkTextLight else Color.Black
-                )
-
-                LazyVerticalGrid(
-                    columns = GridCells.Fixed(2),
-                    modifier = Modifier.padding(8.dp)
-                ) {
-                    items(yearRanges) { (start, end) ->
-                        val isCurrentRange = currentYear in start..end
-                        Text(
-                            text = "$start–$end",
-                            fontSize = 16.sp,
-                            textAlign = TextAlign.Center,
-                            color = if (isCurrentRange) Color.White else if (isDarkMode) DarkTextLight else Color.Black,
+                        Box(
                             modifier = Modifier
-                                .padding(8.dp)
-                                .clip(RoundedCornerShape(8.dp))
-                                .background(
-                                    if (isCurrentRange) if (isDarkMode) DarkPrimaryBlue else Color(0xFF7DAFCB)
-                                    else if (isDarkMode) DarkCardLight else Color(0xFFE0E0E0)
-                                )
-                                .padding(vertical = 12.dp, horizontal = 16.dp)
+                                .aspectRatio(1f)
                                 .fillMaxWidth()
-                                .clickable {
-                                    onYearRangeSelected(start)
-                                }
-                        )
-                    }
-                }
-            }
-        }
-    }
-}
-
-@Composable
-fun MonthSelectionDialog(
-    selectedYear: Int,
-    onDismiss: () -> Unit,
-    onBackPressed: () -> Unit,
-    onMonthSelected: (Int) -> Unit,
-    isDarkMode: Boolean
-) {
-    val currentMonth = Calendar.getInstance().get(Calendar.MONTH)
-    val currentYear = Calendar.getInstance().get(Calendar.YEAR)
-
-    Dialog(onDismissRequest = onDismiss) {
-        Card(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp),
-            shape = RoundedCornerShape(16.dp),
-            colors = CardDefaults.cardColors(
-                containerColor = if (isDarkMode) DarkCardBackground else Color.White
-            )
-        ) {
-            Column(modifier = Modifier.padding(16.dp)) {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    IconButton(onClick = onBackPressed) {
-                        Icon(
-                            Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "Back",
-                            tint = if (isDarkMode) DarkTextLight else Color.Black
-                        )
-                    }
-                    Text(
-                        "Pilih Bulan $selectedYear",
-                        fontWeight = FontWeight.Bold,
-                        fontSize = 18.sp,
-                        modifier = Modifier.weight(1f),
-                        color = if (isDarkMode) DarkTextLight else Color.Black
-                    )
-                }
-
-                Spacer(modifier = Modifier.height(16.dp))
-
-                LazyVerticalGrid(
-                    columns = GridCells.Fixed(3),
-                    modifier = Modifier.padding(8.dp)
-                ) {
-                    items(MONTH_NAMES.indices.toList()) { index ->
-                        val isCurrentMonth = index == currentMonth && selectedYear == currentYear
-                        Text(
-                            text = MONTH_NAMES[index],
-                            fontSize = 14.sp,
-                            textAlign = TextAlign.Center,
-                            color = if (isCurrentMonth) Color.White else if (isDarkMode) DarkTextLight else Color.Black,
-                            modifier = Modifier
-                                .padding(4.dp)
-                                .clip(RoundedCornerShape(8.dp))
+                                .clip(CircleShape)
                                 .background(
-                                    if (isCurrentMonth) if (isDarkMode) DarkPrimaryBlue else Color(0xFF7DAFCB)
-                                    else if (isDarkMode) DarkCardLight else Color(0xFFE0E0E0)
+                                    when {
+                                        day.isSelected -> if (isDarkMode) DarkPrimaryBlue else Color(0xFF7DAFCB)
+                                        day.hasSchedule -> if (isDarkMode) Color(0xFF1E4B6B) else Color(0xFFCCE5FF)
+                                        else -> Color.Transparent
+                                    }
                                 )
-                                .padding(vertical = 12.dp, horizontal = 8.dp)
-                                .fillMaxWidth()
                                 .clickable {
-                                    onMonthSelected(index)
-                                }
-                        )
+                                    onDateSelected(day.date)
+                                },
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text(
+                                text = day.date.get(Calendar.DAY_OF_MONTH).toString(),
+                                color = when {
+                                    day.isSelected -> Color.White
+                                    isDarkMode -> DarkTextLight
+                                    else -> Color.Black
+                                },
+                                fontSize = 14.sp
+                            )
+                        }
                     }
                 }
             }

@@ -224,7 +224,7 @@ fun AddTaskScreen(
                     }) { Text("OK") }
                 },
                 dismissButton = {
-                    TextButton(onClick = { showDatePicker = false }) { Text("Cancel") }
+                    TextButton(onClick = { showDatePicker = false }) { Text("Batal") }
                 }
             ) {
                 DatePicker(state = datePickerState)
@@ -290,7 +290,7 @@ fun TimePickerDialog(
             TextButton(onClick = onConfirm) { Text("OK") }
         },
         dismissButton = {
-            TextButton(onClick = onDismissRequest) { Text("Cancel") }
+            TextButton(onClick = onDismissRequest) { Text("Batal") }
         },
         text = { content() }
     )
