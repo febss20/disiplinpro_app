@@ -3,6 +3,8 @@ plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
+    id("kotlin-kapt")
+    id("com.google.dagger.hilt.android")
 }
 
 android {
@@ -99,4 +101,12 @@ dependencies {
     debugImplementation(libs.androidx.ui.test.manifest)
     implementation("com.google.zxing:core:3.5.1")
     implementation("com.journeyapps:zxing-android-embedded:4.3.0")
+    implementation("com.google.ai.client.generativeai:generativeai:0.2.0")
+    implementation("com.squareup.retrofit2:retrofit:2.9.0")
+    implementation("com.squareup.retrofit2:converter-gson:2.9.0")
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.7.3")
+    implementation("com.google.dagger:hilt-android:2.48")
+    kapt("com.google.dagger:hilt-android-compiler:2.48")
+    kapt("com.google.dagger:hilt-compiler:2.48")
+    implementation("androidx.hilt:hilt-navigation-compose:1.1.0")
 }
