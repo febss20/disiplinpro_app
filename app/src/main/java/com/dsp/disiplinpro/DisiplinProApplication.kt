@@ -6,8 +6,10 @@ import com.dsp.disiplinpro.data.security.NetworkSecurityManager
 import com.google.firebase.FirebaseApp
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.FirebaseFirestoreSettings
+import dagger.hilt.android.HiltAndroidApp
 import okhttp3.OkHttpClient
 
+@HiltAndroidApp
 class DisiplinProApplication : Application() {
 
     companion object {

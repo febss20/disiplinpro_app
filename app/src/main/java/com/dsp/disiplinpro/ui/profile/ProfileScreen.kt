@@ -196,7 +196,7 @@ fun ProfileScreen(
                 }
             }
 
-            Spacer(modifier = Modifier.height(300.dp))
+            Spacer(modifier = Modifier.height(150.dp))
         }
     }
 }

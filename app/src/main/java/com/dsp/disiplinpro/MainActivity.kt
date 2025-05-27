@@ -33,7 +33,10 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import com.dsp.disiplinpro.util.NavigationBarUtils
 import androidx.compose.ui.platform.LocalContext
+import com.dsp.disiplinpro.ui.components.FloatingAIButton
+import dagger.hilt.android.AndroidEntryPoint
 
+@AndroidEntryPoint
 class MainActivity : FragmentActivity() {
     private val themeViewModel = ThemeViewModel()
     private lateinit var securityManager: SecurityManager
@@ -102,7 +105,7 @@ class MainActivity : FragmentActivity() {
             val context = LocalContext.current
             val navBackStackEntry by navController.currentBackStackEntryAsState()
             val currentRoute = navBackStackEntry?.destination?.route
-
+            val isUserLoggedIn = authViewModel.isUserLoggedIn
             val isGestureNavigation = NavigationBarUtils.isGestureNavigation(context)
             val bottomPadding = if (isGestureNavigation) 25.dp else 55.dp
 
@@ -150,6 +153,13 @@ class MainActivity : FragmentActivity() {
                                 .padding(bottom = bottomPadding)
                         )
                     }
+
+                    FloatingAIButton(
+                        navController = navController,
+                        isUserLoggedIn = isUserLoggedIn,
+                        isDarkMode = isDarkMode,
+                        currentRoute = currentRoute
+                    )
                 }
             }
         }

@@ -3,7 +3,9 @@ package com.dsp.disiplinpro.viewmodel.auth
 import android.content.Context
 import android.util.Log
 import androidx.activity.result.ActivityResult
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import androidx.fragment.app.FragmentActivity
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -45,7 +47,10 @@ class AuthViewModel : ViewModel() {
     private val _currentUser = MutableStateFlow<User?>(null)
     val currentUser: StateFlow<User?> = _currentUser.asStateFlow()
 
-    val isLoading = mutableStateOf(false)
+    var isUserLoggedIn by mutableStateOf(auth.currentUser != null)
+        private set
+
+    var isLoading = mutableStateOf(false)
 
     private val _requires2FA = MutableStateFlow(false)
     val requires2FA: StateFlow<Boolean> = _requires2FA.asStateFlow()
@@ -64,6 +69,10 @@ class AuthViewModel : ViewModel() {
     init {
         auth.currentUser?.let {
             refreshCurrentUser()
+        }
+
+        auth.addAuthStateListener { firebaseAuth ->
+            isUserLoggedIn = firebaseAuth.currentUser != null
         }
     }
 
