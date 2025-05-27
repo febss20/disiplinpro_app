@@ -25,7 +25,7 @@ import com.dsp.disiplinpro.ui.auth.RegisterScreen
 import com.dsp.disiplinpro.ui.auth.TwoFactorSetupScreen
 import com.dsp.disiplinpro.ui.auth.TwoFactorVerificationScreen
 import com.dsp.disiplinpro.ui.calender.CalendarScreen
-import com.dsp.disiplinpro.ui.chat.ChatbotScreen
+import com.dsp.disiplinpro.ui.chatbot.ChatbotScreen
 import com.dsp.disiplinpro.ui.home.HomeScreen
 import com.dsp.disiplinpro.ui.notification.NotificationListScreen
 import com.dsp.disiplinpro.ui.notification.NotificationScreen

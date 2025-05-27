@@ -1,4 +1,4 @@
-package com.dsp.disiplinpro.viewmodel.chat
+package com.dsp.disiplinpro.viewmodel.chatbot
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope

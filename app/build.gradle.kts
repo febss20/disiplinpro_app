@@ -7,6 +7,17 @@ plugins {
     id("com.google.dagger.hilt.android")
 }
 
+val geminiApiKey: String = rootProject.file("local.properties").let { file ->
+    if (file.exists()) {
+        file.readLines()
+            .find { it.startsWith("GEMINI_API_KEY=") }
+            ?.substringAfter("=")
+            ?: ""
+    } else {
+        ""
+    }
+}
+
 android {
     namespace = "com.dsp.disiplinpro"
     compileSdk = 35
@@ -15,10 +26,12 @@ android {
         applicationId = "com.dsp.disiplinpro"
         minSdk = 24
         targetSdk = 35
-        versionCode = 4
-        versionName = "1.4"
+        versionCode = 5
+        versionName = "1.5"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+
+        buildConfigField("String", "GEMINI_API_KEY", "\"$geminiApiKey\"")
     }
 
     buildTypes {
@@ -40,6 +53,7 @@ android {
     }
     buildFeatures {
         compose = true
+        buildConfig = true
     }
 }
 

@@ -34,6 +34,7 @@
             android:name="com.dsp.disiplinpro.MainActivity"
             android:exported="true"
             android:label="@string/app_name"
+            android:windowSoftInputMode="adjustResize"
             android:theme="@style/Theme.Disiplinpro_1">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
