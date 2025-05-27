@@ -3,6 +3,7 @@ package com.dsp.disiplinpro.di
 import android.content.Context
 import com.dsp.disiplinpro.data.repository.NotificationRepository
 import com.dsp.disiplinpro.data.repository.chatbot.AppDataRepository
+import com.dsp.disiplinpro.data.repository.chatbot.ChatHistoryRepository
 import com.dsp.disiplinpro.data.repository.chatbot.FAQRepository
 import com.dsp.disiplinpro.data.repository.chatbot.NotificationInfoRepository
 import com.dsp.disiplinpro.data.repository.chatbot.ScheduleRepository
@@ -109,6 +110,15 @@ object ChatbotModule {
             subjectRepository,
             notificationInfoRepository
         )
+    }
+
+    @Provides
+    @Singleton
+    fun provideChatHistoryRepository(
+        firestore: FirebaseFirestore,
+        auth: FirebaseAuth
+    ): ChatHistoryRepository {
+        return ChatHistoryRepository(firestore, auth)
     }
 
     @Provides

@@ -8,8 +8,10 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Clear
+import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.filled.Send
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -24,6 +26,7 @@ import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import com.dsp.disiplinpro.data.preferences.ThemePreferences
+import com.dsp.disiplinpro.ui.components.ChatHistoryDrawer
 import com.dsp.disiplinpro.ui.components.ChatMessageItem
 import com.dsp.disiplinpro.ui.theme.DarkBackground
 import com.dsp.disiplinpro.ui.theme.DarkCardBackground
@@ -41,6 +44,9 @@ fun ChatbotScreen(
     val messages by viewModel.messages.collectAsState()
     val inputText by viewModel.inputText.collectAsState()
     val isLoading by viewModel.isLoading.collectAsState()
+    val isHistoryVisible by viewModel.isHistoryVisible.collectAsState()
+    val chatHistories by viewModel.chatHistories.collectAsState()
+    val isInitializing by viewModel.isInitializing.collectAsState()
 
     val context = LocalContext.current
     val themePreferences = ThemePreferences(context)
@@ -52,161 +58,217 @@ fun ChatbotScreen(
     val isGestureNavigation = NavigationBarUtils.isGestureNavigation(context)
     val bottomPadding = if (isGestureNavigation) 10.dp else 50.dp
 
+    LaunchedEffect(isHistoryVisible) {
+        if (isHistoryVisible) {
+            viewModel.loadChatHistories()
+        }
+    }
+
     LaunchedEffect(messages.size) {
         if (messages.isNotEmpty()) {
             listState.animateScrollToItem(messages.size - 1)
         }
     }
 
-    Column(modifier = Modifier.fillMaxSize()) {
-        TopAppBar(
-            title = {
-                Text(
-                    "DisiplinPro Asisten",
-                    fontWeight = FontWeight.Bold
-                )
-            },
-            navigationIcon = {
-                IconButton(onClick = { navController.popBackStack() }) {
-                    Icon(
-                        imageVector = Icons.Default.ArrowBack,
-                        contentDescription = "Kembali"
-                    )
-                }
-            },
-            actions = {
-                IconButton(
-                    onClick = { viewModel.clearChat() }
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.Clear,
-                        contentDescription = "Hapus Chat",
-                        tint = if (isDarkMode) Color.White else Color(0xFF333333)
-                    )
-                }
-            },
-            colors = TopAppBarDefaults.topAppBarColors(
-                containerColor = if (isDarkMode) DarkCardBackground else Color(0xFFFFF8E1),
-                titleContentColor = if (isDarkMode) Color.White else Color(0xFF333333),
-                navigationIconContentColor = if (isDarkMode) Color.White else Color(0xFF333333),
-                actionIconContentColor = if (isDarkMode) Color.White else Color(0xFF333333)
-            )
-        )
-
-        Box(
-            modifier = Modifier
-                .weight(1f)
-                .fillMaxWidth()
-                .background(if (isDarkMode) DarkBackground else LightBeige)
-        ) {
-            if (messages.isEmpty()) {
-                Column(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(16.dp),
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.Center
-                ) {
-                    Text(
-                        "Selamat datang di chatbot DisiplinPro!",
-                        fontSize = 18.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = if (isDarkMode) Color.White else Color(0xFF212121)
-                    )
-                    Spacer(modifier = Modifier.height(8.dp))
-                    Text(
-                        "Mulai bertanya tentang tugas, jadwal, atau fitur aplikasi.",
-                        fontSize = 14.sp,
-                        color = if (isDarkMode) Color(0xFFBBBBBB) else Color(0xFF757575),
-                        modifier = Modifier.padding(horizontal = 32.dp)
-                    )
-                }
-            } else {
-                LazyColumn(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(vertical = 8.dp),
-                    state = listState,
-                    contentPadding = PaddingValues(bottom = 8.dp)
-                ) {
-                    items(messages) { message ->
-                        ChatMessageItem(
-                            message = message,
-                            isDarkMode = isDarkMode
-                        )
-                    }
-                }
-            }
-        }
-
-        Surface(
-            modifier = Modifier
-                .fillMaxWidth()
-                .imePadding(),
-            shadowElevation = 8.dp,
-            shape = RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp),
-            color = if (isDarkMode) DarkCardBackground else Color(0xFFFFF8E1)
-        ) {
-            Row(
+    Box(modifier = Modifier.fillMaxSize()) {
+        if (isInitializing) {
+            Box(
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(12.dp)
-                    .padding(bottom = bottomPadding),
-                verticalAlignment = Alignment.CenterVertically
+                    .fillMaxSize()
+                    .background(if (isDarkMode) DarkBackground else LightBeige),
+                contentAlignment = Alignment.Center
             ) {
-                OutlinedTextField(
-                    value = inputText,
-                    onValueChange = { viewModel.updateInputText(it) },
-                    placeholder = {
+                CircularProgressIndicator(
+                    color = if (isDarkMode) DarkPrimaryBlue else MaterialTheme.colorScheme.primary
+                )
+            }
+        } else {
+            Column(modifier = Modifier.fillMaxSize()) {
+                TopAppBar(
+                    title = {
                         Text(
-                            "Ketik pesan...",
-                            color = if (isDarkMode) Color(0xFF8E8E8E) else Color(0xFF757575)
+                            "DisiplinPro Asisten",
+                            fontWeight = FontWeight.Bold
                         )
                     },
-                    modifier = Modifier
-                        .weight(1f)
-                        .padding(end = 8.dp),
-                    shape = RoundedCornerShape(24.dp),
-                    colors = OutlinedTextFieldDefaults.colors(
-                        focusedBorderColor = if (isDarkMode) DarkPrimaryBlue else MaterialTheme.colorScheme.primary,
-                        unfocusedBorderColor = if (isDarkMode) Color(0xFF404040) else Color(0xFFDDDDDD),
-                        focusedTextColor = if (isDarkMode) Color.White else Color(0xFF212121),
-                        unfocusedTextColor = if (isDarkMode) Color.White else Color(0xFF212121),
-                        cursorColor = if (isDarkMode) DarkPrimaryBlue else MaterialTheme.colorScheme.primary
-                    ),
-                    maxLines = 4
+                    navigationIcon = {
+                        IconButton(onClick = { navController.popBackStack() }) {
+                            Icon(
+                                imageVector = Icons.Default.ArrowBack,
+                                contentDescription = "Kembali"
+                            )
+                        }
+                    },
+                    actions = {
+                        IconButton(
+                            onClick = { viewModel.createNewChat() }
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Add,
+                                contentDescription = "Chat Baru",
+                                tint = if (isDarkMode) Color.White else Color(0xFF333333)
+                            )
+                        }
+
+                        IconButton(
+                            onClick = { viewModel.toggleHistoryVisibility() }
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.History,
+                                contentDescription = "Riwayat Chat",
+                                tint = if (isDarkMode) Color.White else Color(0xFF333333)
+                            )
+                        }
+
+                        IconButton(
+                            onClick = { viewModel.clearChat() }
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Clear,
+                                contentDescription = "Hapus Chat",
+                                tint = if (isDarkMode) Color.White else Color(0xFF333333)
+                            )
+                        }
+                    },
+                    colors = TopAppBarDefaults.topAppBarColors(
+                        containerColor = if (isDarkMode) DarkCardBackground else Color(0xFFFFF8E1),
+                        titleContentColor = if (isDarkMode) Color.White else Color(0xFF333333),
+                        navigationIconContentColor = if (isDarkMode) Color.White else Color(
+                            0xFF333333
+                        ),
+                        actionIconContentColor = if (isDarkMode) Color.White else Color(0xFF333333)
+                    )
                 )
 
                 Box(
                     modifier = Modifier
-                        .size(48.dp)
-                        .clip(CircleShape)
-                        .background(
-                            if (inputText.isNotEmpty() && !isLoading) {
-                                if (isDarkMode) DarkPrimaryBlue else MaterialTheme.colorScheme.primary
-                            } else {
-                                if (isDarkMode) Color(0xFF404040) else Color(0xFFDDDDDD)
-                            }
-                        )
-                        .padding(8.dp),
-                    contentAlignment = Alignment.Center
+                        .weight(1f)
+                        .fillMaxWidth()
+                        .background(if (isDarkMode) DarkBackground else LightBeige)
                 ) {
-                    IconButton(
-                        onClick = {
-                            if (inputText.isNotEmpty() && !isLoading) {
-                                viewModel.sendMessage()
+                    if (messages.isEmpty()) {
+                        Column(
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .padding(16.dp),
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            verticalArrangement = Arrangement.Center
+                        ) {
+                            Text(
+                                "Selamat datang di chatbot DisiplinPro!",
+                                fontSize = 18.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = if (isDarkMode) Color.White else Color(0xFF212121)
+                            )
+                            Spacer(modifier = Modifier.height(8.dp))
+                            Text(
+                                "Mulai bertanya tentang tugas, jadwal, atau fitur aplikasi.",
+                                fontSize = 14.sp,
+                                color = if (isDarkMode) Color(0xFFBBBBBB) else Color(0xFF757575),
+                                modifier = Modifier.padding(horizontal = 32.dp)
+                            )
+                        }
+                    } else {
+                        LazyColumn(
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .padding(vertical = 8.dp),
+                            state = listState,
+                            contentPadding = PaddingValues(bottom = 8.dp)
+                        ) {
+                            items(messages) { message ->
+                                ChatMessageItem(
+                                    message = message,
+                                    isDarkMode = isDarkMode
+                                )
                             }
-                        },
-                        enabled = inputText.isNotEmpty() && !isLoading
+                        }
+                    }
+                }
+
+                Surface(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .imePadding(),
+                    shadowElevation = 8.dp,
+                    shape = RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp),
+                    color = if (isDarkMode) DarkCardBackground else Color(0xFFFFF8E1)
+                ) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(12.dp)
+                            .padding(bottom = bottomPadding),
+                        verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Icon(
-                            imageVector = Icons.Default.Send,
-                            contentDescription = "Kirim",
-                            tint = Color.White
+                        OutlinedTextField(
+                            value = inputText,
+                            onValueChange = { viewModel.updateInputText(it) },
+                            placeholder = {
+                                Text(
+                                    "Ketik pesan...",
+                                    color = if (isDarkMode) Color(0xFF8E8E8E) else Color(0xFF757575)
+                                )
+                            },
+                            modifier = Modifier
+                                .weight(1f)
+                                .padding(end = 8.dp),
+                            shape = RoundedCornerShape(24.dp),
+                            colors = OutlinedTextFieldDefaults.colors(
+                                focusedBorderColor = if (isDarkMode) DarkPrimaryBlue else MaterialTheme.colorScheme.primary,
+                                unfocusedBorderColor = if (isDarkMode) Color(0xFF404040) else Color(
+                                    0xFFDDDDDD
+                                ),
+                                focusedTextColor = if (isDarkMode) Color.White else Color(0xFF212121),
+                                unfocusedTextColor = if (isDarkMode) Color.White else Color(
+                                    0xFF212121
+                                ),
+                                cursorColor = if (isDarkMode) DarkPrimaryBlue else MaterialTheme.colorScheme.primary
+                            ),
+                            maxLines = 4
                         )
+
+                        Box(
+                            modifier = Modifier
+                                .size(48.dp)
+                                .clip(CircleShape)
+                                .background(
+                                    if (inputText.isNotEmpty() && !isLoading) {
+                                        if (isDarkMode) DarkPrimaryBlue else MaterialTheme.colorScheme.primary
+                                    } else {
+                                        if (isDarkMode) Color(0xFF404040) else Color(0xFFDDDDDD)
+                                    }
+                                )
+                                .padding(8.dp),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            IconButton(
+                                onClick = {
+                                    if (inputText.isNotEmpty() && !isLoading) {
+                                        viewModel.sendMessage()
+                                    }
+                                },
+                                enabled = inputText.isNotEmpty() && !isLoading
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.Send,
+                                    contentDescription = "Kirim",
+                                    tint = Color.White
+                                )
+                            }
+                        }
                     }
                 }
             }
         }
+
+        ChatHistoryDrawer(
+            isVisible = isHistoryVisible,
+            histories = chatHistories,
+            isDarkMode = isDarkMode,
+            onDismiss = { viewModel.toggleHistoryVisibility() },
+            onSelectHistory = { viewModel.loadChatFromHistory(it) },
+            onDeleteHistory = { viewModel.deleteChatHistory(it) }
+        )
     }
 }

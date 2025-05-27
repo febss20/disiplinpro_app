@@ -45,6 +45,12 @@ class GeminiChatManager @Inject constructor(
         }
     }
 
+    fun addToHistory(role: String, message: String) {
+        if (role in listOf("user", "ai") && message.isNotEmpty()) {
+            chatHistory.add(Pair(role, message))
+        }
+    }
+
     private suspend fun sendPromptToGemini(prompt: String): GenerateContentResponse {
         val content = content {
             text(prompt)
@@ -114,7 +120,7 @@ class GeminiChatManager @Inject constructor(
         val sections = mapOf(
             "tugas|deadline|pr|assignment" to "Ringkasan Tugas:|Tugas Terlambat:|Tugas Hari Ini:|Tugas Mendatang:|Tugas yang Sudah Selesai:",
             "jadwal|kuliah|kelas|mata kuliah|matkul" to "Jadwal Kuliah:|Jadwal Kuliah Hari Ini:|Detail Mata Kuliah:",
-            "notifikasi|pemberitahuan|pengingat" to "Pengaturan Keamanan & Privasi:|Notifikasi:",
+            "notifikasi|pemberitahuan|pengingat|riwayat notifikasi|history notifikasi|detail notifikasi" to "Pengaturan Keamanan & Privasi:|Notifikasi:|Informasi Detail Notifikasi:",
             "akun|profil|user|pengguna|login" to "Informasi Pengguna:|Pengaturan Keamanan & Privasi:",
             "bantuan|help|faq" to "Informasi FAQ dan Bantuan:|Bantuan Akun:|Bantuan Tugas dan Jadwal:|Bantuan Umum:",
             "mata kuliah|subjek|matkul" to "Daftar Mata Kuliah:|Detail Mata Kuliah:|Statistik Mata Kuliah:",
@@ -132,6 +138,13 @@ class GeminiChatManager @Inject constructor(
             lowercaseQuery.contains("siapa yang membuat")) {
 
             return extractSection(appContext, "Tentang Pembuat Aplikasi:", "Bantuan Akun:")
+        }
+
+        if (lowercaseQuery.contains("riwayat notifikasi") ||
+            lowercaseQuery.contains("history notifikasi") ||
+            lowercaseQuery.contains("detail notifikasi")) {
+
+            return extractSection(appContext, "Informasi Detail Notifikasi:", "Informasi FAQ dan Bantuan:")
         }
 
         if (relevantRegexes.isEmpty()) {
@@ -184,7 +197,7 @@ class GeminiChatManager @Inject constructor(
             lowercaseQuery.contains("jadwal") && lowercaseQuery.contains("hapus") -> "DELETE_SCHEDULE"
             lowercaseQuery.contains("deadline") || lowercaseQuery.contains("tugas") -> "TASK_INFO"
             lowercaseQuery.contains("jadwal") || lowercaseQuery.contains("kuliah") -> "SCHEDULE_INFO"
-            lowercaseQuery.contains("notifikasi") || lowercaseQuery.contains("pengingat") -> "NOTIFICATION_INFO"
+            lowercaseQuery.contains("riwayat notifikasi") || lowercaseQuery.contains("history notifikasi") || lowercaseQuery.contains("detail notifikasi") -> "NOTIFICATION_HISTORY"
             lowercaseQuery.contains("bantuan") || lowercaseQuery.contains("cara") -> "HELP"
             lowercaseQuery.contains("profil") || lowercaseQuery.contains("akun") -> "PROFILE_INFO"
             else -> "GENERAL"
@@ -206,6 +219,9 @@ class GeminiChatManager @Inject constructor(
 
             "SCHEDULE_INFO" ->
                 "Pengguna bertanya tentang jadwal. Berikan informasi detail dan terorganisir tentang jadwal yang ada dalam data."
+
+            "NOTIFICATION_HISTORY" ->
+                "Pengguna bertanya tentang riwayat atau detail notifikasi. Berikan informasi lengkap dan detail tentang riwayat notifikasi yang ada. Gunakan informasi dari bagian 'Informasi Detail Notifikasi' yang menyediakan statistik dan detail lengkap semua notifikasi yang pernah tergenerate dalam sistem."
 
             "NOTIFICATION_INFO" ->
                 "Pengguna bertanya tentang notifikasi. Berikan informasi detail tentang pengaturan notifikasi, cara kerjanya, dan fitur terkait."
