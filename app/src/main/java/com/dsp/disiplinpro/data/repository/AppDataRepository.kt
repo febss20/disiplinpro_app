@@ -452,6 +452,17 @@ class AppDataRepository @Inject constructor(
             append("Tugas selesai: ${completedTasks.size}\n")
             append("Tugas belum selesai: ${tasks.size - completedTasks.size}\n")
             append("Rasio penyelesaian tugas: ${if (tasks.isNotEmpty()) String.format("%.1f%%", completedTasks.size.toFloat() / tasks.size * 100) else "0%"}\n")
+
+            append("\nTentang Pembuat Aplikasi:\n")
+            append("DisiplinPro dikembangkan oleh satu orang mahasiswa Teknik Informatika Universitas Negeri Surabaya angkatan 2023.\n\n")
+            append("Tim Pengembang:\n")
+            append("- Alif Rasyid Febriansyah - Ketua Tim & Lead Developer\n")
+            append("Aplikasi ini dibangun sebagai bagian dari proyek mata kuliah Pengembangan Aplikasi Mobile. Versi pertama diluncurkan pada tahun 2025 dan terus dikembangkan dengan fitur baru secara berkala.\n\n")
+            append("Kontak:\n")
+            append("Email: alif.23131@mhs.unesa.ac.id\n")
+            append("Website: corecrab.vercel.app\n")
+            append("GitHub: https://github.com/febss20\n")
+            append("Instagram: @febss.rasy\n")
         }
     }
 

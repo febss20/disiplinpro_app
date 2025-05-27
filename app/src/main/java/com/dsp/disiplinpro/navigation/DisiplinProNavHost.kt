@@ -233,6 +233,7 @@ fun DisiplinProNavHost(
 
                 route == "forgot_password" -> 4
                 route == "email_verification" -> 4
+                route == "chatbot" -> 4
 
                 else -> -1
             }

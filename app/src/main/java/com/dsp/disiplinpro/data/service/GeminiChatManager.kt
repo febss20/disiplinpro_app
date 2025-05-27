@@ -67,7 +67,7 @@ class GeminiChatManager @Inject constructor(
             Berdasarkan informasi di atas, jawab pertanyaan pengguna:
             $userQuery
             
-            Berikan jawaban yang relevan, ringkas, dan dalam Bahasa Indonesia yang sopan.
+            Berikan jawaban yang relevan, ringkas, dan dalam Bahasa Indonesia yang gaul.
             Jika ada informasi yang tidak tersedia dalam data yang diberikan, sampaikan bahwa kamu tidak memiliki informasi tersebut.
             Jika diminta untuk membuat, mengubah, atau menghapus tugas, beri tahu pengguna bahwa mereka perlu melakukannya melalui antarmuka aplikasi.
         """.trimIndent()
