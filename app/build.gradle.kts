@@ -7,16 +7,27 @@ plugins {
     id("com.google.dagger.hilt.android")
 }
 
-val geminiApiKey: String = rootProject.file("local.properties").let { file ->
-    if (file.exists()) {
-        file.readLines()
-            .find { it.startsWith("GEMINI_API_KEY=") }
-            ?.substringAfter("=")
-            ?: ""
-    } else {
-        ""
-    }
+val localPropertiesFile = rootProject.file("local.properties")
+val localPropertiesLines = if (localPropertiesFile.exists()) {
+    localPropertiesFile.readLines()
+} else {
+    emptyList()
 }
+
+val geminiApiKey = localPropertiesLines
+    .find { it.startsWith("GEMINI_API_KEY=") }
+    ?.substringAfter("=")
+    ?: ""
+
+val awsAccessKey = localPropertiesLines
+    .find { it.startsWith("AWS_ACCESS_KEY=") }
+    ?.substringAfter("=")
+    ?: ""
+
+val awsSecretKey = localPropertiesLines
+    .find { it.startsWith("AWS_SECRET_KEY=") }
+    ?.substringAfter("=")
+    ?: ""
 
 android {
     namespace = "com.dsp.disiplinpro"
@@ -32,6 +43,8 @@ android {
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
         buildConfigField("String", "GEMINI_API_KEY", "\"$geminiApiKey\"")
+        buildConfigField("String", "AWS_ACCESS_KEY", "\"$awsAccessKey\"")
+        buildConfigField("String", "AWS_SECRET_KEY", "\"$awsSecretKey\"")
     }
 
     buildTypes {
